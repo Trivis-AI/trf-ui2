@@ -1,0 +1,29 @@
+{
+  "name": "@trf/ui2 design system docs",
+  "purpose": "AI-navigable knowledge layer. Read this manifest first, then load ONLY the doc you need. Do not load everything.",
+  "readBeforeWritingUI": [
+    "13-ai-coding-guidelines.md",
+    "03-design-tokens.md",
+    "07-component-architecture.md"
+  ],
+  "docs": {
+    "README-START-HERE.md": "Entry point: status legend, reading order, task-based map.",
+    "03-design-tokens.md": "Colors, radius, fonts, dark mode. The token contract. Use tokens, never raw values.",
+    "05-iconography.md": "Lucide is the single icon library. Sizes and rules.",
+    "07-component-architecture.md": "Layer model (tokens -> primitives -> app code), where things live, new-component process.",
+    "13-ai-coding-guidelines.md": "Non-negotiable rules for any AI writing UI in or against this system.",
+    "08-ui-components/": "One doc per component (props, variants, when to use). Load the specific component file.",
+    "for-consuming-apps.md": "How one of the 14 TRF apps adopts trf-ui2, plus the AGENTS.md pointer snippet."
+  },
+  "components": {
+    "Button": "08-ui-components/button.md"
+  },
+  "status": {
+    "legend": { "ready": "Follow as-is", "draft": "Usable, may change", "scaffold": "Structure only" },
+    "03-design-tokens.md": "ready",
+    "05-iconography.md": "ready",
+    "07-component-architecture.md": "ready",
+    "13-ai-coding-guidelines.md": "ready",
+    "08-ui-components/button.md": "ready"
+  }
+}

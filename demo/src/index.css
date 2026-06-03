@@ -1,0 +1,16 @@
+@import "tailwindcss";
+@import "../../src/styles/tokens.css";
+
+/* Scan trf-ui2 source + this demo so all component classes are generated. */
+@source "../../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";
+
+/* Dark mode via a `.dark` class on a parent (the demo toggles it on <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+}
