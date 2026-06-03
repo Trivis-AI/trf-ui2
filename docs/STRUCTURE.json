@@ -13,7 +13,8 @@
     "07-component-architecture.md": "Layer model (tokens -> primitives -> app code), where things live, new-component process.",
     "13-ai-coding-guidelines.md": "Non-negotiable rules for any AI writing UI in or against this system.",
     "08-ui-components/": "One doc per component (props, variants, when to use). Load the specific component file.",
-    "for-consuming-apps.md": "How one of the 14 TRF apps adopts trf-ui2, plus the AGENTS.md pointer snippet."
+    "for-consuming-apps.md": "How one of the 14 TRF apps adopts trf-ui2, plus the AGENTS.md pointer snippet.",
+    "open-questions.md": "Living parking lot: unresolved decisions and future plans (i18n, analytics, typography scale, theming). File questions here instead of guessing."
   },
   "components": {
     "Button": "08-ui-components/button.md",
