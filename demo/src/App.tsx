@@ -26,6 +26,7 @@ import {
   EmptyState,
   Field,
   Input,
+  Label,
   LoadingState,
   RadioGroup,
   RadioGroupItem,
@@ -37,6 +38,13 @@ import {
   Separator,
   Spinner,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
   Textarea,
   Tooltip,
   TooltipContent,
@@ -44,14 +52,48 @@ import {
   TooltipTrigger,
 } from "@trf/ui2";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const slug = (s: string) =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+function Section({
+  title,
+  nav,
+  children,
+}: {
+  title: string;
+  /** Short label for the table of contents (defaults to the title). */
+  nav?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <section className="flex flex-col gap-4">
+    <section id={slug(title)} data-nav={nav ?? title} className="flex scroll-mt-32 flex-col gap-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
       </h2>
       <div className="flex flex-wrap items-start gap-3">{children}</div>
     </section>
+  );
+}
+
+/** Auto-built from the rendered sections, so new sections show up automatically. */
+function Toc() {
+  const [items, setItems] = useState<{ id: string; label: string }[]>([]);
+  useEffect(() => {
+    const secs = [...document.querySelectorAll<HTMLElement>("section[data-nav]")];
+    setItems(secs.map((s) => ({ id: s.id, label: s.dataset.nav ?? s.id })));
+  }, []);
+  return (
+    <nav className="flex flex-wrap gap-1.5">
+      {items.map((it) => (
+        <a
+          key={it.id}
+          href={`#${it.id}`}
+          className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          {it.label}
+        </a>
+      ))}
+    </nav>
   );
 }
 
@@ -134,29 +176,34 @@ export function App() {
   return (
     <TooltipProvider delayDuration={200}>
     <div className="min-h-screen">
-      {/* Header / controls */}
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
-        <div className="flex items-baseline gap-3">
-          <span className="text-lg font-semibold">trf-ui2</span>
-          <span className="text-sm text-muted-foreground">kitchen sink</span>
+      {/* Sticky header + table of contents */}
+      <div className="sticky top-0 z-20 border-b border-border bg-background/80 backdrop-blur">
+        <header className="flex items-center justify-between gap-4 px-6 py-3">
+          <div className="flex items-baseline gap-3">
+            <span className="text-lg font-semibold">trf-ui2</span>
+            <span className="text-sm text-muted-foreground">kitchen sink</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              radius {radius}px
+              <input
+                type="range"
+                min={0}
+                max={20}
+                value={radius}
+                onChange={(e) => setRadius(Number(e.target.value))}
+              />
+            </label>
+            <Button variant="secondary" size="sm" onClick={() => setDark((d) => !d)}>
+              {dark ? <Sun /> : <Moon />}
+              {dark ? "Light" : "Dark"}
+            </Button>
+          </div>
+        </header>
+        <div className="px-6 pb-2">
+          <Toc />
         </div>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            radius {radius}px
-            <input
-              type="range"
-              min={0}
-              max={20}
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-            />
-          </label>
-          <Button variant="secondary" size="sm" onClick={() => setDark((d) => !d)}>
-            {dark ? <Sun /> : <Moon />}
-            {dark ? "Light" : "Dark"}
-          </Button>
-        </div>
-      </header>
+      </div>
 
       <main className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-10">
         <Section title="Buttons">
@@ -199,13 +246,57 @@ export function App() {
           </div>
         </Section>
 
-        <Section title="DataTable — sort · filter · drag-reorder columns · inline edit">
+        <Section title="DataTable — sort · filter · drag-reorder columns · inline edit" nav="DataTable">
           <div className="w-full">
             <p className="mb-2 text-xs text-muted-foreground">
               Click headers to sort · type to filter · drag the grip to reorder columns · click
               Customer or Total to edit inline.
             </p>
             <InvoiceTable />
+          </div>
+        </Section>
+
+        <Section title="Table (primitive)" nav="Table">
+          <div className="w-full max-w-md overflow-hidden rounded-lg border border-border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Line</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Net</TableCell>
+                  <TableCell className="text-right">€1,000.00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>VAT 22%</TableCell>
+                  <TableCell className="text-right">€220.00</TableCell>
+                </TableRow>
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell>Total</TableCell>
+                  <TableCell className="text-right">€1,220.00</TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
+        </Section>
+
+        <Section title="Typography & dividers" nav="Typography">
+          <div className="flex w-full max-w-md flex-col gap-2">
+            <p className="text-lg font-semibold">Heading — lg / semibold</p>
+            <p className="text-sm">Body text — sm / regular</p>
+            <p className="text-sm text-muted-foreground">Muted text — sm / muted-foreground</p>
+            <Label>Standalone Label</Label>
+            <Separator className="my-2" />
+            <div className="flex h-5 items-center gap-3 text-sm">
+              <span>Left</span>
+              <Separator orientation="vertical" />
+              <span>Right</span>
+            </div>
           </div>
         </Section>
 

@@ -48,6 +48,9 @@ from it.
 2. **Compose before creating.** Most needs are an arrangement of existing primitives.
 3. **Real need → add it properly.** New primitive → `src/components/ui/` + export + a doc in
    `08-ui-components/`. New shared component → `src/components/` + export.
+   **Always add a `<Section>` for it in the kitchen sink (`demo/src/App.tsx`)** showing every
+   variant/state — the sink is the living showcase and its table of contents is auto-generated,
+   so a new section appears in the nav automatically. A component with no sink section is incomplete.
 4. **Designer flow:** if you introduce a new *pattern* while improving UX and it could be reused
    elsewhere, **flag it** so it can graduate into a shared component / pattern doc rather than
    living as a one-off.
