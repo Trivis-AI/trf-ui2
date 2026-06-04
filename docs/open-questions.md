@@ -14,9 +14,15 @@
 
 ## 🟡 Open
 
-### Q1 — Typography: fixed type scale, or loose?
-**Raised by:** Claude · **Blocks:** `H1/H2/H3`, `Text` components · **Scheduled:** decide
-2026-06-04 (Jaak).
+### Q1 — Typography: fixed type scale, or loose? — 🟢 DECIDED & BUILT (2026-06-03)
+
+**Outcome:** fixed, **tight weight-driven** scale (Option A), shipped as `H1/H2/H3/Text`.
+Scale `xs 12 · sm 14 (body) · base 16 · lg 18 · xl 20 · 2xl 24 · 3xl 30`; headings `font-semibold`
+(no 700). **One-knob `--font-scale`** (rem-based, browser-respecting, S/M/L-ready) implemented and
+verified. Mono + tabular-nums applied to table numbers. See `08-ui-components/typography.md` and
+`03-design-tokens.md`. Original analysis kept below for reference.
+
+**Raised by:** Claude · **Blocks:** `H1/H2/H3`, `Text` components.
 
 - **Option A — fixed scale, few styles, no exceptions** (e.g. H1, H2, H3, body, small, label).
   One weight policy (the reference system used `font-semibold` only — banned `font-bold`/700).

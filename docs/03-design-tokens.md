@@ -12,8 +12,24 @@ block. There is **no `tailwind.config.js`** — Tailwind v4 reads the tokens dir
 
 - **Radius:** change `--radius` once → every `rounded-sm/md/lg/xl/2xl` moves, because the scale
   is *derived* (`--radius-sm: calc(var(--radius) - 4px)`, etc.). Never hardcode a corner radius.
-- **Font:** change `--font-sans` once → all UI text follows.
+- **Font family:** change `--font-sans` / `--font-mono` once → all UI text follows. (Geist +
+  Geist Mono; tables/numbers use mono.)
+- **Text size:** change `--font-scale` once → **every** text size scales, because each size is
+  `calc(<rem> * var(--font-scale))`. Default 1.
 - **Color:** every color is a semantic token with a light and dark value. Change it in one place.
+
+## Type scale & `--font-scale`
+
+Sizes (`--text-xs … --text-3xl`) are **rem-based** and multiplied by `--font-scale`:
+
+- **rem** ⇒ the browser font-size / zoom is respected (accessibility). **Never set an absolute
+  px root font-size** — it would break that.
+- **`--font-scale`** ⇒ one knob scales all text. An app-level **S / M / L** setting just sets it
+  (e.g. `0.9 / 1 / 1.15`) and **composes on top** of the browser size (browser × scale).
+
+Scale: `xs 12 · sm 14 (body) · base 16 · lg 18 · xl 20 · 2xl 24 · 3xl 30`. Use the
+typography components (`H1/H2/H3/Text`) or `text-*` utilities — never off-scale (`text-[13px]`).
+See [08-ui-components/typography.md](08-ui-components/typography.md).
 
 ## Color tokens (semantic — use these names)
 

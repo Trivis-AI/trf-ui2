@@ -26,6 +26,9 @@ import {
   EmptyState,
   Field,
   Grow,
+  H1,
+  H2,
+  H3,
   Input,
   Label,
   LoadingState,
@@ -33,6 +36,7 @@ import {
   PageHeader,
   Row,
   Stack,
+  Text,
   RadioGroup,
   RadioGroupItem,
   Select,
@@ -165,9 +169,13 @@ function InvoiceTable() {
   );
 }
 
+const FONT_SCALE = { S: 0.9, M: 1, L: 1.15 } as const;
+type SizeBracket = keyof typeof FONT_SCALE;
+
 export function App() {
   const [dark, setDark] = useState(false);
   const [radius, setRadius] = useState(8);
+  const [textSize, setTextSize] = useState<SizeBracket>("M");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -177,6 +185,11 @@ export function App() {
     // Demonstrates the "change one number" token: drive --radius live.
     document.documentElement.style.setProperty("--radius", `${radius}px`);
   }, [radius]);
+
+  useEffect(() => {
+    // One knob scales ALL text (S/M/L bracket → --font-scale). Composes with browser font-size.
+    document.documentElement.style.setProperty("--font-scale", String(FONT_SCALE[textSize]));
+  }, [textSize]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -189,6 +202,19 @@ export function App() {
             <span className="text-sm text-muted-foreground">kitchen sink</span>
           </div>
           <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              text
+              {(Object.keys(FONT_SCALE) as SizeBracket[]).map((b) => (
+                <Button
+                  key={b}
+                  variant={textSize === b ? "primary" : "secondary"}
+                  size="sm"
+                  onClick={() => setTextSize(b)}
+                >
+                  {b}
+                </Button>
+              ))}
+            </div>
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               radius {radius}px
               <input
@@ -339,17 +365,28 @@ export function App() {
           </div>
         </Section>
 
-        <Section title="Typography & dividers" nav="Typography">
-          <div className="flex w-full max-w-md flex-col gap-2">
-            <p className="text-lg font-semibold">Heading — lg / semibold</p>
-            <p className="text-sm">Body text — sm / regular</p>
-            <p className="text-sm text-muted-foreground">Muted text — sm / muted-foreground</p>
+        <Section title="Typography" nav="Typography">
+          <div className="flex w-full max-w-xl flex-col gap-3">
+            <p className="text-xs text-muted-foreground">
+              Use the <strong>text S/M/L</strong> control above — one knob (<code>--font-scale</code>)
+              scales everything, and it respects your browser font size too.
+            </p>
+            <H1>H1 — Page title (24)</H1>
+            <H2>H2 — Section heading (20)</H2>
+            <H3>H3 — Subsection (16, weight-driven)</H3>
+            <Text size="lg">Text lg — 18px</Text>
+            <Text>Text — body, 14px (default)</Text>
+            <Text size="xs" tone="muted">
+              Text xs muted — 12px, captions & meta
+            </Text>
+            <Text weight="medium">Text — medium weight for emphasis</Text>
+            <Text mono>Text mono — 1234567890 · €1,240.00 (tabular figures)</Text>
+            <Separator className="my-1" />
             <Label>Standalone Label</Label>
-            <Separator className="my-2" />
-            <div className="flex h-5 items-center gap-3 text-sm">
-              <span>Left</span>
+            <div className="flex h-5 items-center gap-3">
+              <Text as="span">Left</Text>
               <Separator orientation="vertical" />
-              <span>Right</span>
+              <Text as="span">Right</Text>
             </div>
           </div>
         </Section>

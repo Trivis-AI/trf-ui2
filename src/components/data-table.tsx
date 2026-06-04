@@ -94,7 +94,7 @@ function EditableCell<TData>({ getValue, row, column, table }: CellContext<TData
       className={cn(
         "-mx-1 w-full rounded-sm bg-transparent px-1 py-0.5 outline-none",
         "hover:bg-muted/60 focus:bg-background focus:ring-2 focus:ring-ring",
-        align === "right" && "text-right",
+        align === "right" && "text-right font-mono tabular-nums",
         align === "center" && "text-center"
       )}
       value={value as string}
@@ -283,7 +283,8 @@ export function DataTable<TData>({
                 <TableCell
                   key={cell.id}
                   className={cn(
-                    cell.column.columnDef.meta?.align === "right" && "text-right",
+                    cell.column.columnDef.meta?.align === "right" &&
+                      "text-right font-mono tabular-nums",
                     cell.column.columnDef.meta?.align === "center" && "text-center"
                   )}
                 >

@@ -5,6 +5,10 @@
 // Utils
 export { cn } from "./lib/utils";
 
+// --- Typography ---
+export { H1, H2, H3, Text } from "./components/typography";
+export type { HeadingProps, TextProps } from "./components/typography";
+
 // --- Layout & page scaffolding ---
 export { Stack } from "./components/stack";
 export type { StackProps } from "./components/stack";

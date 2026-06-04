@@ -13,6 +13,15 @@
   --radius: 0.5rem;
 
   /*
+   * Change this ONE value to scale ALL text sizes (analogous to --radius).
+   * Every text size is `rem * --font-scale`, so:
+   *  - browser font-size / zoom is respected (rem), AND
+   *  - an app-level size setting can scale on top of it (S/M/L → set --font-scale).
+   * Default 1. Never set an absolute px root font-size (would break browser scaling).
+   */
+  --font-scale: 1;
+
+  /*
    * Fonts: Geist (UI) + Geist Mono (tables & numbers).
    * The font *files* are loaded by the consuming app via @fontsource-variable/geist[-mono]
    * (see docs/for-consuming-apps.md). These tokens only name the family + fallbacks, so the
@@ -104,6 +113,25 @@
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+
+  /*
+   * Type scale — every size = rem * --font-scale (one knob scales all; rem respects the browser).
+   * Tight, weight-driven scale: 12/14/16 carry the UI; 18/20/24/30 for headings & display.
+   */
+  --text-xs: calc(0.75rem * var(--font-scale));
+  --text-xs--line-height: calc(1rem * var(--font-scale));
+  --text-sm: calc(0.875rem * var(--font-scale));
+  --text-sm--line-height: calc(1.25rem * var(--font-scale));
+  --text-base: calc(1rem * var(--font-scale));
+  --text-base--line-height: calc(1.5rem * var(--font-scale));
+  --text-lg: calc(1.125rem * var(--font-scale));
+  --text-lg--line-height: calc(1.75rem * var(--font-scale));
+  --text-xl: calc(1.25rem * var(--font-scale));
+  --text-xl--line-height: calc(1.75rem * var(--font-scale));
+  --text-2xl: calc(1.5rem * var(--font-scale));
+  --text-2xl--line-height: calc(2rem * var(--font-scale));
+  --text-3xl: calc(1.875rem * var(--font-scale));
+  --text-3xl--line-height: calc(2.25rem * var(--font-scale));
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
+import { H1 } from "./typography";
 
 const SIZE = {
   sm: "max-w-xl",
@@ -31,11 +32,7 @@ export interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   actions?: React.ReactNode;
 }
 
-/**
- * Page title + optional description + actions row.
- * NOTE: the title uses an inline heading style for now; it will adopt the `H1`
- * component once the typography scale is decided (see docs/open-questions.md Q1).
- */
+/** Page title + optional description + actions row. */
 export function PageHeader({
   title,
   description,
@@ -49,9 +46,7 @@ export function PageHeader({
       {...props}
     >
       <div className="flex flex-col gap-1">
-        {title != null && (
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight">{title}</h1>
-        )}
+        {title != null && <H1>{title}</H1>}
         {description != null && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}

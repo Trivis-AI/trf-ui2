@@ -68,5 +68,8 @@ clsx + tailwind-merge (`cn()`) · Lucide icons · Geist + Geist Mono (self-hoste
   sorting, global filter, column drag-reorder, inline editing). TanStack chosen over AG Grid to
   keep ownership + token-native styling; AG Grid was evaluated and reserved for any future
   Excel-grade grid only.
-- **Next** — DropdownMenu, Tabs, Combobox, and the app shell (AppShell, SideMenu, Page/
-  PageHeader, typography). See `docs/STRUCTURE.json`.
+- **Layout + typography** ✅ — `Stack/Row/Grow/Page/PageHeader` and `H1/H2/H3/Text`. Tight,
+  weight-driven type scale on a **one-knob `--font-scale`** (rem-based, browser-respecting,
+  S/M/L-ready); mono + tabular-nums for table numbers.
+- **Next** — DropdownMenu, Tabs, Combobox, and the app shell (AppShell, SideMenu). See
+  `docs/STRUCTURE.json`.
