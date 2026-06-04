@@ -162,3 +162,29 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 }
+
+/*
+ * Cursor: clickable things get a pointer — ONE global rule, never per-component.
+ * Tailwind v4 Preflight (and shadcn) reset native <button> to `cursor: default`. Instead of
+ * sprinkling `cursor-pointer` everywhere, we restore it once here for everything interactive
+ * (native + ARIA roles — Radix renders checkbox/switch/radio/select as role-tagged buttons).
+ * Disabled elements are excluded. DO NOT add cursor-pointer to components.
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]),
+  [role="menuitemradio"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+}

@@ -132,7 +132,7 @@ function HeaderContent<TData>({
       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
       className={cn(
         "inline-flex items-center gap-1",
-        canSort && "cursor-pointer hover:text-foreground"
+        canSort && "hover:text-foreground"
       )}
     >
       {flexRender(header.column.columnDef.header, header.getContext())}

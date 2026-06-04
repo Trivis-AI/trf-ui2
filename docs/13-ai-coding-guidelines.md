@@ -28,6 +28,10 @@ from a consuming app. Keep it simple, fast, and on-system (KISS).
   `text-[13px]`, no arbitrary radii.
 - **CVA** for any component with multiple variants. Variants are typed props.
 - **No `!important`, no inline styles** for anything tokens or Tailwind can express.
+- **Never add `cursor-pointer` to a component.** A global base rule in `tokens.css` already gives
+  every interactive element (`button`, `a[href]`, `[role="button"]`, checkbox/switch/radio/select,
+  etc.) a pointer cursor. Draggable handles are the only exception — they set `cursor-grab`
+  (and `active:cursor-grabbing`) explicitly.
 
 ### Components
 - **Never recreate** Button, Input, Dialog, etc. Import from `@trf/ui2`.
