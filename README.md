@@ -56,7 +56,7 @@ Swap that one file to re-skin the whole system (e.g. when the real Figma/brand t
 ## Stack
 
 React 19 · TypeScript (strict) · Tailwind v4 · Radix UI · class-variance-authority ·
-clsx + tailwind-merge (`cn()`) · Lucide icons.
+clsx + tailwind-merge (`cn()`) · Lucide icons · Geist + Geist Mono (self-hosted via Fontsource).
 
 ## Status
 

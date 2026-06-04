@@ -12,10 +12,16 @@
   /* Change this ONE value to reshape every corner radius in the system. */
   --radius: 0.5rem;
 
-  /* Swap this to change every font in the system. System stack for now (font TBD). */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  /*
+   * Fonts: Geist (UI) + Geist Mono (tables & numbers).
+   * The font *files* are loaded by the consuming app via @fontsource-variable/geist[-mono]
+   * (see docs/for-consuming-apps.md). These tokens only name the family + fallbacks, so the
+   * whole system re-fonts by changing these two lines.
+   */
+  --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", "Cascadia Code",
+    Menlo, Consolas, monospace;
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.21 0.02 264);

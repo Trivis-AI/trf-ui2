@@ -322,17 +322,17 @@ export function App() {
               <TableBody>
                 <TableRow>
                   <TableCell>Net</TableCell>
-                  <TableCell className="text-right">€1,000.00</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">€1,000.00</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>VAT 22%</TableCell>
-                  <TableCell className="text-right">€220.00</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">€220.00</TableCell>
                 </TableRow>
               </TableBody>
               <TableFooter>
                 <TableRow>
                   <TableCell>Total</TableCell>
-                  <TableCell className="text-right">€1,220.00</TableCell>
+                  <TableCell className="text-right font-mono tabular-nums">€1,220.00</TableCell>
                 </TableRow>
               </TableFooter>
             </Table>

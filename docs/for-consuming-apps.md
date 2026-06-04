@@ -12,6 +12,25 @@ npm i file:../trf-ui2
 
 Peer deps the app already has: `react`, `react-dom`, `lucide-react`.
 
+## 1b. Install the fonts (Geist + Geist Mono, self-hosted)
+
+The tokens name **Geist** (UI) and **Geist Mono** (tables/numbers) but don't ship the files.
+Self-host them — GDPR-clean, no external requests:
+
+```bash
+npm i @fontsource-variable/geist @fontsource-variable/geist-mono
+```
+
+Import once at your app entry (e.g. `main.tsx`), before your CSS:
+
+```ts
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
+import "./index.css";
+```
+
+(If you prefer not to self-host, you can skip this — the tokens fall back to the system stack.)
+
 ## 2. Wire up tokens + Tailwind (once, in the app's main CSS)
 
 ```css

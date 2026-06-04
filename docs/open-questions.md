@@ -60,9 +60,8 @@
 
 ## ⚪ Also tracked (known-open from earlier)
 
-- **Visual identity / brand:** colors + font are placeholder tokens in `src/styles/tokens.css` —
+- **Visual identity / brand:** colors are placeholder tokens in `src/styles/tokens.css` —
   swap when Figma/brand lands.
-- **Font choice:** system stack for now; pick a real typeface (ties into Q1).
 - **Multi-tenant theming:** one TRF brand vs per-org / white-label theming — affects token
   architecture (one theme vs themeable-per-tenant).
 
@@ -73,6 +72,9 @@
 - **Foundation:** shadcn-style — owned Radix + Tailwind v4 + CVA, CSS-variable tokens.
 - **Distribution:** raw `.tsx` via `github:triiberg/trf-ui2#main`, no build step.
 - **Icons:** Lucide only (see `05-iconography.md`).
+- **Fonts:** **Geist** (UI) + **Geist Mono** (tables/numbers), self-hosted via
+  `@fontsource-variable/geist[-mono]`. Set in `src/styles/tokens.css`; loading documented in
+  `for-consuming-apps.md`. (Type *scale* still open — Q1.)
 - **Tables:** TanStack (owned) over AG Grid; AG Grid reserved for any future Excel-grade grid
   (see `08-ui-components/table.md`).
 
