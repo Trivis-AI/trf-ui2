@@ -40,18 +40,23 @@
     "DropdownMenu": "08-ui-components/dropdown-menu.md",
     "Table": "08-ui-components/table.md",
     "DataTable": "08-ui-components/table.md",
-    "Logo": "(TRF brand mark — see src/components/logo.tsx; currentColor, defaults to text-primary)",
-    "Badge": "(see src/components/ui/badge.tsx — doc pending)",
-    "Input": "(see src/components/ui/input.tsx — doc pending)",
-    "Textarea": "(see src/components/ui/textarea.tsx — doc pending)",
-    "Field": "(see src/components/ui/field.tsx — doc pending)",
-    "Card": "(see src/components/ui/card.tsx — doc pending)",
-    "Dialog": "(see src/components/ui/dialog.tsx — doc pending)",
-    "Separator": "(see src/components/ui/separator.tsx — doc pending)",
-    "Spinner": "(see src/components/ui/spinner.tsx — doc pending)"
+    "Logo": "(TRF brand mark \u2014 see src/components/logo.tsx; currentColor, defaults to text-primary)",
+    "Badge": "(see src/components/ui/badge.tsx \u2014 doc pending)",
+    "Input": "(see src/components/ui/input.tsx \u2014 doc pending)",
+    "Textarea": "(see src/components/ui/textarea.tsx \u2014 doc pending)",
+    "Field": "(see src/components/ui/field.tsx \u2014 doc pending)",
+    "Card": "(see src/components/ui/card.tsx \u2014 doc pending)",
+    "Dialog": "(see src/components/ui/dialog.tsx \u2014 doc pending)",
+    "Separator": "(see src/components/ui/separator.tsx \u2014 doc pending)",
+    "Spinner": "(see src/components/ui/spinner.tsx \u2014 doc pending)",
+    "Tabs": "08-ui-components/tabs.md"
   },
   "status": {
-    "legend": { "ready": "Follow as-is", "draft": "Usable, may change", "scaffold": "Structure only" },
+    "legend": {
+      "ready": "Follow as-is",
+      "draft": "Usable, may change",
+      "scaffold": "Structure only"
+    },
     "03-design-tokens.md": "ready",
     "05-iconography.md": "ready",
     "07-component-architecture.md": "ready",
@@ -64,6 +69,7 @@
     "08-ui-components/layout.md": "ready",
     "08-ui-components/typography.md": "ready",
     "08-ui-components/sidebar.md": "ready",
-    "08-ui-components/dropdown-menu.md": "ready"
+    "08-ui-components/dropdown-menu.md": "ready",
+    "08-ui-components/tabs.md": "ready"
   }
 }

@@ -15,7 +15,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   EmptyState, Field, Grow, H1, H2, H3, Input, Label, LoadingState,
   Logo, PageHeader, Row, Stack, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
-  SelectItem, SelectTrigger, SelectValue, Separator, Spinner, Switch, Table, TableBody, TableCell,
+  SelectItem, SelectTrigger, SelectValue, Separator, Spinner, Switch, Tabs, TabsContent, TabsList,
+  TabsTrigger, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
 } from "@trf/ui2";
@@ -355,6 +356,20 @@ const GROUPS: GroupDef[] = [
               action={<Button size="sm">New invoice</Button>}
             />
           </>
+        ),
+      },
+      {
+        id: "tabs", label: "Tabs", render: () => (
+          <Tabs defaultValue="overview" className="w-full max-w-md">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="lines">Line items</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview"><Text tone="muted">Invoice summary, customer, totals.</Text></TabsContent>
+            <TabsContent value="lines"><Text tone="muted">The editable line items table.</Text></TabsContent>
+            <TabsContent value="history"><Text tone="muted">Status changes and audit trail.</Text></TabsContent>
+          </Tabs>
         ),
       },
       {

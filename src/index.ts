@@ -130,6 +130,8 @@ export {
   DropdownMenuRadioGroup,
 } from "./components/ui/dropdown-menu";
 
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./components/ui/tabs";
+
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components/ui/alert";
 export type { AlertProps, AlertVariant } from "./components/ui/alert";
 
