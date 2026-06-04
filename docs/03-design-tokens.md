@@ -49,11 +49,12 @@ Use them as Tailwind utilities: `bg-primary`, `text-muted-foreground`, `border-i
 logo** (`Logo` defaults to `text-primary`). Unlike the other tokens it changes *character*, not
 just lightness, between themes:
 
-- **Light:** deep **sea-blue** (`oklch(0.44 0.105 233)`) with white foreground.
+- **Light:** near-black **ink** (`oklch(0.22 0.018 240)` — the same value as the dark-mode
+  background) with white foreground. A sleek dark-button-on-light look.
 - **Dark:** **amber** (`oklch(0.76 0.188 70)`) with dark foreground.
 
 Amber-as-primary fails on light backgrounds (low contrast, reads as a warning), so light uses
-sea-blue; amber returns in dark where it pops. Brand orange source: `#FF9100`.
+the ink; amber returns in dark where it pops. Brand orange source: `#FF9100`.
 
 ## Dark mode
 

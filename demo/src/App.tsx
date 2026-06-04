@@ -259,7 +259,7 @@ export function App() {
           </div>
           <p className="w-full text-xs text-muted-foreground">
             <code>Logo</code> defaults to <code>text-primary</code> — tracks the brand/action color
-            per theme (sea-blue in light, amber in dark). Override via <code>className</code>.
+            per theme (ink in light, amber in dark). Override via <code>className</code>.
           </p>
         </Section>
 

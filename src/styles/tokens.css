@@ -4,8 +4,8 @@
  * Colors are oklch (lightness, chroma, hue). `@theme inline` maps each
  * token to a Tailwind utility so `bg-primary`, `text-muted-foreground`, etc. resolve.
  *
- * Identity: cool blue-gray neutrals with a theme-dependent --primary (sea-blue in light, amber
- * in dark). A starting point — replace with the real Figma/brand theme later.
+ * Identity: cool blue-gray neutrals with a theme-dependent --primary (near-black ink in light,
+ * amber in dark). A starting point — replace with the real Figma/brand theme later.
  */
 
 :root {
@@ -34,8 +34,8 @@
 
   /*
    * Identity: cool blue-gray neutrals (hue ~240). --primary is the brand + action color
-   * (buttons/links/focus/logo) and is theme-dependent: deep SEA-BLUE in light, AMBER in dark.
-   * (Amber-as-primary fails on light backgrounds — low contrast, reads as a warning.)
+   * (buttons/links/focus/logo) and is theme-dependent: near-black INK in light (the same value
+   * as the dark-mode background), AMBER in dark. (Amber-as-primary fails on light backgrounds.)
    */
   --background: oklch(0.98 0.005 240);
   --foreground: oklch(0.22 0.02 240);
@@ -46,7 +46,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.02 240);
 
-  --primary: oklch(0.44 0.105 233);
+  --primary: oklch(0.22 0.018 240);
   --primary-foreground: oklch(0.98 0.005 240);
 
   --secondary: oklch(0.94 0.008 240);
@@ -69,7 +69,7 @@
 
   --border: oklch(0.89 0.012 240);
   --input: oklch(0.89 0.012 240);
-  --ring: oklch(0.44 0.105 233);
+  --ring: oklch(0.22 0.018 240);
 }
 
 .dark {

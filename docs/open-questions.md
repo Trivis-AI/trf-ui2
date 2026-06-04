@@ -91,7 +91,7 @@ verified. Mono + tabular-nums applied to table numbers. See `08-ui-components/ty
 ## ⚪ Also tracked (known-open from earlier)
 
 - **Visual identity / brand:** cool blue-gray neutrals (hue ~240). **`--primary`** = brand +
-  action color, theme-dependent: **sea-blue in light / amber in dark** (logo + buttons track it;
+  action color, theme-dependent: **near-black ink in light / amber in dark** (logo + buttons track it;
   `Logo` defaults to `text-primary`). See `03-design-tokens.md`. Refine when a Figma/brand source
   lands.
 - **Multi-tenant theming:** one TRF brand vs per-org / white-label theming — affects token
