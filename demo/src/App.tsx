@@ -14,7 +14,7 @@ import {
   Checkbox, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader,
   DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
-  EmptyState, Field, Grow, H1, H2, H3, Input, Label, LoadingState,
+  EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState,
   Logo, PageHeader, Row, Stack, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, Separator, Spinner, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -382,6 +382,20 @@ const GROUPS: GroupDef[] = [
               action={<Button size="sm">New invoice</Button>}
             />
           </>
+        ),
+      },
+      {
+        id: "infogrid", label: "Info grid", render: () => (
+          <div className="w-full max-w-lg rounded-lg border border-border p-5">
+            <InfoGrid columns={2}>
+              <InfoField label="Customer">Triiberg AS</InfoField>
+              <InfoField label="Status"><Badge variant="success">Paid</Badge></InfoField>
+              <InfoField label="Issued">2026-05-14</InfoField>
+              <InfoField label="Due">2026-05-28</InfoField>
+              <InfoField label="Reference">INV-1042</InfoField>
+              <InfoField label="Payable"><Text mono>€1,240.00</Text></InfoField>
+            </InfoGrid>
+          </div>
         ),
       },
       {

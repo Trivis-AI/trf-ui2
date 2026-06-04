@@ -52,7 +52,8 @@
     "Tabs": "08-ui-components/tabs.md",
     "Combobox": "08-ui-components/combobox.md",
     "Popover": "08-ui-components/combobox.md",
-    "Command": "08-ui-components/combobox.md"
+    "Command": "08-ui-components/combobox.md",
+    "InfoGrid": "08-ui-components/info-grid.md"
   },
   "status": {
     "legend": {
@@ -74,6 +75,7 @@
     "08-ui-components/sidebar.md": "ready",
     "08-ui-components/dropdown-menu.md": "ready",
     "08-ui-components/tabs.md": "ready",
-    "08-ui-components/combobox.md": "ready"
+    "08-ui-components/combobox.md": "ready",
+    "08-ui-components/info-grid.md": "ready"
   }
 }

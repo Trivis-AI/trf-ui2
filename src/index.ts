@@ -150,6 +150,9 @@ export type { ComboboxProps, ComboboxOption } from "./components/combobox";
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components/ui/alert";
 export type { AlertProps, AlertVariant } from "./components/ui/alert";
 
+export { InfoGrid, InfoField } from "./components/info-grid";
+export type { InfoGridProps, InfoFieldProps } from "./components/info-grid";
+
 export { EmptyState } from "./components/empty-state";
 export type { EmptyStateProps } from "./components/empty-state";
 
