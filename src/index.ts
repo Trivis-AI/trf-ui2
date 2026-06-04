@@ -112,6 +112,24 @@ export {
   SelectSeparator,
 } from "./components/ui/select";
 
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuGroup,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+} from "./components/ui/dropdown-menu";
+
 export { Alert, AlertTitle, AlertDescription, alertVariants } from "./components/ui/alert";
 export type { AlertProps, AlertVariant } from "./components/ui/alert";
 

@@ -37,6 +37,7 @@
     "EmptyState": "08-ui-components/feedback.md",
     "LoadingState": "08-ui-components/feedback.md",
     "Tooltip": "08-ui-components/feedback.md",
+    "DropdownMenu": "08-ui-components/dropdown-menu.md",
     "Table": "08-ui-components/table.md",
     "DataTable": "08-ui-components/table.md",
     "Logo": "(TRF brand mark — see src/components/logo.tsx; currentColor, defaults to text-primary)",
@@ -62,6 +63,7 @@
     "08-ui-components/table.md": "ready",
     "08-ui-components/layout.md": "ready",
     "08-ui-components/typography.md": "ready",
-    "08-ui-components/sidebar.md": "ready"
+    "08-ui-components/sidebar.md": "ready",
+    "08-ui-components/dropdown-menu.md": "ready"
   }
 }

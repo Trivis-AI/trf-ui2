@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
-  Palette, Atom, Combine, Layers,
+  Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
 } from "lucide-react";
 import {
   Alert, AlertDescription, AlertTitle,
@@ -11,7 +11,9 @@ import {
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
   Checkbox, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader,
-  DialogTitle, DialogTrigger, EmptyState, Field, Grow, H1, H2, H3, Input, Label, LoadingState,
+  DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
+  EmptyState, Field, Grow, H1, H2, H3, Input, Label, LoadingState,
   Logo, PageHeader, Row, Stack, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, Separator, Spinner, Switch, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
@@ -309,6 +311,23 @@ const GROUPS: GroupDef[] = [
             <TooltipTrigger asChild><Button variant="secondary" size="sm"><Info /> Hover me</Button></TooltipTrigger>
             <TooltipContent>Reference number is optional.</TooltipContent>
           </Tooltip>
+        ),
+      },
+      {
+        id: "dropdown", label: "Dropdown menu", render: () => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" aria-label="Row actions"><MoreHorizontal /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel>Invoice #1042</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem><Pencil /> Edit <DropdownMenuShortcut>⌘E</DropdownMenuShortcut></DropdownMenuItem>
+              <DropdownMenuItem><Copy /> Duplicate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem destructive><Trash2 /> Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
       },
     ],
