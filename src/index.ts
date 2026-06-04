@@ -73,6 +73,12 @@ export {
   CardFooter,
 } from "./components/ui/card";
 
+export { TableCard } from "./components/ui/table-card";
+export type { TableCardProps } from "./components/ui/table-card";
+
+export { RadioCard } from "./components/ui/radio-card";
+export type { RadioCardProps } from "./components/ui/radio-card";
+
 export { Spinner } from "./components/ui/spinner";
 export type { SpinnerProps, SpinnerSize } from "./components/ui/spinner";
 

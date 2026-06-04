@@ -45,7 +45,7 @@
     "Input": "(see src/components/ui/input.tsx \u2014 doc pending)",
     "Textarea": "(see src/components/ui/textarea.tsx \u2014 doc pending)",
     "Field": "(see src/components/ui/field.tsx \u2014 doc pending)",
-    "Card": "(see src/components/ui/card.tsx \u2014 doc pending)",
+    "Card": "08-ui-components/cards.md",
     "Dialog": "(see src/components/ui/dialog.tsx \u2014 doc pending)",
     "Separator": "(see src/components/ui/separator.tsx \u2014 doc pending)",
     "Spinner": "(see src/components/ui/spinner.tsx \u2014 doc pending)",
@@ -55,7 +55,9 @@
     "Command": "08-ui-components/combobox.md",
     "InfoGrid": "08-ui-components/info-grid.md",
     "StatusBadge": "08-ui-components/status-badge.md",
-    "Skeleton": "08-ui-components/skeleton.md"
+    "Skeleton": "08-ui-components/skeleton.md",
+    "TableCard": "08-ui-components/cards.md",
+    "RadioCard": "08-ui-components/cards.md"
   },
   "status": {
     "legend": {
@@ -80,6 +82,7 @@
     "08-ui-components/combobox.md": "ready",
     "08-ui-components/info-grid.md": "ready",
     "08-ui-components/status-badge.md": "ready",
-    "08-ui-components/skeleton.md": "ready"
+    "08-ui-components/skeleton.md": "ready",
+    "08-ui-components/cards.md": "ready"
   }
 }

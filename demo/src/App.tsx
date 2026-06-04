@@ -9,7 +9,7 @@ import {
   AppShell, Badge, Button, cn, type ColumnDef, DataTable,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox,
+  Combobox, RadioCard, TableCard,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
   Checkbox, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader,
   DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -65,6 +65,16 @@ function ComboboxDemo() {
         emptyText="No customer found."
       />
     </Field>
+  );
+}
+
+function RadioCardDemo() {
+  const [val, setVal] = useState("invoice");
+  return (
+    <div className="grid w-full max-w-lg gap-3 sm:grid-cols-2">
+      <RadioCard selected={val === "invoice"} onClick={() => setVal("invoice")} icon={<Receipt />} title="Invoice" description="A standard sales invoice." />
+      <RadioCard selected={val === "offer"} onClick={() => setVal("offer")} icon={<ScrollText />} title="Offer" description="A price quote / proposal." />
+    </div>
   );
 }
 
@@ -423,6 +433,7 @@ const GROUPS: GroupDef[] = [
           </div>
         ),
       },
+      { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       {
         id: "tabs", label: "Tabs", render: () => (
           <Tabs defaultValue="overview" className="w-full max-w-md">
@@ -515,6 +526,25 @@ const GROUPS: GroupDef[] = [
               <TableFooter><TableRow><TableCell>Total</TableCell><TableCell className="text-right font-mono tabular-nums">€1,220.00</TableCell></TableRow></TableFooter>
             </Table>
           </div>
+        ),
+      },
+      {
+        id: "tablecard", label: "Table card", render: () => (
+          <TableCard
+            className="w-full max-w-md"
+            title="Recent invoices"
+            actions={<Button size="sm" variant="secondary">Export</Button>}
+            footer={<Text size="xs" tone="muted">3 documents</Text>}
+          >
+            <Table>
+              <TableHeader><TableRow><TableHead>Number</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+              <TableBody>
+                <TableRow><TableCell>1042</TableCell><TableCell className="text-right font-mono tabular-nums">€1,240.00</TableCell></TableRow>
+                <TableRow><TableCell>1041</TableCell><TableCell className="text-right font-mono tabular-nums">€380.50</TableCell></TableRow>
+                <TableRow><TableCell>1040</TableCell><TableCell className="text-right font-mono tabular-nums">€96.00</TableCell></TableRow>
+              </TableBody>
+            </Table>
+          </TableCard>
         ),
       },
       { id: "datatable", label: "DataTable", render: () => <InvoiceTable /> },
