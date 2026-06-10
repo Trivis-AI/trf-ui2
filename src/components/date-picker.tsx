@@ -1,11 +1,11 @@
 import * as React from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
-import type { DateRange } from "react-day-picker";
+import type { DateRange, Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 
-export type { DateRange };
+export type { DateRange, Matcher };
 
 interface DatePickerBaseProps {
   /** Trigger text when nothing is selected. */
@@ -22,6 +22,12 @@ interface DatePickerBaseProps {
   startMonth?: Date;
   /** Latest selectable/navigable month. Bounds the year dropdown. */
   endMonth?: Date;
+  /**
+   * Dates that can't be selected, as a react-day-picker matcher (greyed out in the calendar).
+   * E.g. `{ after: new Date() }` to forbid future dates, or `{ before: min }`. Distinct from the
+   * boolean `disabled` below, which disables the whole trigger.
+   */
+  disabledDates?: Matcher | Matcher[];
   id?: string;
   disabled?: boolean;
   className?: string;
@@ -58,6 +64,7 @@ export function DatePicker(props: DatePickerProps) {
     captionLayout = "label",
     startMonth,
     endMonth,
+    disabledDates,
     id,
     disabled,
     className,
@@ -107,6 +114,7 @@ export function DatePicker(props: DatePickerProps) {
             autoFocus
             selected={props.value}
             onSelect={props.onChange}
+            disabled={disabledDates}
             {...navProps}
           />
         ) : (
@@ -118,6 +126,7 @@ export function DatePicker(props: DatePickerProps) {
               props.onChange?.(date);
               setOpen(false);
             }}
+            disabled={disabledDates}
             {...navProps}
           />
         )}
