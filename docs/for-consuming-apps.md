@@ -4,11 +4,16 @@
 
 ## 1. Install
 
+Always pin a **tag** — never `#main` (main moves). Use the latest release tag:
+
 ```bash
-npm i github:triiberg/trf-ui2#main
+npm i github:triiberg/trf-ui2#v0.6.0
 # or, for local side-by-side dev:
 npm i file:../trf-ui2
 ```
+
+> **AI agents:** the caller's migration prompt will specify the exact tag to use. If no tag is
+> specified, check the latest release at github.com/triiberg/trf-ui2/releases before installing.
 
 Peer deps the app already has: `react`, `react-dom`, `lucide-react`.
 
