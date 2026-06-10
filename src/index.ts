@@ -168,6 +168,7 @@ export type {
   SingleDatePickerProps,
   RangeDatePickerProps,
   DateRange,
+  Matcher,
 } from "./components/date-picker";
 
 export { MonthPicker } from "./components/month-picker";

@@ -48,6 +48,7 @@ const [period, setPeriod] = useState<DateRange>();
 | `formatDate?` | `(date: Date) => string` | Trigger label formatter. Defaults to a locale medium date (`09 Jun 2026`). |
 | `captionLayout?` | `"label"` \| `"dropdown"` \| `"dropdown-months"` \| `"dropdown-years"` | Header nav. Default `"label"` (month title + arrows). `"dropdown"` adds month **and** year dropdowns for fast jumping. |
 | `startMonth?` / `endMonth?` | `Date` | Bound the year dropdown. Default ±10 years around now when a dropdown layout is used. |
+| `disabledDates?` | `Matcher \| Matcher[]` | react-day-picker matcher for non-selectable dates (greyed out). E.g. `{ after: new Date() }` to forbid future dates. Distinct from the boolean `disabled` (which disables the whole trigger). |
 | `id` / `disabled` / `className` | | Trigger mirrors the Combobox / Select trigger styling. |
 
 ### Fast navigation (month + year dropdowns)
