@@ -12,7 +12,7 @@ const actionPillVariants = cva(
         default:
           "border-border bg-muted/50 text-foreground hover:bg-muted",
         selected:
-          "border-primary/30 bg-primary/10 font-semibold text-primary hover:bg-primary/15",
+          "border-transparent bg-primary font-semibold text-primary-foreground hover:bg-primary/90",
         primary:
           "border-transparent bg-primary font-semibold text-primary-foreground hover:bg-primary/90",
         warning:
