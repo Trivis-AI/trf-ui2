@@ -395,7 +395,9 @@ export function SidebarMenuSub({
       style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
     >
       <div className="overflow-hidden">
-        <ul className={cn("ml-7 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-1.5", className)}>
+        {/* ml-5 (20px) + the SidebarMenu's px-2 (8px) ⇒ the left border sits at 28px,
+            centered under the parent row's icon. */}
+        <ul className={cn("ml-5 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2.5", className)}>
           {children}
         </ul>
       </div>
