@@ -218,9 +218,17 @@ export function SidebarContent({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
+  const { mobileOpen } = useSidebar();
   return (
     <div
-      className={cn("min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-2", className)}
+      className={cn(
+        "min-h-0 flex-1 overflow-y-auto overflow-x-hidden py-2",
+        // Mobile: the nav body slides up into place as the menu opens (the header bar
+        // stays fixed, so there's no jump). Inert on desktop (max-md:).
+        "max-md:transition-transform max-md:duration-200 max-md:ease-out",
+        mobileOpen ? "max-md:translate-y-0" : "max-md:translate-y-4",
+        className
+      )}
       {...props}
     />
   );
