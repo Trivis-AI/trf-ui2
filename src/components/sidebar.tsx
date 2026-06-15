@@ -168,12 +168,10 @@ export function Sidebar({
           mobileOpen ? "visible opacity-100" : "invisible opacity-0 pointer-events-none"
         )}
       >
-        <aside
-          className={cn(
-            "flex h-full w-full flex-col overflow-hidden bg-card text-card-foreground pb-[env(safe-area-inset-bottom)] transition-transform duration-200 ease-out",
-            mobileOpen ? "translate-y-0" : "-translate-y-3"
-          )}
-        >
+        {/* No transform: the header bar is identical/aligned to the closed-state bar,
+            so a fade (on the wrapper) keeps it visually static — only the body appears. */}
+        <aside className="flex h-full w-full flex-col overflow-hidden bg-card text-card-foreground pb-[env(safe-area-inset-bottom)]">
+
           {/* The header bar (with its own ☰/✕ toggle) is part of `children`, so it
               aligns exactly with the closed-state bar. */}
           <SidebarContext.Provider value={{ ...ctx, collapsed: false }}>
