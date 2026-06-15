@@ -162,18 +162,17 @@ export function Sidebar({
           The mobile-specific sizing lives in the `max-md:` utilities on the rows. */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <aside className="flex h-full w-full flex-col overflow-hidden bg-card text-card-foreground pb-[env(safe-area-inset-bottom)]">
+          <aside className="relative flex h-full w-full flex-col overflow-hidden bg-card text-card-foreground pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+            {/* Close sits on the brand row (top-right), not a separate row. */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="absolute right-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&_svg]:size-6"
+            >
+              <X />
+            </button>
             <SidebarContext.Provider value={{ ...ctx, collapsed: false }}>
-              <div className="flex shrink-0 justify-end px-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(false)}
-                  aria-label="Close menu"
-                  className="flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&_svg]:size-6"
-                >
-                  <X />
-                </button>
-              </div>
               {children}
             </SidebarContext.Provider>
           </aside>
@@ -256,7 +255,7 @@ function FadeLabel({ children, className }: { children: React.ReactNode; classNa
     <span
       className={cn(
         "min-w-0 flex-1 overflow-hidden whitespace-nowrap text-ellipsis transition-[max-width,opacity] duration-200 ease-in-out",
-        collapsed ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100",
+        collapsed ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100 max-md:max-w-none",
         className
       )}
     >
@@ -328,7 +327,7 @@ export function SidebarMenuButton({
       {groupId && (
         <span
           className={cn(
-            "ml-1 flex overflow-hidden transition-[max-width,opacity] duration-200",
+            "ml-auto flex shrink-0 overflow-hidden transition-[max-width,opacity] duration-200",
             collapsed ? "max-w-0 opacity-0" : "max-w-4 opacity-100"
           )}
         >
