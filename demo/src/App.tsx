@@ -36,7 +36,7 @@ function SidebarBrand({ label = "TRF", version }: { label?: string; version?: st
   const { collapsed } = useSidebar();
   return (
     <div className="flex w-full items-center gap-2 overflow-hidden px-4 py-3">
-      <Logo size={24} className="shrink-0" />
+      <Avatar name={label} colorKey={label} size={24} className="shrink-0" />
       <span
         className={cn(
           "flex items-baseline gap-1.5 overflow-hidden whitespace-nowrap font-semibold transition-[max-width,opacity] duration-200",

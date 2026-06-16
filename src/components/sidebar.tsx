@@ -323,7 +323,9 @@ export function SidebarMenuButton({
     // these only affect the full-screen mobile menu).
     "max-md:gap-1 max-md:py-3 max-md:text-base",
     isActive
-      ? "bg-primary/10 font-medium text-primary"
+      // Light: purple ink reads fine on the tinted bg. Dark: the magenta primary is too
+      // dark on the tint, so the active label goes near-white (foreground) for contrast.
+      ? "bg-primary/10 font-medium text-primary dark:text-foreground"
       : "text-foreground hover:bg-accent hover:text-accent-foreground",
     "[&_svg]:size-4 [&_svg]:shrink-0 max-md:[&_svg]:size-5",
     className
