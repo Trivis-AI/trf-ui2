@@ -117,15 +117,20 @@ export async function mintOrgToken(
   slug: string,
   opts?: { apiBase?: string; signal?: AbortSignal },
 ): Promise<RenewResult> {
+  // The account session cookie (`jwt_token`) is HttpOnly, so JS can't read it — it is
+  // auto-sent with credentials:'include'. Send a Bearer only if we actually have one in JS
+  // (a cached org token, or a non-HttpOnly token on native/legacy); never send `Bearer:
+  // null`, which would defeat the server's cookie fallback.
   const bearer = readCookie(ACCOUNT_COOKIE) ?? readCache(slug);
-  if (!bearer) return { token: null, unauthorized: true };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (bearer) headers.Bearer = bearer;
 
   const base = opts?.apiBase ?? loginApiBase();
   try {
     const res = await fetch(`${base}/v1/account/org-token`, {
       method: 'POST',
       credentials: 'include',
-      headers: { Bearer: bearer, 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ slug }),
       signal: opts?.signal,
     });
