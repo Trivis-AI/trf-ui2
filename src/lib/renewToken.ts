@@ -1,28 +1,35 @@
-// Session-token renewal.
+// Org-token acquisition.
 //
-// The org-scoped session JWT (cookie `trf_jwt_<slug>`) carries the permission
-// bitmask `p`, and trfbacklogin now mints it with a 30-day TTL. Calling
-// POST /v1/account/renew-token re-reads the caller's role from the database and
-// re-issues a fresh token, so role changes (downgrade / removal) propagate
-// without a full re-login, and the expiry rolls forward while the user is active.
+// Org-scoped session JWTs are no longer stored as one cookie per org. That design sent
+// every `trf_jwt_<slug>` cookie on every request to `*.trivis.ee` (the browser auto-
+// attaches them even though no backend reads them — backends read the `Bearer` header the
+// JS sets), so at ~20 orgs the Cookie header blew past the 8 KB nginx/ALB limit → 400/431.
 //
-// Backend contract (trfbacklogin):
-//   POST {login-api}/v1/account/renew-token
-//   header: `Bearer: <current org jwt>`   (literal "Bearer" header, as billing uses)
-//   200 -> { token: "<fresh jwt>", ... }   (ReturnWithHeaders returns the DTO directly)
-//   401 -> session expired or membership revoked -> caller should send user to login.
+// Instead, each tab MINTS the org token for the slug in its URL via
+// `POST /v1/account/org-token`, authenticated by the account session cookie (`jwt_token`),
+// and caches it in memory + `sessionStorage` (per tab, never sent as a cookie). The Cookie
+// header is now one constant-size account cookie regardless of org count, so an accountant
+// can switch between thousands of orgs. The mint re-reads the role from the DB and is
+// denied for removed members (see AUTH_UPGRADE.md), so this also keeps permissions fresh.
+//
+// Backwards-compatible: if a legacy `trf_jwt_<slug>` cookie still exists it is used and
+// seeded into the cache, so sessions created before the cutover keep working.
 
 import { useEffect, useRef, useState } from 'react';
 
-/** CORS-enabled login API base derived from the current host, e.g.
- *  `app.trivis.ee` -> `https://login-api.trivis.ee`. Mirrors app-shell apexFor(). */
+const ACCOUNT_COOKIE = 'jwt_token';        // account session, set at login on the apex
+const LEGACY_PREFIX = 'trf_jwt_';          // pre-cutover per-org cookies
+const CACHE_PREFIX = 'trf_org_jwt_';       // sessionStorage key for the minted org token
+const REFRESH_SKEW_MS = 60 * 1000;         // re-mint when within this window of expiry
+
+/** Apex host, e.g. `crm.trivis.ee` -> `trivis.ee`. Mirrors app-shell apexFor(). */
 function apexHost(): string {
   if (typeof window === 'undefined') return 'trf.is';
   const parts = window.location.hostname.split('.');
   return parts.length >= 2 ? parts.slice(-2).join('.') : 'trf.is';
 }
 
-/** CORS-enabled login API base, e.g. `app.trivis.ee` -> `https://login-api.trivis.ee`. */
+/** CORS-enabled login API base, e.g. `crm.trivis.ee` -> `https://login-api.trivis.ee`. */
 function loginApiBase(): string {
   return `https://login-api.${apexHost()}`;
 }
@@ -33,55 +40,148 @@ function loginPortalBase(): string {
 }
 
 function readCookie(name: string): string | null {
-  // JWT is base64url (cookie-safe), so read it raw — matches app-shell orgJwt().
   const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return m ? m[1] : null;
 }
 
-function writeOrgCookie(name: string, value: string): void {
-  const parts = window.location.hostname.split('.');
-  const domain = parts.length >= 2 ? `; domain=.${parts.slice(-2).join('.')}` : '';
-  const secure = window.location.protocol === 'https:' ? '; secure' : '';
-  // 30-day cookie on the apex domain so every *.<apex> app shares it (mirrors the
-  // theme cookie + the original login-portal cookie). max-age tracks the JWT TTL.
-  document.cookie = `${name}=${value}; path=/; max-age=2592000; samesite=lax${domain}${secure}`;
+/** Expiry (ms) from a JWT's `exp`, or 0 if it can't be read. */
+function jwtExpMs(token: string): number {
+  try {
+    const [, payload] = token.split('.');
+    const claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return claims?.exp ? claims.exp * 1000 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** A token is usable if it exists and isn't within the refresh window of expiring.
+ *  Unknown-exp tokens are treated as usable (the server is the real gate). */
+function fresh(token: string | null): boolean {
+  if (!token) return false;
+  const exp = jwtExpMs(token);
+  return exp === 0 ? true : exp - Date.now() > REFRESH_SKEW_MS;
+}
+
+// In-memory cache (per tab / JS context) — the fastest path and the source of truth for
+// the current tab; sessionStorage backs it so a reload doesn't force a re-mint.
+const mem = new Map<string, string>();
+
+function cacheKey(slug: string): string {
+  return CACHE_PREFIX + slug;
+}
+
+function writeCache(slug: string, token: string): void {
+  mem.set(slug, token);
+  try {
+    sessionStorage.setItem(cacheKey(slug), token);
+  } catch {
+    /* ignore quota/availability errors — memory cache still holds it */
+  }
+}
+
+function readCache(slug: string): string | null {
+  const m = mem.get(slug);
+  if (m) return m;
+  try {
+    const s = sessionStorage.getItem(cacheKey(slug));
+    if (s) {
+      mem.set(slug, s);
+      return s;
+    }
+  } catch {
+    /* sessionStorage unavailable (rare) — fall through */
+  }
+  // Migration: a legacy per-org cookie still identifies the org; use and seed it.
+  const legacy = readCookie(LEGACY_PREFIX + slug);
+  if (legacy) {
+    writeCache(slug, legacy);
+    return legacy;
+  }
+  return null;
 }
 
 export interface RenewResult {
   token: string | null;
-  /** true when the server explicitly rejected the token (expired / revoked). */
+  /** true when the server rejected the credential (expired / membership revoked). */
   unauthorized: boolean;
 }
 
 /**
- * Renews the `trf_jwt_<slug>` token. On success writes the fresh token back to the
- * cookie and returns it. Returns `{ token: null }` on network failure (keep the old
- * token) and `{ token: null, unauthorized: true }` on 401 (session/membership gone).
+ * Mints a fresh org token for `slug` via POST /v1/account/org-token. The bearer credential
+ * is the account session cookie; failing that, any cached/legacy org token (which still
+ * identifies the account server-side). Returns `{unauthorized:true}` when there is no
+ * session or the server rejects it (401) — caller should send the user to login.
  */
-export async function renewOrgToken(
+export async function mintOrgToken(
   slug: string,
   opts?: { apiBase?: string; signal?: AbortSignal },
 ): Promise<RenewResult> {
-  const cookieName = `trf_jwt_${slug}`;
-  const current = readCookie(cookieName);
-  if (!current) return { token: null, unauthorized: false };
+  const bearer = readCookie(ACCOUNT_COOKIE) ?? readCache(slug);
+  if (!bearer) return { token: null, unauthorized: true };
 
   const base = opts?.apiBase ?? loginApiBase();
   try {
-    const res = await fetch(`${base}/v1/account/renew-token`, {
+    const res = await fetch(`${base}/v1/account/org-token`, {
       method: 'POST',
       credentials: 'include',
-      headers: { Bearer: current },
+      headers: { Bearer: bearer, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug }),
       signal: opts?.signal,
     });
     if (res.status === 401) return { token: null, unauthorized: true };
     if (!res.ok) return { token: null, unauthorized: false };
     const data: { token?: string } = await res.json();
     if (!data?.token) return { token: null, unauthorized: false };
-    writeOrgCookie(cookieName, data.token);
+    writeCache(slug, data.token);
     return { token: data.token, unauthorized: false };
   } catch {
-    return { token: null, unauthorized: false }; // network blip — keep current token
+    return { token: null, unauthorized: false }; // network blip — keep whatever we have
+  }
+}
+
+/**
+ * Returns a usable org token for `slug`: the cached one if still fresh, otherwise a freshly
+ * minted one. On a non-auth mint failure (network/5xx) it falls back to the (possibly
+ * stale) cached token so the app keeps working; the server validates it regardless.
+ */
+export async function getOrgToken(
+  slug: string,
+  opts?: { apiBase?: string; signal?: AbortSignal },
+): Promise<RenewResult> {
+  const cached = readCache(slug);
+  if (fresh(cached)) return { token: cached, unauthorized: false };
+  const minted = await mintOrgToken(slug, opts);
+  if (minted.token || minted.unauthorized) return minted;
+  return { token: cached, unauthorized: false };
+}
+
+/** Synchronous best-effort read (memory → sessionStorage → legacy cookie). Use where
+ *  awaiting a mint is impractical; pair with `getOrgToken` to refresh. */
+export function peekOrgToken(slug: string | null | undefined): string | null {
+  return slug ? readCache(slug) : null;
+}
+
+/** @deprecated Renamed to {@link getOrgToken}; kept for back-compat. */
+export async function renewOrgToken(
+  slug: string,
+  opts?: { apiBase?: string; signal?: AbortSignal },
+): Promise<RenewResult> {
+  return getOrgToken(slug, opts);
+}
+
+/** Deletes legacy `trf_jwt_<slug>` cookies so they stop bloating the request header. Safe
+ *  to call on every app load during/after the cutover — org tokens now live in the cache. */
+export function clearLegacyOrgCookies(): void {
+  if (typeof document === 'undefined') return;
+  const parts = window.location.hostname.split('.');
+  const domain = parts.length >= 2 ? `; domain=.${parts.slice(-2).join('.')}` : '';
+  for (const c of document.cookie.split(';')) {
+    const name = c.split('=')[0].trim();
+    if (name.startsWith(LEGACY_PREFIX)) {
+      document.cookie = `${name}=; path=/; max-age=0; samesite=lax${domain}`;
+      document.cookie = `${name}=; path=/; max-age=0`; // host-only variant, just in case
+    }
   }
 }
 
@@ -95,19 +195,17 @@ export interface UseRenewingTokenOptions {
 }
 
 /**
- * Returns the current org-scoped token as reactive state, renewing it on mount,
- * on tab focus, and every `intervalMs`. Drop-in replacement for a plain cookie read
- * in each app's `useOrgToken`, so `PermsProvider` re-renders with fresh permissions.
+ * Returns the org-scoped token for `slug` as reactive state, minting it on mount, on tab
+ * focus, and every `intervalMs`. Drop-in replacement for the old cookie-reading hook, so
+ * `PermsProvider` re-renders with fresh permissions. Tokens are cached per tab; nothing is
+ * written to cookies.
  */
 export function useRenewingOrgToken(
   slug: string | null | undefined,
   opts: UseRenewingTokenOptions = {},
 ): string | null {
   const { intervalMs = 30 * 60 * 1000, onUnauthorized, apiBase } = opts;
-  const [token, setToken] = useState<string | null>(() =>
-    slug ? readCookie(`trf_jwt_${slug}`) : null,
-  );
-  // Keep callbacks/options out of the effect deps so they don't re-arm the timer.
+  const [token, setToken] = useState<string | null>(() => (slug ? readCache(slug) : null));
   const cbRef = useRef(onUnauthorized);
   cbRef.current = onUnauthorized;
 
@@ -116,13 +214,13 @@ export function useRenewingOrgToken(
       setToken(null);
       return;
     }
-    setToken(readCookie(`trf_jwt_${slug}`));
+    setToken(readCache(slug));
 
     let cancelled = false;
     const controller = new AbortController();
 
     const run = async () => {
-      const { token: fresh, unauthorized } = await renewOrgToken(slug, {
+      const { token: freshToken, unauthorized } = await getOrgToken(slug, {
         apiBase,
         signal: controller.signal,
       });
@@ -132,7 +230,7 @@ export function useRenewingOrgToken(
         else window.location.href = loginPortalBase();
         return;
       }
-      if (fresh) setToken(fresh);
+      if (freshToken) setToken(freshToken);
     };
 
     run();
