@@ -9,7 +9,7 @@ import {
   AppShell, Badge, Button, cn, type ColumnDef, DataTable,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox, AsyncCombobox, EntityCombobox, type EntityComboboxItem, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
+  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
@@ -74,20 +74,53 @@ function SearchInputDemo() {
   );
 }
 
+const ACCOUNTS = [
+  { code: "400", name: "Kaubad, toore, materjal ja teenused" },
+  { code: "401", name: "Elekter, vesi, küte" },
+  { code: "410", name: "Tööjõukulud" },
+  { code: "271", name: "Kapitalirent (lühiajaline)" },
+  { code: "281", name: "Kapitalirendi kohustus (pikaajaline)" },
+  { code: "153", name: "Masinad ja seadmed" },
+  { code: "154", name: "Muu materiaalne põhivara" },
+  { code: "100", name: "Kassa" },
+].map((a) => ({ value: a.code, label: `${a.code} ${a.name}`, data: { code: a.code } }));
+
+const ACCOUNT_PRESETS: ComboboxPreset<{ code: string }>[] = [
+  { label: "Expenses", match: (o) => !!o.data?.code.startsWith("4") },
+  { label: "Leasing", match: (o) => !!o.data && (o.data.code.startsWith("27") || o.data.code.startsWith("28")) },
+  { label: "Fixed assets", match: (o) => !!o.data?.code.startsWith("15") },
+  { label: "All", match: () => true },
+];
+
 function ComboboxDemo() {
   const [customer, setCustomer] = useState("Triiberg AS");
+  const [account, setAccount] = useState("400");
   return (
-    <Field label="Customer" htmlFor="customer" className="w-72">
-      <Combobox
-        id="customer"
-        options={CUSTOMERS}
-        value={customer}
-        onChange={setCustomer}
-        placeholder="Pick a customer…"
-        searchPlaceholder="Search customers…"
-        emptyText="No customer found."
-      />
-    </Field>
+    <>
+      <Field label="Customer" htmlFor="customer" className="w-72">
+        <Combobox
+          id="customer"
+          options={CUSTOMERS}
+          value={customer}
+          onChange={setCustomer}
+          placeholder="Pick a customer…"
+          searchPlaceholder="Search customers…"
+          emptyText="No customer found."
+        />
+      </Field>
+      <Field label="Account" htmlFor="account" description="With category preset pills." className="w-72">
+        <Combobox
+          id="account"
+          options={ACCOUNTS}
+          presets={ACCOUNT_PRESETS}
+          value={account}
+          onChange={setAccount}
+          placeholder="Select account…"
+          searchPlaceholder="Search accounts…"
+          emptyText="No account found."
+        />
+      </Field>
+    </>
   );
 }
 

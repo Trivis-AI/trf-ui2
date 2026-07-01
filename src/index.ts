@@ -163,7 +163,7 @@ export { SimpleSelect } from "./components/simple-select";
 export type { SimpleSelectProps, SimpleSelectOption } from "./components/simple-select";
 
 export { Combobox } from "./components/combobox";
-export type { ComboboxProps, ComboboxOption } from "./components/combobox";
+export type { ComboboxProps, ComboboxOption, ComboboxPreset } from "./components/combobox";
 
 export { AsyncCombobox } from "./components/async-combobox";
 export type { AsyncComboboxProps } from "./components/async-combobox";

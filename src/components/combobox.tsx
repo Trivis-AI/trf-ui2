@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { ActionPill } from "./ui/action-pill";
 import {
   Command,
   CommandEmpty,
@@ -11,13 +12,20 @@ import {
   CommandList,
 } from "./ui/command";
 
-export interface ComboboxOption {
+export interface ComboboxOption<T = unknown> {
   value: string;
   label: string;
+  /** Arbitrary payload for preset filtering (e.g. account type) — not rendered. */
+  data?: T;
 }
 
-export interface ComboboxProps {
-  options: ComboboxOption[];
+export interface ComboboxPreset<T = unknown> {
+  label: string;
+  match: (option: ComboboxOption<T>) => boolean;
+}
+
+export interface ComboboxProps<T = unknown> {
+  options: ComboboxOption<T>[];
   value?: string;
   onChange?: (value: string) => void;
   /** Trigger text when nothing is selected. */
@@ -29,13 +37,19 @@ export interface ComboboxProps {
   id?: string;
   disabled?: boolean;
   className?: string;
+  /**
+   * Category filter pills shown between the search box and the results (e.g. "Expenses" /
+   * "Leasing" / "Fixed assets" / "All" for a chart-of-accounts picker). The first preset is
+   * active by default; requires at least 2 presets to render.
+   */
+  presets?: ComboboxPreset<T>[];
 }
 
 /**
  * Single-select autocomplete (Popover + Command). The accessible, filterable replacement for the
- * old AccountCombobox — e.g. a customer picker.
+ * old AccountCombobox — e.g. a customer picker. Pass `presets` to bring back its category pills.
  */
-export function Combobox({
+export function Combobox<T = unknown>({
   options,
   value,
   onChange,
@@ -45,9 +59,15 @@ export function Combobox({
   id,
   disabled,
   className,
-}: ComboboxProps) {
+  presets,
+}: ComboboxProps<T>) {
   const [open, setOpen] = React.useState(false);
+  const [activePreset, setActivePreset] = React.useState(0);
   const selected = options.find((o) => o.value === value);
+  const visible =
+    presets && presets.length > 1
+      ? options.filter(presets[activePreset]?.match ?? (() => true))
+      : options;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -76,10 +96,23 @@ export function Combobox({
       >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
+          {presets && presets.length > 1 && (
+            <div className="flex flex-wrap gap-1 border-b border-border p-2">
+              {presets.map((p, i) => (
+                <ActionPill
+                  key={p.label}
+                  variant={activePreset === i ? "selected" : "default"}
+                  onClick={() => setActivePreset(i)}
+                >
+                  {p.label}
+                </ActionPill>
+              ))}
+            </div>
+          )}
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((o) => (
+              {visible.map((o) => (
                 <CommandItem
                   key={o.value}
                   value={o.label}
