@@ -22,7 +22,11 @@ import {
   TabsTrigger, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
+  ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig,
 } from "@trf/ui2";
+import {
+  AreaChart as RAreaChart, Area, CartesianGrid, XAxis, YAxis,
+} from "recharts";
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -405,6 +409,105 @@ function StatementTableDemo() {
         labelHeader="Item"
         valueHeaders={["31.12.2026", "31.12.2025"]}
       />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------- section: Chart */
+
+// Monthly revenue in euros — realistic shape (Estonian retail/services
+// seasonality: a summer dip, a year-end push), not a random/stock demo.
+const REVENUE_DATA = [
+  { month: "Jaan", revenue: 18400, expenses: 12100 },
+  { month: "Veebr", revenue: 19850, expenses: 12800 },
+  { month: "Märts", revenue: 24200, expenses: 14300 },
+  { month: "Apr", revenue: 26100, expenses: 15200 },
+  { month: "Mai", revenue: 25300, expenses: 14900 },
+  { month: "Juuni", revenue: 21700, expenses: 13600 },
+  { month: "Juuli", revenue: 17900, expenses: 12400 },
+  { month: "Aug", revenue: 19200, expenses: 12700 },
+  { month: "Sept", revenue: 27400, expenses: 15800 },
+  { month: "Okt", revenue: 29600, expenses: 16400 },
+  { month: "Nov", revenue: 31200, expenses: 17100 },
+  { month: "Dets", revenue: 34800, expenses: 18500 },
+] satisfies { month: string; revenue: number; expenses: number }[];
+
+const REVENUE_CHART_CONFIG = {
+  revenue: { label: "Müügitulu", color: "var(--chart-1)" },
+  expenses: { label: "Kulud", color: "var(--chart-4)" },
+} satisfies ChartConfig;
+
+function ChartDemo() {
+  return (
+    <div className="flex w-full max-w-2xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Kuine müügitulu</CardTitle>
+          <CardDescription>Jaanuar – detsember 2026</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={REVENUE_CHART_CONFIG} className="aspect-auto h-72 w-full">
+            <RAreaChart data={REVENUE_DATA} margin={{ left: 4, right: 4 }}>
+              <defs>
+                <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                width={48}
+                tickFormatter={(v: number) => `€${Math.round(v / 1000)}k`}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name) => (
+                      <div className="flex w-full items-center justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          {REVENUE_CHART_CONFIG[name as keyof typeof REVENUE_CHART_CONFIG]?.label ?? name}
+                        </span>
+                        <span className="font-mono font-medium tabular-nums text-foreground">
+                          €{Number(value).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  />
+                }
+              />
+              <Area
+                dataKey="expenses"
+                type="monotone"
+                fill="url(#fillExpenses)"
+                stroke="var(--color-expenses)"
+                strokeWidth={2}
+                stackId="a"
+              />
+              <Area
+                dataKey="revenue"
+                type="monotone"
+                fill="url(#fillRevenue)"
+                stroke="var(--color-revenue)"
+                strokeWidth={2}
+                stackId="b"
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+            </RAreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+      <Text size="xs" tone="muted">
+        ↑ `ChartContainer` + `ChartTooltip`/`ChartLegend` around Recharts — series colors come
+        from `ChartConfig` (`--chart-1`…`--chart-5` tokens), so light/dark just work.
+      </Text>
     </div>
   );
 }
@@ -1255,6 +1358,7 @@ const GROUPS: GroupDef[] = [
         ),
       },
       { id: "datatable", label: "DataTable", render: () => <InvoiceTable /> },
+      { id: "chart", label: "Chart", render: () => <ChartDemo /> },
       { id: "sidebar", label: "App shell / Sidebar", render: () => <SidebarDemo /> },
     ],
   },

@@ -84,7 +84,10 @@
     "StepCard": "08-ui-components/step-card.md",
     "ChatMessage": "08-ui-components/chat.md",
     "TypingIndicator": "08-ui-components/chat.md",
-    "ChatComposer": "08-ui-components/chat.md"
+    "ChatComposer": "08-ui-components/chat.md",
+    "ChartContainer": "08-ui-components/chart.md",
+    "ChartTooltip": "08-ui-components/chart.md",
+    "ChartLegend": "08-ui-components/chart.md"
   },
   "status": {
     "legend": {
