@@ -10,7 +10,7 @@ another element (e.g. a router `<Link>`).
 | Prop | Type | Default | Notes |
 |---|---|---|---|
 | `variant` | `primary \| secondary \| destructive \| ghost \| link` | `primary` | Visual intent. |
-| `size` | `sm \| md \| lg \| icon` | `md` | `icon` is square; pass an `aria-label`. |
+| `size` | `sm \| md \| lg \| icon \| icon-xs` | `md` | `icon`/`icon-xs` are square; pass an `aria-label`. `icon-xs` is for dense contexts (e.g. `Attachment` actions). |
 | `asChild` | `boolean` | `false` | Render the child as the button, merging styles onto it. |
 | ...rest | `button` attributes | — | `onClick`, `disabled`, `type`, etc. |
 

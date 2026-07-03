@@ -3,9 +3,13 @@ import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
+  FileText, ImageIcon, X, Download,
 } from "lucide-react";
 import {
   ActionPill, Alert, AlertDescription, AlertTitle, Avatar,
+  Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
+  AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
+  AttachmentDropzone, type AttachmentDropzoneFile,
   AppShell, Badge, Button, cn, type ColumnDef, DataTable,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
@@ -537,6 +541,158 @@ function ActionPillDemo() {
           Unpaid only
         </ActionPill>
       </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------- section: Attachment */
+
+const ATTACHMENT_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23a78bfa'/%3E%3C/svg%3E";
+
+function AttachmentDemo() {
+  return (
+    <div className="flex w-full max-w-2xl flex-col gap-6">
+      <div className="flex flex-wrap items-start gap-3">
+        <Attachment>
+          <AttachmentMedia><FileText /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>invoice-1042.pdf</AttachmentTitle>
+            <AttachmentDescription>PDF · 214 KB</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction aria-label="Remove"><X /></AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
+        <Attachment>
+          <AttachmentMedia variant="image"><img src={ATTACHMENT_IMG} alt="" /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>receipt.png</AttachmentTitle>
+            <AttachmentDescription>PNG · 1.1 MB</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction aria-label="Download"><Download /></AttachmentAction>
+            <AttachmentAction aria-label="Remove"><X /></AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
+      </div>
+
+      <div className="flex flex-wrap items-start gap-3">
+        <Attachment state="idle">
+          <AttachmentMedia><FileText /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>Waiting to upload</AttachmentTitle>
+            <AttachmentDescription>Idle</AttachmentDescription>
+          </AttachmentContent>
+        </Attachment>
+        <Attachment state="uploading">
+          <AttachmentMedia><FileText /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>bank-statement.csv</AttachmentTitle>
+            <AttachmentDescription>Uploading…</AttachmentDescription>
+          </AttachmentContent>
+        </Attachment>
+        <Attachment state="processing">
+          <AttachmentMedia><FileText /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>bank-statement.csv</AttachmentTitle>
+            <AttachmentDescription>Processing…</AttachmentDescription>
+          </AttachmentContent>
+        </Attachment>
+        <Attachment state="error">
+          <AttachmentMedia><FileText /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>bank-statement.csv</AttachmentTitle>
+            <AttachmentDescription>Upload failed</AttachmentDescription>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction aria-label="Retry"><Download /></AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
+      </div>
+
+      <div className="flex flex-wrap items-start gap-3">
+        <Attachment size="sm">
+          <AttachmentMedia><ImageIcon /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>Small</AttachmentTitle>
+            <AttachmentDescription>size="sm"</AttachmentDescription>
+          </AttachmentContent>
+        </Attachment>
+        <Attachment size="xs">
+          <AttachmentMedia><ImageIcon /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>Extra small</AttachmentTitle>
+            <AttachmentDescription>size="xs"</AttachmentDescription>
+          </AttachmentContent>
+        </Attachment>
+        <Attachment orientation="vertical">
+          <AttachmentTrigger aria-label="Open receipt.png" />
+          <AttachmentMedia variant="image"><img src={ATTACHMENT_IMG} alt="" /></AttachmentMedia>
+          <AttachmentContent>
+            <AttachmentTitle>receipt.png</AttachmentTitle>
+          </AttachmentContent>
+          <AttachmentActions>
+            <AttachmentAction aria-label="Remove"><X /></AttachmentAction>
+          </AttachmentActions>
+        </Attachment>
+      </div>
+
+      <div className="w-full">
+        <Text size="xs" tone="muted" className="mb-2 block">AttachmentGroup — scrolls horizontally</Text>
+        <AttachmentGroup className="max-w-md">
+          {["contract.pdf", "invoice-1042.pdf", "logo.png", "terms.docx", "photo.jpg"].map((name) => (
+            <Attachment key={name} size="sm">
+              <AttachmentMedia><FileText /></AttachmentMedia>
+              <AttachmentContent>
+                <AttachmentTitle>{name}</AttachmentTitle>
+              </AttachmentContent>
+            </Attachment>
+          ))}
+        </AttachmentGroup>
+      </div>
+    </div>
+  );
+}
+
+function AttachmentDropzoneDemo() {
+  const [files, setFiles] = useState<AttachmentDropzoneFile[]>([]);
+  const nextId = useRef(1);
+
+  const handleFilesAdded = (added: File[]) => {
+    const withIds: AttachmentDropzoneFile[] = added.map((file) => ({
+      id: String(nextId.current++),
+      file,
+      state: "uploading",
+    }));
+    setFiles((fs) => [...fs, ...withIds]);
+    withIds.forEach((f) => {
+      setTimeout(() => {
+        setFiles((fs) =>
+          fs.map((x) =>
+            x.id !== f.id
+              ? x
+              : /fail/i.test(f.file.name)
+                ? { ...x, state: "error", description: "Upload failed — try again" }
+                : { ...x, state: "done" }
+          )
+        );
+      }, 1200);
+    });
+  };
+
+  return (
+    <div className="w-full max-w-xl">
+      <AttachmentDropzone
+        files={files}
+        onFilesAdded={handleFilesAdded}
+        onRemove={(id) => setFiles((fs) => fs.filter((x) => x.id !== id))}
+        accept="image/*,application/pdf,.csv,.docx"
+      />
+      <Text size="xs" tone="muted" className="mt-2 block">
+        Drag a file here, paste an image (⌘V), or click to browse — it "uploads" for 1.2s. Name a
+        file with "fail" in it to see the error state.
+      </Text>
     </div>
   );
 }
@@ -1268,6 +1424,8 @@ const GROUPS: GroupDef[] = [
       { id: "markdown", label: "Markdown", render: () => <MarkdownDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
+      { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
+      { id: "attachment-dropzone", label: "Attachment dropzone", render: () => <AttachmentDropzoneDemo /> },
       {
         id: "tabs", label: "Tabs", render: () => (
           <Tabs defaultValue="overview" className="w-full max-w-md">

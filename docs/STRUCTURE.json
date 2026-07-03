@@ -53,6 +53,9 @@
     "StatementTable": "08-ui-components/statement-table.md",
     "EditableGrid": "08-ui-components/editable-grid.md",
     "Logo": "(TRF brand mark \u2014 see src/components/logo.tsx; currentColor, defaults to text-primary)",
+    "Attachment": "08-ui-components/attachment.md",
+    "AttachmentDropzone": "08-ui-components/attachment-dropzone.md",
+    "useFileDrop": "08-ui-components/attachment-dropzone.md",
     "Badge": "08-ui-components/badge.md",
     "ActionPill": "08-ui-components/action-pill.md",
     "Input": "08-ui-components/inputs.md",
@@ -129,6 +132,8 @@
     "08-ui-components/separator.md": "ready",
     "08-ui-components/spinner.md": "ready",
     "08-ui-components/chat.md": "ready",
+    "08-ui-components/attachment.md": "ready",
+    "08-ui-components/attachment-dropzone.md": "ready",
     "14-migration-guide.md": "ready",
     "15-migration-infra.md": "ready"
   }

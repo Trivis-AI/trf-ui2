@@ -243,6 +243,35 @@ export type { AvatarProps } from "./components/avatar";
 
 export { Skeleton } from "./components/ui/skeleton";
 
+// --- Attachments ---
+export {
+  Attachment,
+  AttachmentMedia,
+  AttachmentContent,
+  AttachmentTitle,
+  AttachmentDescription,
+  AttachmentActions,
+  AttachmentAction,
+  AttachmentTrigger,
+  AttachmentGroup,
+  attachmentVariants,
+  attachmentMediaVariants,
+} from "./components/ui/attachment";
+export type {
+  AttachmentProps,
+  AttachmentSize,
+  AttachmentOrientation,
+  AttachmentState,
+  AttachmentMediaProps,
+  AttachmentTriggerProps,
+} from "./components/ui/attachment";
+
+export { useFileDrop } from "./hooks/useFileDrop";
+export type { UseFileDropOptions, UseFileDropResult } from "./hooks/useFileDrop";
+
+export { AttachmentDropzone } from "./components/attachment-dropzone";
+export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";
+
 // --- Copy & secrets ---
 export { CopyField } from "./components/copy-field";
 export type { CopyFieldProps } from "./components/copy-field";
