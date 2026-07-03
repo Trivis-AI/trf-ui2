@@ -178,7 +178,7 @@ export function AttachmentGroup({ className, ...props }: React.HTMLAttributes<HT
       className={cn(
         "flex min-w-0 snap-x snap-mandatory scroll-px-1 gap-3 overflow-x-auto overscroll-x-contain py-1",
         "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        "[mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1rem),transparent)]",
+        "scroll-fade-x",
         "*:data-[slot=attachment]:flex-none *:data-[slot=attachment]:snap-start",
         className
       )}

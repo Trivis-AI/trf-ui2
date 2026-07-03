@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FileText, Upload, X } from "lucide-react";
+import { FilePlus, FileText, Upload, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useFileDrop } from "../hooks/useFileDrop";
 import {
@@ -14,6 +14,7 @@ import {
   type AttachmentState,
 } from "./ui/attachment";
 import { Text } from "./typography";
+import { Button } from "./ui/button";
 
 export interface AttachmentDropzoneFile {
   id: string;
@@ -82,6 +83,23 @@ export function AttachmentDropzone({
     disabled,
   });
 
+  const images = files.filter(({ file }) => file.type.startsWith("image/"));
+  const otherFiles = files.filter(({ file }) => !file.type.startsWith("image/"));
+
+  const addButton = (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      onClick={open}
+      disabled={disabled}
+      className="self-center shrink-0"
+    >
+      <FilePlus className="size-4" />
+      Select files...
+    </Button>
+  );
+
   return (
     <div
       {...dropzoneProps}
@@ -104,21 +122,46 @@ export function AttachmentDropzone({
       <input {...inputProps} className="sr-only" />
 
       {files.length === 0 ? (
-        <button
-          type="button"
-          onClick={open}
-          disabled={disabled}
-          className="flex flex-col items-center gap-2 py-4 text-muted-foreground"
-        >
-          <Upload className="size-5" />
-          <Text size="sm" tone="muted">{placeholder}</Text>
-        </button>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={open}
+            disabled={disabled}
+            className="flex flex-col items-center gap-2 py-4 text-muted-foreground"
+          >
+            <Upload className="size-5" />
+            <Text size="sm" tone="muted">{placeholder}</Text>
+          </button>
+          {addButton}
+        </div>
       ) : (
-        <AttachmentGroup className="py-0">
-          {files.map(({ id, file, state = "done", description }) => (
-            <Attachment key={id} state={state} size="sm">
-              <AttachmentMedia variant={file.type.startsWith("image/") ? "image" : "icon"}>
-                {file.type.startsWith("image/") ? <ImagePreview file={file} /> : <FileText />}
+        <div className="flex flex-col gap-3">
+          {images.length > 0 && (
+            <AttachmentGroup className="py-0">
+              {images.map(({ id, file, state = "done", description }) => (
+                <Attachment key={id} state={state} orientation="vertical">
+                  <AttachmentMedia variant="image">
+                    <ImagePreview file={file} />
+                  </AttachmentMedia>
+                  <AttachmentContent>
+                    <AttachmentTitle>{file.name}</AttachmentTitle>
+                    <AttachmentDescription>
+                      {description ?? `${fileKind(file)} · ${formatSize(file.size)}`}
+                    </AttachmentDescription>
+                  </AttachmentContent>
+                  <AttachmentActions>
+                    <AttachmentAction aria-label={`Remove ${file.name}`} onClick={() => onRemove(id)}>
+                      <X />
+                    </AttachmentAction>
+                  </AttachmentActions>
+                </Attachment>
+              ))}
+            </AttachmentGroup>
+          )}
+          {otherFiles.map(({ id, file, state = "done", description }) => (
+            <Attachment key={id} state={state} className="w-full">
+              <AttachmentMedia>
+                <FileText />
               </AttachmentMedia>
               <AttachmentContent>
                 <AttachmentTitle>{file.name}</AttachmentTitle>
@@ -133,16 +176,8 @@ export function AttachmentDropzone({
               </AttachmentActions>
             </Attachment>
           ))}
-          <button
-            type="button"
-            onClick={open}
-            disabled={disabled}
-            aria-label={placeholder}
-            className="flex size-10 shrink-0 items-center justify-center self-center rounded-lg border border-dashed border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none"
-          >
-            <Upload className="size-4" />
-          </button>
-        </AttachmentGroup>
+          {addButton}
+        </div>
       )}
     </div>
   );

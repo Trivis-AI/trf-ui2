@@ -612,6 +612,90 @@
 }
 
 /*
+ * scroll-fade-x: edge fade for horizontally-scrolling containers (AttachmentGroup) that
+ * tracks scroll position via a scroll-driven animation — crisp at rest, fades only the
+ * edge that has more content to reveal. A static mask-image would dim the first item's
+ * edge even when there's nothing to scroll to. Vendored from shadcn/ui's scroll-fade
+ * utility (shadcn/tailwind.css), trimmed to the x-axis since nothing here scrolls vertically.
+ */
+@property --scroll-fade-s {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-e {
+  syntax: "<length-percentage>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --scroll-fade-mask {
+  syntax: "*";
+  inherits: false;
+}
+
+@theme inline {
+  @keyframes scroll-fade-reveal-s {
+    from {
+      --scroll-fade-s: 0px;
+    }
+    to {
+      --scroll-fade-s: var(--_scroll-fade-size-s, min(12%, calc(var(--spacing) * 10)));
+    }
+  }
+  @keyframes scroll-fade-reveal-e {
+    from {
+      --scroll-fade-e: var(--_scroll-fade-size-e, min(12%, calc(var(--spacing) * 10)));
+    }
+    to {
+      --scroll-fade-e: 0px;
+    }
+  }
+}
+
+@utility scroll-fade-x {
+  --_scroll-fade-size-s: min(12%, calc(var(--spacing) * 10));
+  --_scroll-fade-size-e: min(12%, calc(var(--spacing) * 10));
+  --scroll-fade-inline: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--scroll-fade-s, 0px),
+    #000 calc(100% - var(--scroll-fade-e, 0px)),
+    transparent 100%
+  );
+  &:where([dir="rtl"], [dir="rtl"] *) {
+    --scroll-fade-inline: linear-gradient(
+      to left,
+      transparent 0,
+      #000 var(--scroll-fade-s, 0px),
+      #000 calc(100% - var(--scroll-fade-e, 0px)),
+      transparent 100%
+    );
+  }
+  -webkit-mask-image: var(--scroll-fade-mask, var(--scroll-fade-inline));
+  mask-image: var(--scroll-fade-mask, var(--scroll-fade-inline));
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  @supports (animation-timeline: scroll()) {
+    animation:
+      scroll-fade-reveal-s 1ms ease-in-out,
+      scroll-fade-reveal-e 1ms ease-in-out;
+    animation-timeline: scroll(self inline), scroll(self inline);
+    animation-range:
+      0 calc(var(--spacing) * 24),
+      calc(100% - calc(var(--spacing) * 24)) 100%;
+    animation-fill-mode: both;
+  }
+
+  @supports not (animation-timeline: scroll()) {
+    --scroll-fade-s: var(--_scroll-fade-size-s);
+    --scroll-fade-e: var(--_scroll-fade-size-e);
+  }
+}
+
+/*
  * Native date/time inputs: the WebKit picker indicator sits right after the
  * value by default (looks "floating in the middle"). Pin it to the right edge
  * so the trigger aligns like our other inputs / the Combobox chevron.
