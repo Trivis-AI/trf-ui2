@@ -82,6 +82,17 @@ export {
 export { TableCard } from "./components/ui/table-card";
 export type { TableCardProps } from "./components/ui/table-card";
 
+export {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+  useChart,
+} from "./components/ui/chart";
+export type { ChartConfig } from "./components/ui/chart";
+
 export { RadioCard } from "./components/ui/radio-card";
 export type { RadioCardProps } from "./components/ui/radio-card";
 

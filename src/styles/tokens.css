@@ -76,6 +76,16 @@
   --border: oklch(0.89 0.012 240);
   --input: oklch(0.89 0.012 240);
   --ring: oklch(0.22 0.018 240);
+
+  /* Chart series colors (Chart component). Spans hues away from
+   * --destructive (25) and --warning (75) so a chart series is never
+   * confused with an error/warning color; distinct lightness/chroma per
+   * step keeps adjacent series visually separable in both themes. */
+  --chart-1: oklch(0.55 0.16 240);
+  --chart-2: oklch(0.65 0.15 200);
+  --chart-3: oklch(0.7 0.15 150);
+  --chart-4: oklch(0.75 0.15 95);
+  --chart-5: oklch(0.62 0.18 320);
 }
 
 .dark {
@@ -117,6 +127,14 @@
   --border: oklch(0.32 0.02 240);
   --input: oklch(0.34 0.02 240);
   --ring: oklch(0.76 0.188 70);
+
+  /* See :root for the rationale. Lightness nudged up from the light-mode
+   * values so each series still reads clearly against the dark background. */
+  --chart-1: oklch(0.65 0.16 240);
+  --chart-2: oklch(0.72 0.14 200);
+  --chart-3: oklch(0.75 0.14 150);
+  --chart-4: oklch(0.8 0.15 95);
+  --chart-5: oklch(0.7 0.18 320);
 }
 
 /* ============================================================================
@@ -559,6 +577,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 }
 
 /*
