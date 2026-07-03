@@ -95,7 +95,7 @@ export function AttachmentDropzone({
         }
       }}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-dashed border-input p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "flex flex-col gap-3 rounded-xl border border-dashed border-input p-4 transition-colors",
         "data-[dragging]:border-primary data-[dragging]:bg-accent",
         disabled && "pointer-events-none opacity-50",
         className
