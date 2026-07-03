@@ -52,12 +52,13 @@ jobs:
           set -euo pipefail
           PAYLOAD='{"app":"trf-ui2","env":"prod","ref":"'"${GITHUB_REF_NAME}"'","sha":"'"${GITHUB_SHA}"'"}'
           SIG=$(printf "%s" "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -binary | xxd -p -c 256)
-          # Same fix as trivis-build.yaml: POST to the bare $WEBHOOK_URL (the
-          # server routes by the payload's app/env), strip any trailing slash,
-          # and FAIL LOUDLY on non-2xx so a rejected rollout can't hide behind a
-          # green check. The old `$WEBHOOK_URL/deploy/trf-ui2/trf-ui2` suffix +
-          # missing -f is what silently froze ui.trivis.ee.
-          URL="${WEBHOOK_URL%/}"
+          # This secret (WEBHOOK_URL) is a BASE url — unlike trivis-build.yaml's
+          # TRIVIS_WH_URL (which is a full deploy path and works bare). So keep
+          # the /deploy/{namespace}/{name} route the server expects; posting bare
+          # 404s (no root route). The one thing the old version lacked was a
+          # failure check: no -f meant a bad rollout still exited 0. Add the
+          # loud-fail so a non-2xx can't hide behind a green check.
+          URL="${WEBHOOK_URL%/}/deploy/trf-ui2/trf-ui2"
           RESP=$(curl -sS -k -w $'\n%{http_code}' -X POST "$URL" \
             -H "Content-Type: application/json" \
             -H "X-Hub-Signature-256: sha256=$SIG" \
