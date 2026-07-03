@@ -95,7 +95,7 @@ export function AttachmentDropzone({
         }
       }}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border border-dashed border-input p-4 transition-colors",
+        "flex flex-col gap-3 rounded-xl border border-dashed border-input p-4 transition-colors focus-visible:outline-none",
         "data-[dragging]:border-primary data-[dragging]:bg-accent",
         disabled && "pointer-events-none opacity-50",
         className
@@ -138,7 +138,7 @@ export function AttachmentDropzone({
             onClick={open}
             disabled={disabled}
             aria-label={placeholder}
-            className="flex size-10 shrink-0 items-center justify-center self-center rounded-lg border border-dashed border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="flex size-10 shrink-0 items-center justify-center self-center rounded-lg border border-dashed border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none"
           >
             <Upload className="size-4" />
           </button>
