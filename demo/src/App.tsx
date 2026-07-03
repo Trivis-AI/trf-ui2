@@ -32,6 +32,11 @@ import {
 } from "@trf/ui2";
 import {
   AreaChart as RAreaChart, Area, CartesianGrid, XAxis, YAxis,
+  BarChart as RBarChart, Bar,
+  PieChart as RPieChart, Pie,
+  RadarChart as RRadarChart, Radar as RRadar,
+  RadialBarChart as RRadialBarChart, RadialBar,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 
 /* ------------------------------------------------------------------ helpers */
@@ -443,6 +448,53 @@ const REVENUE_CHART_CONFIG = {
   expenses: { label: "Kulud", color: "var(--chart-4)" },
 } satisfies ChartConfig;
 
+// Quarterly aggregation of REVENUE_DATA — grouped bars compare series per
+// category; do NOT stack unless the parts genuinely sum to a meaningful whole.
+const QUARTER_DATA = [
+  { quarter: "Q1", revenue: 62450, expenses: 39200 },
+  { quarter: "Q2", revenue: 73100, expenses: 43700 },
+  { quarter: "Q3", revenue: 64500, expenses: 40900 },
+  { quarter: "Q4", revenue: 95600, expenses: 52000 },
+];
+
+// Revenue by activity — long Estonian labels are the horizontal bar's reason
+// to exist: the label column gets real width instead of overlapping x ticks.
+const ACTIVITY_DATA = [
+  { activity: "Ehitusmaterjalide hulgimüük", revenue: 84000 },
+  { activity: "Raamatupidamisteenused", revenue: 42000 },
+  { activity: "IT-konsultatsioonid", revenue: 39000 },
+  { activity: "Kinnisvara üürileandmine", revenue: 27500 },
+  { activity: "Koolitused", revenue: 12800 },
+];
+
+// Pie/radial color per SLICE (each row is an identity), not per series —
+// bake `fill` into the data and key the config by row name so
+// ChartTooltipContent/ChartLegendContent resolve labels via nameKey="name".
+// Keep slices ≤5: the palette has 5 fixed hues and cycling would repeat a
+// hue on adjacent slices.
+const ACTIVITY_SHARE = ACTIVITY_DATA.map((d, i) => ({
+  name: d.activity,
+  value: d.revenue,
+  fill: `var(--chart-${i + 1})`,
+}));
+const ACTIVITY_SHARE_CONFIG = Object.fromEntries(
+  ACTIVITY_SHARE.map((r) => [r.name, { label: r.name }]),
+) satisfies ChartConfig;
+
+// Cost structure across categories, two years side by side — the radar's
+// niche: comparing 2+ entities across 3+ shared dimensions.
+const COST_STRUCTURE = [
+  { category: "Palgad", y2025: 96000, y2026: 104000 },
+  { category: "Rent", y2025: 24000, y2026: 26400 },
+  { category: "IT", y2025: 11200, y2026: 16800 },
+  { category: "Turundus", y2025: 8600, y2026: 12400 },
+  { category: "Muu", y2025: 14100, y2026: 12900 },
+];
+const COST_STRUCTURE_CONFIG = {
+  y2025: { label: "2025", color: "var(--chart-2)" },
+  y2026: { label: "2026", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
 function ChartDemo() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -513,6 +565,165 @@ function ChartDemo() {
       <Text size="xs" tone="muted">
         ↑ `ChartContainer` + `ChartTooltip`/`ChartLegend` around Recharts — series colors come
         from `ChartConfig` (`--chart-1`…`--chart-5` tokens), so light/dark just work.
+      </Text>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Kvartali tulud ja kulud</CardTitle>
+          <CardDescription>Grouped bars — compare series per category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={REVENUE_CHART_CONFIG} className="aspect-auto h-64 w-full">
+            <RBarChart data={QUARTER_DATA} margin={{ left: 4, right: 4 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="quarter" tickLine={false} axisLine={false} tickMargin={8} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                width={48}
+                tickFormatter={(v: number) => `€${Math.round(v / 1000)}k`}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expenses" fill="var(--color-expenses)" radius={[4, 4, 0, 0]} />
+              <ChartLegend content={<ChartLegendContent />} />
+            </RBarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Müügitulu tegevusalade lõikes</CardTitle>
+          <CardDescription>Horizontal bars — long labels stay readable</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            config={{ revenue: { label: "Müügitulu", color: "var(--chart-1)" } }}
+            className="aspect-auto w-full"
+            style={{ height: ACTIVITY_DATA.length * 40 }}
+          >
+            <RBarChart data={ACTIVITY_DATA} layout="vertical" margin={{ left: 4, right: 4 }}>
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <XAxis
+                type="number"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(v: number) => `€${Math.round(v / 1000)}k`}
+              />
+              {/* layout="vertical" flips the axes: XAxis must be type="number",
+                  YAxis type="category" — and the YAxis needs an explicit width
+                  or long labels truncate at the default 60px. */}
+              <YAxis
+                type="category"
+                dataKey="activity"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                width={170}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[0, 4, 4, 0]} />
+            </RBarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tulude jaotus</CardTitle>
+          <CardDescription>Donut — per-slice colors, nameKey wiring</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={ACTIVITY_SHARE_CONFIG} className="aspect-auto h-64 w-full">
+            <RPieChart>
+              <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+              {/* stroke = surface color → a 2px gap separating the slices.
+                  isAnimationActive off: recharts 3.9's polar mount animation
+                  can stall at scale 0, leaving the marks invisible — applies
+                  to Pie, Radar and RadialBar alike. */}
+              <Pie
+                data={ACTIVITY_SHARE}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={55}
+                stroke="var(--background)"
+                strokeWidth={2}
+                isAnimationActive={false}
+              />
+              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+            </RPieChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Kulude struktuur, 2025 vs 2026</CardTitle>
+          <CardDescription>Radar — 2+ entities across 3+ shared dimensions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={COST_STRUCTURE_CONFIG} className="aspect-auto h-64 w-full">
+            <RRadarChart data={COST_STRUCTURE}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="category" />
+              {/* invisible, but required: without a radius axis recharts v3
+                  collapses the value scale and polygons render sub-pixel */}
+              <PolarRadiusAxis tick={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <RRadar
+                dataKey="y2025"
+                stroke="var(--color-y2025)"
+                strokeWidth={2}
+                fill="var(--color-y2025)"
+                fillOpacity={0.25}
+                isAnimationActive={false}
+              />
+              <RRadar
+                dataKey="y2026"
+                stroke="var(--color-y2026)"
+                strokeWidth={2}
+                fill="var(--color-y2026)"
+                fillOpacity={0.25}
+                isAnimationActive={false}
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+            </RRadarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Tulude jaotus rõngastena</CardTitle>
+          <CardDescription>Radial bars — same per-slice wiring as the donut</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={ACTIVITY_SHARE_CONFIG} className="aspect-auto h-64 w-full">
+            <RRadialBarChart
+              data={ACTIVITY_SHARE}
+              innerRadius={30}
+              outerRadius={110}
+              startAngle={90}
+              endAngle={-270}
+            >
+              <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
+              <RadialBar dataKey="value" background cornerRadius={4} isAnimationActive={false} />
+              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
+            </RRadialBarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      <Text size="xs" tone="muted">
+        ↑ Same wrappers, five more Recharts compositions. Pie/radial color per SLICE (config
+        keyed by row name, `nameKey="name"` on tooltip + legend, ≤5 slices — hues are never
+        cycled); horizontal bars need `layout="vertical"` + typed axes + explicit YAxis width;
+        radar needs a hidden `PolarRadiusAxis`. Polar marks (Pie/Radar/RadialBar) render with
+        `isAnimationActive={false}` — recharts 3.9's mount animation can stall at scale 0 and
+        leave them invisible.
       </Text>
     </div>
   );
