@@ -50,7 +50,22 @@ jobs:
           set -euo pipefail
           PAYLOAD='{"app":"trf-ui2","env":"trivis","ref":"'"${GITHUB_REF_NAME}"'","sha":"'"${GITHUB_SHA}"'"}'
           SIG=$(printf "%s" "$PAYLOAD" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -binary | xxd -p -c 256)
-          curl -sS -X POST "$WEBHOOK_URL/deploy/trf-ui2/trf-ui2" \
+          # The webhook routes by the PAYLOAD's app/env (same server + WEBHOOK_SECRET
+          # as trffrontai's docker.yml, which POSTs to a bare $WEBHOOK_URL and works).
+          # The previous `$WEBHOOK_URL/deploy/trf-ui2/trf-ui2` suffix produced an
+          # "invalid path" rejection that, without -f, still exited 0 — so every
+          # trivis run went green while nothing actually rolled out (ui.trivis.ee
+          # was frozen at the last manual deploy). Strip any trailing slash, capture
+          # the response, and FAIL LOUDLY on non-2xx so a bad rollout can't hide.
+          URL="${WEBHOOK_URL%/}"
+          RESP=$(curl -sS -k -w $'\n%{http_code}' -X POST "$URL" \
             -H "Content-Type: application/json" \
             -H "X-Hub-Signature-256: sha256=$SIG" \
-            -d "$PAYLOAD"
+            -d "$PAYLOAD")
+          CODE="${RESP##*$'\n'}"
+          BODY="${RESP%$'\n'*}"
+          echo "rollout response: HTTP ${CODE} — ${BODY}"
+          case "$CODE" in
+            2*) echo "rollout accepted" ;;
+            *) echo "::error::rollout webhook failed (HTTP ${CODE})"; exit 1 ;;
+          esac
