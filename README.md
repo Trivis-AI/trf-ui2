@@ -32,7 +32,7 @@ part of the published library.
 See [`docs/for-consuming-apps.md`](docs/for-consuming-apps.md). Short version:
 
 ```bash
-npm i github:triiberg/trf-ui2#main   # or file:../trf-ui2 for local dev
+npm i github:Trivis-AI/trf-ui2#main   # or file:../trf-ui2 for local dev
 ```
 ```css
 @import "tailwindcss";

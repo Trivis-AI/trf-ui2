@@ -1,5 +1,5 @@
 // @trf/ui2 — public API barrel.
-// Consumed as raw .tsx via `github:triiberg/trf-ui2#master` (no build step).
+// Consumed as raw .tsx via `github:Trivis-AI/trf-ui2#master` (no build step).
 // NOTE: this barrel is required because trf-ui2 is consumed as a package.
 
 // Utils

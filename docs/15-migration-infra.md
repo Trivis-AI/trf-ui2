@@ -32,10 +32,10 @@ main  ────────────────────────�
 Each app pins a specific tag in `package.json`:
 
 ```json
-"@trf/ui2": "github:triiberg/trf-ui2#v0.6.6"
+"@trf/ui2": "github:Trivis-AI/trf-ui2#v0.6.6"
 ```
 
-> Always use the latest tag. Check github.com/triiberg/trf-ui2/releases if unsure.
+> Always use the latest tag. Check github.com/Trivis-AI/trf-ui2/releases if unsure.
 
 **Rules:**
 - Never pin `#main` in an app — tags are immutable, `main` moves

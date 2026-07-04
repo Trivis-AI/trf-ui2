@@ -102,7 +102,7 @@ verified. Mono + tabular-nums applied to table numbers. See `08-ui-components/ty
 ## 🟢 Decided (for reference)
 
 - **Foundation:** shadcn-style — owned Radix + Tailwind v4 + CVA, CSS-variable tokens.
-- **Distribution:** raw `.tsx` via `github:triiberg/trf-ui2#main`, no build step.
+- **Distribution:** raw `.tsx` via `github:Trivis-AI/trf-ui2#main`, no build step.
 - **Icons:** Lucide only (see `05-iconography.md`).
 - **Fonts:** **Geist** (UI) + **Geist Mono** (tables/numbers), self-hosted via
   `@fontsource-variable/geist[-mono]`. Set in `src/styles/tokens.css`; loading documented in

@@ -30,7 +30,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/triiberg/trf-ui2
+          images: ghcr.io/trivis-ai/trf-ui2
           tags: |
             type=raw,value=prod
             type=ref,event=tag
