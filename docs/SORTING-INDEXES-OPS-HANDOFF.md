@@ -32,6 +32,22 @@ The index DDL is deployed but only runs when `Migrate()` is invoked, and the tri
 
 Verify on a tenant schema: `\di idx_*` (or `EXPLAIN` a sorted list query and confirm an Index Scan).
 
+## ⚠️ URGENT: prod sales + purchase already show (inert) sort headers
+
+A `main → trivis` merge (the one-word-status-label re-bump) inadvertently carried the sort-enable
+commits to prod for **frontinvoices** and **frontpurchase**. So those two PROD lists now show
+clickable sort headers, but the PROD backends (backinvoices, backpurchase) don't have the sort param
+yet, so clicking does nothing (soft, no error). To make it functional, **promoting backend sort to
+prod for backinvoices + backpurchase is now the priority** (payments + products frontends are NOT
+sort-enabled on prod, so they're unaffected).
+
+Note: the backend *sort param* support is backward-compatible and low-risk to deploy; the LOCKING
+concern below is only about the *index creation*, which is separable. For backinvoices, Migrate()
+only runs on POST /v1/migrate, so a prod deploy will NOT auto-create indexes (sort works, indexes come
+when you run migrate with the CONCURRENTLY fix). For backpurchase, Migrate() auto-runs per-tenant on
+first request, so a prod deploy WOULD trigger the (plain, locking) index creation - do the CONCURRENTLY
+fix below FIRST for backpurchase.
+
 ## Task 2 — PROD rollout of sorting (when you're ready)
 
 **⚠️ Locking gotcha first:** the indexes are added as plain `CREATE INDEX` inside `Migrate()`.
