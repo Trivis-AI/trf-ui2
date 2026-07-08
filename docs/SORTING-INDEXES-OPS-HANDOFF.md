@@ -60,6 +60,18 @@ on staging, risky on large prod tables. Before prod, either:
 The sort-index block is in `internal/store/store.go` in each of backinvoices / backpurchase /
 backpayments / backproducts.
 
+**Confirmed safe to use CONCURRENTLY:** verified `Migrate()` runs the sort-index `db.Exec(CREATE INDEX ...)`
+directly on the pool, NOT inside a transaction (the existing ivfflat index does the same), so you can
+just swap `CREATE INDEX` -> `CREATE INDEX CONCURRENTLY IF NOT EXISTS` in that block without a tx-refactor.
+Note backpurchase's Migrate auto-runs per-tenant on first request, so once the CONCURRENTLY change is
+deployed the indexes build non-blocking automatically; backinvoices/backpayments/backproducts still need
+a `POST /v1/migrate` per tenant.
+
+**FYI — frontends already promoted:** the sales + purchase FRONTENDS (unified status filter + sort UI) are
+now on prod (2026-07-09). So prod is waiting only on this backend-sort promotion to make sorting functional
+(until then the prod sort headers are inert). The unified status FILTER already works on prod (it uses the
+existing status + payment_status params).
+
 Then the promotion order (backend before frontend, so prod frontends' sort params are honored):
 1. Promote backend sort + indexes → prod: merge `main` → `trivis` in each `back*` repo; run
    `/v1/migrate` per prod tenant (or the manual concurrent index creation above).
