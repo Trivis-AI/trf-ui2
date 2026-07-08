@@ -74,6 +74,66 @@ export function deriveInvoiceStatus(
 }
 
 /**
+ * Filterable invoice statuses, for a status filter dropdown. This is the companion
+ * to `deriveInvoiceStatus`: the derive function renders the display state, these map
+ * a chosen filter value to the backend query params (and back).
+ *
+ * NOTE: "Overdue" is intentionally NOT a filter option. The backend has no due-date
+ * filter yet, so there is no way to query for overdue rows specifically; "Unpaid"
+ * returns overdue rows too (they are confirmed + unpaid).
+ */
+export const INVOICE_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "draft", label: "Draft" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "partial", label: "Partial" },
+  { value: "paid", label: "Paid" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "credited", label: "Credited" },
+];
+
+/**
+ * Maps a status-filter value (see `INVOICE_STATUS_FILTER_OPTIONS`) to the backend
+ * query params `{ status, payment_status }`. An unknown/empty value clears both.
+ */
+export function invoiceStatusFilterToParams(
+  value: string,
+): { status: string; payment_status: string } {
+  switch (value) {
+    case "draft":
+      return { status: "draft", payment_status: "" };
+    case "cancelled":
+      return { status: "cancelled", payment_status: "" };
+    case "credited":
+      return { status: "credited", payment_status: "" };
+    case "paid":
+      return { status: "confirmed", payment_status: "paid" };
+    case "partial":
+      return { status: "confirmed", payment_status: "partial" };
+    case "unpaid":
+      return { status: "confirmed", payment_status: "unpaid" };
+    default:
+      return { status: "", payment_status: "" };
+  }
+}
+
+/**
+ * Reverse of `invoiceStatusFilterToParams`: given the backend params, return the
+ * matching filter value, or "" if none match (e.g. status=confirmed with no
+ * payment_status, which is not a selectable filter option).
+ */
+export function invoiceStatusFilterFromParams(
+  p: { status?: string; payment_status?: string },
+): string {
+  const status = p.status ?? "";
+  const paymentStatus = p.payment_status ?? "";
+  const match = INVOICE_STATUS_FILTER_OPTIONS.find((opt) => {
+    const params = invoiceStatusFilterToParams(opt.value);
+    return params.status === status && params.payment_status === paymentStatus;
+  });
+  return match ? match.value : "";
+}
+
+/**
  * Renders the derived invoice status as a `StatusCell` pill. Drop into a status
  * column's `cell` (or an invoice detail header) instead of mapping status to a tone
  * by hand.

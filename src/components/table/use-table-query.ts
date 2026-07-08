@@ -39,6 +39,11 @@ export interface TableQuery {
   setSorting(sorting: SortingState): void;
   setSearch(value: string): void;
   setFilter(key: string, value: string): void;
+  /**
+   * Merge several filter keys in one update: sets each key, an empty-string value
+   * clears that key, resets pageIndex to 0, and writes the URL a single time.
+   */
+  setFilters(next: Record<string, string>): void;
   clearFilters(): void;
 
   /** Stable react-query key. */
@@ -187,6 +192,17 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     });
   }, []);
 
+  const setFilters = React.useCallback((next: Record<string, string>) => {
+    setCore((s) => {
+      const filters = { ...s.filters };
+      for (const [key, value] of Object.entries(next)) {
+        if (value) filters[key] = value;
+        else delete filters[key];
+      }
+      return { ...s, filters, pageIndex: 0 };
+    });
+  }, []);
+
   const clearFilters = React.useCallback(() => {
     setSearchInput("");
     clearTimeout(debounceTimer.current);
@@ -226,6 +242,7 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     setSorting,
     setSearch,
     setFilter,
+    setFilters,
     clearFilters,
     queryKey,
     params,
