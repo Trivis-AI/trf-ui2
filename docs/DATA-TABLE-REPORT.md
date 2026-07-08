@@ -2,6 +2,10 @@
 
 _Living summary, updated as work ships. Last updated: 2026-07-09._
 
+**On staging, trialing (not yet prod):** bulk row-selection + a **"Print selected"** action on the
+sales invoice list — select invoices, get one merged PDF (each invoice its own page) in a single print
+job. Reuses the existing per-invoice PDF render (no backend change).
+
 We rebuilt the big list pages on one shared, server-driven table system in `@trf/ui2` and
 shipped it across all four to prod.
 
