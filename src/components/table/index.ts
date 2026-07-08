@@ -29,6 +29,7 @@ export {
 export type {
   TableSearchProps,
   TableColumnOptionsProps,
+  TableColumnOption,
   TablePaginationProps,
   TableFilterBarProps,
 } from "./table-toolbar";

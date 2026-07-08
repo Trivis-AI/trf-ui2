@@ -48,6 +48,8 @@ export interface ServerDataTableProps<TData> {
   selectedRowIds?: Record<string, boolean>;
   onSelectedRowIdsChange?: (next: Record<string, boolean>) => void;
   getRowId?: (row: TData) => string;
+  /** Bulk toolbar shown in place of the column-header row while rows are selected. */
+  bulkActions?: React.ReactNode;
 
   // Expandable detail sub-row. Toggle a row via row.toggleExpanded() from a cell.
   renderSubRow?: (row: TData) => React.ReactNode;
@@ -98,6 +100,7 @@ export function ServerDataTable<TData>({
   selectedRowIds,
   onSelectedRowIdsChange,
   getRowId,
+  bulkActions,
   renderSubRow,
   loading = false,
   fetching = false,
@@ -121,6 +124,7 @@ export function ServerDataTable<TData>({
   const visibility = columnVisibility ?? internalVisibility;
   const order = columnOrder ?? internalOrder;
   const selection = selectedRowIds ?? internalSelection;
+  const selectedCount = Object.values(selection).filter(Boolean).length;
 
   const handleVisibilityChange: OnChangeFn<VisibilityState> = (updater) => {
     const next = resolveUpdater(updater, visibility);
@@ -194,6 +198,7 @@ export function ServerDataTable<TData>({
       renderSubRow={renderSubRow}
       enableRowSelection={enableRowSelection}
       enableSelectAll={enableSelectAll}
+      bulkBar={selectedCount > 0 ? bulkActions : undefined}
       enableColumnReorder={false}
       className={className}
     />

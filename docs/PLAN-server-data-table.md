@@ -334,10 +334,12 @@ Fixed positions (guardrails):
   opens the item (`onRowClick`). No per-row "Open ->" link cell anywhere. The
   actions column is only for secondary verbs (Restore, Delete, Download, ...), and
   row-click nav coexists with them (action buttons stop propagation).
-- **Quick-filter search**: always toolbar-left, via `TablePage.search`. Never in the
-  filter bar, never on the right. (Search/filter bar gets a visual redesign later;
-  it stays a slot so that redesign never touches the table.)
-- **Column options** (hide / reorder): always toolbar-right, via `columnOptions`.
+- **Quick-filter search**: on the same row as the filters (leftmost), via
+  `TablePage.search`. (Filter row gets a visual redesign later; it stays a slot so
+  that redesign never touches the table.)
+- **Column options** (hide / drag-reorder): a compact icon button attached to the
+  table's top-right, via `columnOptions` (pass `TableColumnOptions iconOnly`).
+  Reordering is drag-and-drop (dnd-kit), not up/down arrows.
 - **Primary action** (the CTA, e.g. "New invoice"): always rightmost in the header,
   primary variant, via `primaryAction`. Secondary/utility buttons sit to its left
   via `secondaryActions`. Structural, so button order cannot drift page to page.

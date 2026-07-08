@@ -79,6 +79,8 @@ export interface TableViewProps<TData> {
   enableRowSelection?: boolean;
   /** Show the header select-all checkbox. Default true (only when selection is on). */
   enableSelectAll?: boolean;
+  /** When set, replaces the column-header row with this bulk toolbar (selection active). */
+  bulkBar?: React.ReactNode;
   /** Drag headers to reorder columns (drives the table's columnOrder state). */
   enableColumnReorder?: boolean;
   className?: string;
@@ -165,6 +167,7 @@ export function TableView<TData>({
   renderSubRow,
   enableRowSelection = false,
   enableSelectAll = true,
+  bulkBar,
   enableColumnReorder = false,
   className,
 }: TableViewProps<TData>) {
@@ -231,34 +234,44 @@ export function TableView<TData>({
   const tableEl = (
     <Table className={className}>
       <TableHeader>
-        {headerGroups.map((hg) => (
-          <TableRow key={hg.id}>
+        {bulkBar ? (
+          // Selection active: the column-header row becomes the bulk toolbar.
+          <TableRow className="hover:bg-transparent">
             {selectionHead}
-            {enableColumnReorder ? (
-              <SortableContext
-                items={columnOrder.length ? columnOrder : leafColumns.map((c) => c.id)}
-                strategy={horizontalListSortingStrategy}
-              >
-                {hg.headers.map((header) => (
-                  <DraggableHeader key={header.id} header={header} />
-                ))}
-              </SortableContext>
-            ) : (
-              hg.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  className={cn(
-                    alignClass(header.column.columnDef.meta?.align),
-                    headStickyClass
-                  )}
-                >
-                  {header.isPlaceholder ? null : <HeaderLabel header={header} />}
-                </TableHead>
-              ))
-            )}
+            <TableHead colSpan={leafColumns.length} className={headStickyClass}>
+              <div className="flex items-center gap-2">{bulkBar}</div>
+            </TableHead>
           </TableRow>
-        ))}
+        ) : (
+          headerGroups.map((hg) => (
+            <TableRow key={hg.id}>
+              {selectionHead}
+              {enableColumnReorder ? (
+                <SortableContext
+                  items={columnOrder.length ? columnOrder : leafColumns.map((c) => c.id)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {hg.headers.map((header) => (
+                    <DraggableHeader key={header.id} header={header} />
+                  ))}
+                </SortableContext>
+              ) : (
+                hg.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    className={cn(
+                      alignClass(header.column.columnDef.meta?.align),
+                      headStickyClass
+                    )}
+                  >
+                    {header.isPlaceholder ? null : <HeaderLabel header={header} />}
+                  </TableHead>
+                ))
+              )}
+            </TableRow>
+          ))
+        )}
       </TableHeader>
       <TableBody>
         {loading ? (

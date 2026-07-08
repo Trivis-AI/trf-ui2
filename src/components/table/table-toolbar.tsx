@@ -1,24 +1,27 @@
 import * as React from "react";
-import type { Table as TanStackTable } from "@tanstack/react-table";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Columns3,
-  ArrowUp,
-  ArrowDown,
-  X,
-} from "lucide-react";
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ChevronLeft, ChevronRight, Columns3, GripVertical, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { SearchInput } from "../ui/search-input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "../ui/dropdown-menu";
+import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
 
 /* -------------------------------------------------------- TableSearch */
 
@@ -75,102 +78,157 @@ export function TableSearch({
 
 /* ------------------------------------------------- TableColumnOptions */
 
-export interface TableColumnOptionsProps<TData> {
-  /** The ServerDataTable / DataTable's TanStack instance. */
-  table: TanStackTable<TData>;
-  /** Override display labels for columns whose header is not a plain string. */
-  columnLabels?: Record<string, string>;
-  /** Allow reordering columns (up/down). Default true. */
+export interface TableColumnOption {
+  id: string;
+  /** Display label in the menu. */
+  label: string;
+  /** If false, the column cannot be hidden (checkbox stays on and disabled). Default true. */
+  hideable?: boolean;
+}
+
+export interface TableColumnOptionsProps {
+  /** Columns the menu can toggle / reorder, in their current display order source. */
+  columns: TableColumnOption[];
+  /** Controlled visibility map; a missing id counts as visible. */
+  visibility: Record<string, boolean>;
+  onVisibilityChange: (next: Record<string, boolean>) => void;
+  /** Controlled column order (ids). */
+  order: string[];
+  onOrderChange: (next: string[]) => void;
+  /** Allow drag reordering. Default true. */
   enableReorder?: boolean;
+  /** Render a compact icon-only trigger (for attaching to the table's top-right). */
+  iconOnly?: boolean;
   className?: string;
 }
 
-function columnLabel<TData>(
-  table: TanStackTable<TData>,
-  id: string,
-  overrides?: Record<string, string>
-): string {
-  if (overrides?.[id]) return overrides[id];
-  const header = table.getColumn(id)?.columnDef.header;
-  return typeof header === "string" ? header : id;
+function SortableColumnRow({
+  option,
+  visible,
+  onToggle,
+  enableReorder,
+}: {
+  option: TableColumnOption;
+  visible: boolean;
+  onToggle: (visible: boolean) => void;
+  enableReorder: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: option.id, disabled: !enableReorder });
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 1 : undefined,
+  };
+  const hideable = option.hideable !== false;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 rounded-md px-1.5 py-1.5 hover:bg-muted/60"
+    >
+      {enableReorder && (
+        <span
+          {...attributes}
+          {...listeners}
+          aria-label={`Drag to reorder ${option.label}`}
+          className="cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing [&_svg]:size-4"
+        >
+          <GripVertical />
+        </span>
+      )}
+      <Checkbox
+        id={`col-opt-${option.id}`}
+        checked={visible}
+        disabled={!hideable}
+        onCheckedChange={(v) => onToggle(!!v)}
+      />
+      <label
+        htmlFor={`col-opt-${option.id}`}
+        className={cn("flex-1 cursor-pointer truncate text-sm", !hideable && "cursor-default")}
+      >
+        {option.label}
+      </label>
+    </div>
+  );
 }
 
 /**
- * A menu to hide/show and reorder columns. Drives the table's columnVisibility /
- * columnOrder state. Always toolbar-right (via TablePage.columnOptions).
+ * A menu to hide/show and drag-reorder columns. Fully controlled: pass the same
+ * columnVisibility / columnOrder you give ServerDataTable. Always toolbar-right
+ * (via TablePage.columnOptions).
  */
-export function TableColumnOptions<TData>({
-  table,
-  columnLabels,
+export function TableColumnOptions({
+  columns,
+  visibility,
+  onVisibilityChange,
+  order,
+  onOrderChange,
   enableReorder = true,
+  iconOnly = false,
   className,
-}: TableColumnOptionsProps<TData>) {
-  const columns = table.getAllLeafColumns().filter((c) => c.getCanHide());
+}: TableColumnOptionsProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
-  const move = (id: string, delta: number) => {
-    const current = table.getState().columnOrder;
-    const order = current.length ? [...current] : table.getAllLeafColumns().map((c) => c.id);
-    const from = order.indexOf(id);
-    const to = from + delta;
-    if (from < 0 || to < 0 || to >= order.length) return;
-    order.splice(to, 0, order.splice(from, 1)[0]);
-    table.setColumnOrder(order);
-  };
+  // Resolve the display order: honor `order`, then append any columns it omits.
+  const byId = new Map(columns.map((c) => [c.id, c]));
+  const ordered: TableColumnOption[] = [];
+  for (const id of order) {
+    const opt = byId.get(id);
+    if (opt) {
+      ordered.push(opt);
+      byId.delete(id);
+    }
+  }
+  for (const c of columns) if (byId.has(c.id)) ordered.push(c);
+  const orderedIds = ordered.map((c) => c.id);
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = orderedIds.indexOf(active.id as string);
+    const to = orderedIds.indexOf(over.id as string);
+    if (from < 0 || to < 0) return;
+    onOrderChange(arrayMove(orderedIds, from, to));
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="sm" className={className}>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="secondary"
+          size={iconOnly ? "icon" : "sm"}
+          aria-label="Columns"
+          title="Columns"
+          className={className}
+        >
           <Columns3 />
-          Columns
+          {!iconOnly && "Columns"}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Columns</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {columns.map((column, i) => (
-          <DropdownMenuCheckboxItem
-            key={column.id}
-            checked={column.getIsVisible()}
-            onCheckedChange={(v) => column.toggleVisibility(!!v)}
-            onSelect={(e) => e.preventDefault()}
-            className="justify-between gap-2"
-          >
-            <span className="truncate">{columnLabel(table, column.id, columnLabels)}</span>
-            {enableReorder && (
-              <span className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  aria-label="Move column up"
-                  disabled={i === 0}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    move(column.id, -1);
-                  }}
-                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowUp className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Move column down"
-                  disabled={i === columns.length - 1}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    move(column.id, 1);
-                  }}
-                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowDown className="size-3.5" />
-                </button>
-              </span>
-            )}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-60 p-2">
+        <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">Columns</p>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>
+            <div className="flex flex-col">
+              {ordered.map((option) => (
+                <SortableColumnRow
+                  key={option.id}
+                  option={option}
+                  visible={visibility[option.id] !== false}
+                  onToggle={(v) => onVisibilityChange({ ...visibility, [option.id]: v })}
+                  enableReorder={enableReorder}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </PopoverContent>
+    </Popover>
   );
 }
 

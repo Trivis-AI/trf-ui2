@@ -14,23 +14,17 @@ export interface TablePageProps {
   /** Rendered left of the primary action (secondary/ghost utilities). */
   secondaryActions?: React.ReactNode;
 
-  // Toolbar row: fixed positions.
-  /** Quick-filter search, always toolbar-left. Omit to hide. */
+  /** Quick-filter search, rendered on the same row as the filters. Omit to hide. */
   search?: {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
   };
-  /** A TableColumnOptions menu, always toolbar-right. */
+  /** A TableColumnOptions menu (pass iconOnly), right-aligned on the filter row. */
   columnOptions?: React.ReactNode;
-  /** Optional, between search and options. Discouraged. */
-  toolbarExtras?: React.ReactNode;
 
-  /** Filter bar, between toolbar and table (wrap in TableFilterBar). */
+  /** Filter controls, shown on one row with the search (wrap in TableFilterBar). */
   filters?: React.ReactNode;
-
-  /** Bulk action bar, shown above the table when rows are selected. */
-  bulkActions?: React.ReactNode;
 
   /** Page max width. Default "full". */
   size?: PageSize;
@@ -49,10 +43,11 @@ export interface TablePageProps {
 }
 
 /**
- * Full-width table page frame. Fixed region order, top to bottom: header ->
- * toolbar (search left, column options right) -> filter bar -> bulk actions ->
- * table -> pagination footer. The app owns *what* goes in each region; the
- * organism owns *where* it goes, so pages cannot drift apart.
+ * Full-width table page frame. Region order, top to bottom: header -> filter row
+ * (search + filters, column options right-aligned) -> table -> pagination footer.
+ * Bulk actions live on the table itself (ServerDataTable.bulkActions replaces the
+ * column-header row while rows are selected). The app owns *what* goes in each
+ * region; the organism owns *where* it goes, so pages cannot drift apart.
  */
 export function TablePage({
   title,
@@ -61,16 +56,12 @@ export function TablePage({
   secondaryActions,
   search,
   columnOptions,
-  toolbarExtras,
   filters,
-  bulkActions,
   size = "full",
   pagination,
   children,
   className,
 }: TablePageProps) {
-  const hasToolbar = !!search || !!columnOptions || !!toolbarExtras;
-
   return (
     <Page size={size} className={cn("flex flex-col gap-4", className)}>
       {/* Header */}
@@ -89,34 +80,22 @@ export function TablePage({
         )}
       </div>
 
-      {/* Toolbar */}
-      {hasToolbar && (
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            {search && (
-              <TableSearch
-                value={search.value}
-                onChange={search.onChange}
-                placeholder={search.placeholder}
-              />
-            )}
-            {toolbarExtras}
-          </div>
-          {columnOptions && <div className="shrink-0">{columnOptions}</div>}
+      {/* Filter row: search, filters, and column options share one row */}
+      {(search || filters || columnOptions) && (
+        <div className="flex flex-wrap items-end gap-3">
+          {search && (
+            <TableSearch
+              value={search.value}
+              onChange={search.onChange}
+              placeholder={search.placeholder}
+            />
+          )}
+          {filters}
+          {columnOptions && <div className="ml-auto">{columnOptions}</div>}
         </div>
       )}
 
-      {/* Filters */}
-      {filters}
-
-      {/* Bulk actions */}
-      {bulkActions && (
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-2">
-          {bulkActions}
-        </div>
-      )}
-
-      {/* Table */}
+      {/* Table (its header row becomes the bulk toolbar when rows are selected) */}
       {children}
 
       {/* Pagination footer */}

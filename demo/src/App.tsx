@@ -5,7 +5,7 @@ import {
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
   FileText, ImageIcon, X, Download,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink,
-  Columns3, ArrowUp, ArrowDown, type LucideIcon,
+  type LucideIcon,
 } from "lucide-react";
 import {
   ActionPill, Alert, AlertDescription, AlertTitle, Avatar,
@@ -37,7 +37,7 @@ import {
 } from "recharts";
 // Server-driven table infra + standard cell renderers, consumed from the barrel.
 import {
-  ServerDataTable, TablePage, TableFilterBar, useTableQuery,
+  ServerDataTable, TablePage, TableFilterBar, TableColumnOptions, useTableQuery,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
 } from "@trf/ui2";
 import {
@@ -1139,77 +1139,6 @@ const SDT_DATA_COLUMNS: { id: string; label: string; hideable: boolean }[] = [
   { id: "payable", label: "Payable", hideable: true },
 ];
 
-// A column-options menu driving ServerDataTable's controlled columnVisibility /
-// columnOrder. (TableColumnOptions takes a TanStack instance, which the controlled
-// ServerDataTable does not expose, so the demo drives the same state directly.)
-function ServerColumnOptions({
-  order,
-  onReorder,
-  visibility,
-  onToggle,
-}: {
-  order: string[];
-  onReorder: (next: string[]) => void;
-  visibility: Record<string, boolean>;
-  onToggle: (id: string, visible: boolean) => void;
-}) {
-  const labelOf = (id: string) => SDT_DATA_COLUMNS.find((c) => c.id === id)?.label ?? id;
-  const move = (id: string, delta: number) => {
-    const next = [...order];
-    const from = next.indexOf(id);
-    const to = from + delta;
-    if (from < 0 || to < 0 || to >= next.length) return;
-    next.splice(to, 0, next.splice(from, 1)[0]);
-    onReorder(next);
-  };
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="sm"><Columns3 /> Columns</Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Columns</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {order.map((id, i) => {
-          const col = SDT_DATA_COLUMNS.find((c) => c.id === id);
-          if (!col) return null;
-          return (
-            <DropdownMenuCheckboxItem
-              key={id}
-              checked={visibility[id] !== false}
-              disabled={!col.hideable}
-              onCheckedChange={(v) => onToggle(id, !!v)}
-              onSelect={(e) => e.preventDefault()}
-              className="justify-between gap-2"
-            >
-              <span className="truncate">{labelOf(id)}</span>
-              <span className="flex items-center gap-0.5">
-                <button
-                  type="button"
-                  aria-label="Move column up"
-                  disabled={i === 0}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); move(id, -1); }}
-                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowUp className="size-3.5" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Move column down"
-                  disabled={i === order.length - 1}
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); move(id, 1); }}
-                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                >
-                  <ArrowDown className="size-3.5" />
-                </button>
-              </span>
-            </DropdownMenuCheckboxItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 function ServerDataTableDemo() {
   // useTableQuery owns page / sort / filter / debounced-search state and produces a
@@ -1226,6 +1155,8 @@ function ServerDataTableDemo() {
   const [opened, setOpened] = useState<string>();
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   // The mock stand-in for react-query: keeps previous data during refetch and
   // serves seen queries from cache. Bumping reloadNonce forces a background
@@ -1325,11 +1256,13 @@ function ServerDataTableDemo() {
           placeholder: "Search by number or supplier...",
         }}
         columnOptions={
-          <ServerColumnOptions
-            order={dataOrder}
-            onReorder={setDataOrder}
+          <TableColumnOptions
+            iconOnly
+            columns={SDT_DATA_COLUMNS}
             visibility={columnVisibility}
-            onToggle={(id, visible) => setColumnVisibility((v) => ({ ...v, [id]: visible }))}
+            onVisibilityChange={setColumnVisibility}
+            order={dataOrder}
+            onOrderChange={setDataOrder}
           />
         }
         filters={
@@ -1380,6 +1313,19 @@ function ServerDataTableDemo() {
           onColumnVisibilityChange={setColumnVisibility}
           columnOrder={columnOrder}
           onColumnOrderChange={(next) => setDataOrder(next.filter((id) => id !== "actions"))}
+          enableRowSelection
+          enableSelectAll
+          getRowId={(row) => row.number}
+          selectedRowIds={selected}
+          onSelectedRowIdsChange={setSelected}
+          bulkActions={
+            <>
+              <Text size="sm" className="font-medium">{selectedCount} selected</Text>
+              <Button variant="secondary" size="sm">Export</Button>
+              <Button variant="destructive" size="sm">Delete</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelected({})}>Cancel</Button>
+            </>
+          }
           loading={result.isLoading}
           fetching={result.isFetching && !result.isLoading}
           onRowClick={(row) => setOpened(row.number)}
@@ -1998,10 +1944,15 @@ export function App() {
           </div>
         </div>
 
-        {/* Active section */}
-        <div className="mx-auto w-full max-w-5xl px-6 py-8">
-          <div className="flex flex-wrap items-start gap-4">{activeSection.render()}</div>
-        </div>
+        {/* Active section. The ServerDataTable section runs full-bleed to show a
+            genuine full-width table (real apps get this from their AppLayout). */}
+        {activeSection.id === "server-datatable" ? (
+          <div className="w-full px-6 py-8">{activeSection.render()}</div>
+        ) : (
+          <div className="mx-auto w-full max-w-5xl px-6 py-8">
+            <div className="flex flex-wrap items-start gap-4">{activeSection.render()}</div>
+          </div>
+        )}
       </AppShell>
     </TooltipProvider>
   );
