@@ -45,6 +45,13 @@ style; it will adopt the `H1` component once the type scale is decided (open-que
 `Row`: `gap`, `align` (start/center/end/stretch/baseline), `justify` (start/center/end/between),
 `wrap`. **`Grow`** fills remaining horizontal space inside a Row.
 
+## TablePage — the full-width table organism
+
+For server-driven list pages, don't hand-roll the frame from `Page` + `PageHeader`.
+`TablePage` composes the full-width layout (header, toolbar, filter bar, bulk actions,
+table, pagination footer) with fixed regions and guardrails. Defaults to `size="full"`.
+See [ServerDataTable, TablePage & cell renderers](./server-data-table.md).
+
 ## Rules
 
 - Reach for these before writing raw `flex`/`grid` divs — keeps spacing on the scale.

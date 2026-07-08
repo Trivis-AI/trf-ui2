@@ -69,9 +69,20 @@ inline text input (commit on blur / Enter, cancel on Escape). **Editing replaces
 display renderer** — so an editable column shows the raw value, not a formatted one. If you need
 formatted-display + edit-on-click, render a custom cell instead of using `meta.editable`.
 
+## Tier 3 — `ServerDataTable` (server-driven)
+
+For **large, server-driven list pages** (thousands of rows) where the server owns
+paging, sorting, and filtering: purchase invoices, payments, products, sales invoices.
+Comes with the `TablePage` organism, the `useTableQuery` state hook, toolbar drop-ins,
+and standard cell renderers (`StatusCell`, `MoneyCell`, `DateCell`, ...).
+
+`DataTable` (Tier 2) stays for small in-memory sets; `ServerDataTable` is a sibling,
+not a replacement. See **[ServerDataTable, TablePage & cell renderers](./server-data-table.md)**.
+
 ## Rules
 
 - Use **Tier 1** unless you need sort/filter/reorder/edit. Don't pull DataTable for a 5-row table.
+- Use **Tier 3** when the server owns paging/sorting/filtering, not Tier 2's client models.
 - DataTable pulls TanStack + dnd-kit; apps that never import it don't bundle those (tree-shaken).
 - Column visuals come from tokens — don't restyle rows/cells with raw colors.
 
