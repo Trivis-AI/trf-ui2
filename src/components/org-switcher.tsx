@@ -90,7 +90,12 @@ export function OrgSwitcher({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent className={cn("w-64 p-0", className)} align={align} side={side}>
+      {/* Width follows the longest org name (up to a cap) instead of a fixed panel width. */}
+      <PopoverContent
+        className={cn("w-auto min-w-64 max-w-[min(24rem,90vw)] p-0", className)}
+        align={align}
+        side={side}
+      >
         <Command filter={substringFilter}>
           {showSearch && <CommandInput placeholder={searchPlaceholder} />}
           <CommandList>
