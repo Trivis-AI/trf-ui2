@@ -40,7 +40,18 @@ const dateTimeFmt = new Intl.DateTimeFormat(undefined, {
 
 function toDate(value: string | number | Date | null | undefined): Date | null {
   if (value == null || value === "") return null;
-  const d = value instanceof Date ? value : new Date(value);
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "string") {
+    // Date-only "YYYY-MM-DD": parse as LOCAL so it never shifts a day across
+    // timezones the way new Date("YYYY-MM-DD") (parsed as UTC midnight) would.
+    // Full ISO datetimes (with a time / "T") fall through to new Date below.
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (m) {
+      const local = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+      return Number.isNaN(local.getTime()) ? null : local;
+    }
+  }
+  const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 

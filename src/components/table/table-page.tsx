@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { Page, type PageSize } from "../page";
+import { pageSizeClass, type PageSize } from "../page";
 import { H1 } from "../typography";
 import { TableSearch, TablePagination } from "./table-toolbar";
 
@@ -63,7 +63,7 @@ export function TablePage({
   className,
 }: TablePageProps) {
   return (
-    <Page size={size} className={cn("flex flex-col gap-4", className)}>
+    <div className={cn("mx-auto flex w-full flex-col gap-4 p-4", pageSizeClass(size), className)}>
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
@@ -107,6 +107,6 @@ export function TablePage({
           onPageChange={pagination.onPageChange}
         />
       )}
-    </Page>
+    </div>
   );
 }

@@ -13,6 +13,12 @@ const SIZE = {
 
 export type PageSize = keyof typeof SIZE;
 
+/** The max-width class for a page size. Lets other layout organisms (e.g. TablePage)
+ *  reuse the size scale without re-declaring it. */
+export function pageSizeClass(size: PageSize = "lg"): string {
+  return SIZE[size];
+}
+
 export interface PageProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Max content width. Default "lg". */
   size?: PageSize;
