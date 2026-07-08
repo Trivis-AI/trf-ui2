@@ -192,6 +192,9 @@ export type { AsyncComboboxProps } from "./components/async-combobox";
 export { EntityCombobox } from "./components/entity-combobox";
 export type { EntityComboboxProps, EntityComboboxItem } from "./components/entity-combobox";
 
+export { OrgSwitcher } from "./components/org-switcher";
+export type { OrgSwitcherProps, OrgSwitcherOrg } from "./components/org-switcher";
+
 export { Calendar } from "./components/ui/calendar";
 export type { CalendarProps } from "./components/ui/calendar";
 

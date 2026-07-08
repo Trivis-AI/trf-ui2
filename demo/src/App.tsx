@@ -4,7 +4,7 @@ import {
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
   FileText, ImageIcon, X, Download,
-  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink,
+  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -15,7 +15,7 @@ import {
   AppShell, Badge, Button, cn, type ColumnDef, DataTable,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
+  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
@@ -323,6 +323,69 @@ function EntityComboboxDemo() {
         Type “tri” for CRM hits (SELECT); “saa” for the registry fallback (IMPORT).
         {picked ? ` Picked: ${picked}` : ""}
       </Text>
+    </div>
+  );
+}
+
+/* ----------------------------------------------- section: OrgSwitcher */
+
+const MANY_ORGS: OrgSwitcherOrg[] = [
+  "Triiberg AS", "Foam Labs OÜ", "Northwind OÜ", "Põhjala Logistika AS",
+  "Sinilill Kohvik OÜ", "Estkapital Invest AS", "Kalev & Pojad OÜ", "100 Meedia Brändi OÜ",
+  "Kamarajura OÜ", "Läänemere Kalandus AS", "Tartu Teraviljasalv OÜ", "Vana-Kalamaja Kinnisvara OÜ",
+  "Saaremaa Sadamad AS", "Nõmme Aiand OÜ", "Rakvere Rehvikeskus OÜ", "Viru Veod AS",
+  "Pärnu Puhkemajad OÜ", "Hiiumaa Käsitöö OÜ", "Mustamäe Meistrid OÜ", "Kadrioru Konsultatsioonid OÜ",
+].map((name, i) => ({ id: String(i + 1), name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") }));
+
+const FEW_ORGS = MANY_ORGS.slice(0, 3);
+
+// Returns the element itself (not a wrapper component) so PopoverTrigger's `asChild`
+// props (onClick, ref, aria) land on the Button.
+function orgTrigger(org: OrgSwitcherOrg) {
+  return (
+    <Button variant="ghost" className="w-56 justify-start px-2">
+      <Avatar name={org.name} colorKey={org.slug} size={24} />
+      <span className="min-w-0 flex-1 truncate text-left">{org.name}</span>
+      <ChevronsUpDown className="text-muted-foreground" />
+    </Button>
+  );
+}
+
+function OrgSwitcherDemo() {
+  const [manyCurrent, setManyCurrent] = useState(MANY_ORGS[0]);
+  const [fewCurrent, setFewCurrent] = useState(FEW_ORGS[0]);
+  const [lazyOrgs, setLazyOrgs] = useState<OrgSwitcherOrg[]>([]);
+  const [lazyLoading, setLazyLoading] = useState(false);
+  const [lazyCurrent, setLazyCurrent] = useState(MANY_ORGS[0]);
+  const lazyTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(lazyTimer.current), []);
+  return (
+    <div className="flex flex-wrap gap-8">
+      <Field label="Many orgs" description="≥ 8 orgs shows type-to-filter search; current org is checked.">
+        <OrgSwitcher orgs={MANY_ORGS} currentSlug={manyCurrent.slug} onSelect={setManyCurrent}>
+          {orgTrigger(manyCurrent)}
+        </OrgSwitcher>
+      </Field>
+      <Field label="Few orgs" description="Below the threshold the search input is hidden.">
+        <OrgSwitcher orgs={FEW_ORGS} currentSlug={fewCurrent.slug} onSelect={setFewCurrent}>
+          {orgTrigger(fewCurrent)}
+        </OrgSwitcher>
+      </Field>
+      <Field label="Lazy list" description="onOpen + loading — list fetched when the popover opens.">
+        <OrgSwitcher
+          orgs={lazyOrgs}
+          currentSlug={lazyCurrent.slug}
+          onSelect={setLazyCurrent}
+          loading={lazyLoading}
+          onOpen={() => {
+            if (lazyOrgs.length) return;
+            setLazyLoading(true);
+            lazyTimer.current = setTimeout(() => { setLazyOrgs(MANY_ORGS); setLazyLoading(false); }, 800);
+          }}
+        >
+          {orgTrigger(lazyCurrent)}
+        </OrgSwitcher>
+      </Field>
     </div>
   );
 }
@@ -1576,6 +1639,7 @@ const GROUPS: GroupDef[] = [
       { id: "combobox", label: "Combobox", render: () => <ComboboxDemo /> },
       { id: "async-combobox", label: "Async combobox", render: () => <AsyncComboboxDemo /> },
       { id: "entity-combobox", label: "Entity combobox", render: () => <EntityComboboxDemo /> },
+      { id: "org-switcher", label: "Org switcher", render: () => <OrgSwitcherDemo /> },
       { id: "datepicker", label: "Date & time pickers", render: () => <DatePickerDemo /> },
       {
         id: "spinner", label: "Spinner", render: () => (
