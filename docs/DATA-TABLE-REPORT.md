@@ -60,7 +60,7 @@ Design & decisions: `PLAN-server-data-table.md` · Backlog: `TABLE-TODO.md` · O
 - backinvoices: sort/dir + search + indexes (await per-tenant migrate)
 - backpurchase: sort/dir + indexes (auto-indexes per tenant)
 - backproducts: sort/dir + SKU search + indexes (await migrate)
-- backpayments: {items,total} pagination + method filter + sort; sort-index CONCURRENTLY fix shipping
+- backpayments: {items,total} pagination + method filter + sort + sort-index CONCURRENTLY (on prod)
 
 **Not released:** backitems inventory pagination (draft on a branch, deferred).
 
