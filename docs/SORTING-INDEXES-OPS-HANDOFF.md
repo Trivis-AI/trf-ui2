@@ -1,5 +1,22 @@
 # Sorting indexes — ops handoff (for Tom, 2026-07-09 AM)
 
+## STATUS UPDATE (2026-07-09): mostly done — one small task remains for you
+
+The backend sort (backinvoices + backpurchase) is now ON PROD, with the sort indexes switched to
+`CREATE INDEX CONCURRENTLY` and made non-fatal. Prod sales + purchase sorting is functional now.
+- **backpurchase**: fully self-serve — its Migrate auto-runs per tenant on first request and builds the
+  CONCURRENTLY indexes non-blocking. Nothing for you to do.
+- **backinvoices**: sorting works but is UNINDEXED until its indexes are materialized. Migrate runs only
+  via `POST /v1/migrate`, so **the one remaining task is: run `POST /v1/migrate` per prod tenant on
+  backinvoices** (prod auth) to build its sort indexes (now CONCURRENTLY, non-blocking). Non-urgent (perf).
+- backpayments/backproducts: their sort-index DDL is still plain `CREATE INDEX` (backpayments sort is on
+  prod but unindexed; backproducts sort not on prod). If/when you materialize those on prod, switch them to
+  CONCURRENTLY too (same one-line change as invoices/purchase).
+
+Everything below is the original context; only the backinvoices per-tenant migrate is still outstanding.
+---
+
+
 **Context:** We added server-side sorting to the four migrated list pages (sales invoices,
 purchase invoices, payments, products). The backend `sort`/`dir` params and single-column btree
 indexes on the sortable columns are deployed to **staging**; the sort-enabled frontends are on
