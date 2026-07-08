@@ -62,6 +62,8 @@
     "TableProgress": "08-ui-components/server-data-table.md",
     "TableView": "08-ui-components/server-data-table.md",
     "StatusCell": "08-ui-components/server-data-table.md",
+    "InvoiceStatusCell": "08-ui-components/server-data-table.md",
+    "deriveInvoiceStatus": "08-ui-components/server-data-table.md",
     "MoneyCell": "08-ui-components/server-data-table.md",
     "MonoCell": "08-ui-components/server-data-table.md",
     "DateCell": "08-ui-components/server-data-table.md",

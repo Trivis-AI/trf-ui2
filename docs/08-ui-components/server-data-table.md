@@ -171,6 +171,7 @@ helper used inside `ColumnDef.cell`, composing existing ui2 primitives.
 | Cell | Use |
 |---|---|
 | `StatusCell` | `StatusBadge` pill, optional inline sub-text. Status column always uses this. |
+| `InvoiceStatusCell` | Canonical sell-invoice lifecycle pill. Maps `{ status, paymentStatus, dueDate }` to Draft / Awaiting payment / Partially paid / Paid / Overdue / Credited / Cancelled via `deriveInvoiceStatus`. Use for every invoice status, never re-derive the tone per page. |
 | `MoneyCell` | Right-aligned, `tabular-nums`, mono; passes raw backend strings through. `signed` variant colors +/-. |
 | `MonoCell` | Codes / SKU / IBAN / numbers, with empty fallback. |
 | `DateCell` | Date / datetime / date-range, one canonical format. Never format dates per page. |

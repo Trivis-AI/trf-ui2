@@ -8,6 +8,9 @@
 export { StatusCell } from "./status-cell";
 export type { StatusCellProps } from "./status-cell";
 
+export { deriveInvoiceStatus, InvoiceStatusCell } from "./invoice-status";
+export type { InvoiceStatusInput, InvoiceStatusCellProps } from "./invoice-status";
+
 export { MoneyCell } from "./money-cell";
 export type { MoneyCellProps } from "./money-cell";
 
