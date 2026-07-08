@@ -313,6 +313,16 @@ export type { DataTableProps } from "./components/data-table";
 // (TanStack's `Row` is aliased to avoid colliding with the layout `Row` component.)
 export type { ColumnDef, CellContext, Row as DataTableRow } from "@tanstack/react-table";
 
+// --- Server-driven table infra ---
+// The controlled ServerDataTable, the TablePage full-width organism, the
+// useTableQuery state hook + URL-state adapter, the toolbar drop-ins
+// (TableSearch / TableColumnOptions / TablePagination / TableFilterBar), the
+// header progress line, the shared TableView core, and the standard cell
+// renderers (StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell,
+// BooleanCell, MeterCell, BadgeListCell, LinkCell, ActionsCell, AvatarCell,
+// ThumbnailCell, CellHoverCard). See src/components/table/index.ts.
+export * from "./components/table";
+
 // --- Permissions ---
 export { PermsProvider, usePerms } from './context/PermsContext';
 export { RequireAccess } from './components/RequireAccess';

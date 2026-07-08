@@ -719,3 +719,21 @@
     cursor: pointer;
   }
 }
+
+/*
+ * Indeterminate sweep for the table progress line (see components/table/TableProgress).
+ * A short bar that slides left-to-right forever, used while a server refetch is in
+ * flight and the rows stay on screen. Registered as a Tailwind v4 `--animate-*` token
+ * so it is available as the `animate-table-progress` utility.
+ */
+@theme {
+  --animate-table-progress: table-progress 1.15s ease-in-out infinite;
+}
+@keyframes table-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}

@@ -4,6 +4,8 @@ import {
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
   FileText, ImageIcon, X, Download,
+  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink,
+  Columns3, ArrowUp, ArrowDown, type LucideIcon,
 } from "lucide-react";
 import {
   ActionPill, Alert, AlertDescription, AlertTitle, Avatar,
@@ -20,11 +22,11 @@ import {
   Checkbox, ConfirmDialog, useConfirm, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader,
   DialogTitle, DialogTrigger,
   FloatingWindow, FloatingWindowClose, FloatingWindowContent, FloatingWindowHeader, FloatingWindowTitle, FloatingWindowTrigger,
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, SearchInput, SecretReveal,
   Logo, PageHeader, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
-  SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, Switch, Tabs, TabsContent, TabsList,
+  SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
@@ -33,6 +35,16 @@ import {
 import {
   AreaChart as RAreaChart, Area, CartesianGrid, XAxis, YAxis,
 } from "recharts";
+// Server-driven table infra + standard cell renderers, consumed from the barrel.
+import {
+  ServerDataTable, TablePage, TableFilterBar, useTableQuery,
+  StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
+} from "@trf/ui2";
+import {
+  queryTable, STATUS_OPTIONS, METHOD_OPTIONS,
+  type InvoiceRow, type InvoiceStatus, type PaymentMethod,
+} from "./mock/server";
+import { useMockQuery } from "./mock/use-mock-query";
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -1092,6 +1104,300 @@ function InvoiceTable() {
   );
 }
 
+/* ---------------------------------------------- section: ServerDataTable */
+
+// Domain status -> pill tone, mapped once so every status cell matches.
+const STATUS_TONE: Record<InvoiceStatus, StatusTone> = {
+  Draft: "neutral",
+  Sent: "info",
+  Paid: "success",
+  Overdue: "warning",
+  Cancelled: "error",
+};
+
+// Payment method -> an icon standing in for the text (IconCell keeps the label
+// visible and accessible). Lucide icons only.
+const METHOD_ICON: Record<PaymentMethod, LucideIcon> = {
+  Wire: Landmark,
+  Cash: Banknote,
+  Card: CreditCard,
+  "Direct debit": Repeat,
+};
+
+// One canonical amount formatter; MoneyCell passes the resulting string through.
+const eur = new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" });
+
+// Data columns (in default order) the column-options menu can hide / reorder. The
+// "actions" column is fixed rightmost and stays out of this list.
+const SDT_DATA_COLUMNS: { id: string; label: string; hideable: boolean }[] = [
+  { id: "number", label: "Number", hideable: false },
+  { id: "supplier", label: "Supplier", hideable: true },
+  { id: "date", label: "Date", hideable: true },
+  { id: "status", label: "Status", hideable: true },
+  { id: "method", label: "Method", hideable: true },
+  { id: "totalGross", label: "Total gross", hideable: true },
+  { id: "payable", label: "Payable", hideable: true },
+];
+
+// A column-options menu driving ServerDataTable's controlled columnVisibility /
+// columnOrder. (TableColumnOptions takes a TanStack instance, which the controlled
+// ServerDataTable does not expose, so the demo drives the same state directly.)
+function ServerColumnOptions({
+  order,
+  onReorder,
+  visibility,
+  onToggle,
+}: {
+  order: string[];
+  onReorder: (next: string[]) => void;
+  visibility: Record<string, boolean>;
+  onToggle: (id: string, visible: boolean) => void;
+}) {
+  const labelOf = (id: string) => SDT_DATA_COLUMNS.find((c) => c.id === id)?.label ?? id;
+  const move = (id: string, delta: number) => {
+    const next = [...order];
+    const from = next.indexOf(id);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= next.length) return;
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    onReorder(next);
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="secondary" size="sm"><Columns3 /> Columns</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Columns</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {order.map((id, i) => {
+          const col = SDT_DATA_COLUMNS.find((c) => c.id === id);
+          if (!col) return null;
+          return (
+            <DropdownMenuCheckboxItem
+              key={id}
+              checked={visibility[id] !== false}
+              disabled={!col.hideable}
+              onCheckedChange={(v) => onToggle(id, !!v)}
+              onSelect={(e) => e.preventDefault()}
+              className="justify-between gap-2"
+            >
+              <span className="truncate">{labelOf(id)}</span>
+              <span className="flex items-center gap-0.5">
+                <button
+                  type="button"
+                  aria-label="Move column up"
+                  disabled={i === 0}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); move(id, -1); }}
+                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                >
+                  <ArrowUp className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Move column down"
+                  disabled={i === order.length - 1}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); move(id, 1); }}
+                  className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                >
+                  <ArrowDown className="size-3.5" />
+                </button>
+              </span>
+            </DropdownMenuCheckboxItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function ServerDataTableDemo() {
+  // useTableQuery owns page / sort / filter / debounced-search state and produces a
+  // stable queryKey + params. URL sync is off here so the demo does not fight the
+  // kitchen sink's own navigation; real pages leave it on (the default).
+  const q = useTableQuery({
+    defaultSort: [{ id: "date", desc: true }],
+    defaultPageSize: 20,
+    filterKeys: ["status", "method"],
+    syncToUrl: false,
+  });
+
+  const [reloadNonce, setReloadNonce] = useState(0);
+  const [opened, setOpened] = useState<string>();
+  const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+
+  // The mock stand-in for react-query: keeps previous data during refetch and
+  // serves seen queries from cache. Bumping reloadNonce forces a background
+  // revalidate (a new, uncached key) so the loading line is easy to trigger.
+  const queryKey = useMemo(() => [...q.queryKey, reloadNonce], [q.queryKey, reloadNonce]);
+  const result = useMockQuery(queryKey, () =>
+    queryTable({
+      pageIndex: q.pageIndex,
+      pageSize: q.pageSize,
+      sorting: q.sorting,
+      search: q.search,
+      filters: q.filters,
+    })
+  );
+
+  const rows = result.data?.rows ?? [];
+  const columnOrder = useMemo(() => [...dataOrder, "actions"], [dataOrder]);
+
+  const columns: ColumnDef<InvoiceRow>[] = useMemo(
+    () => [
+      {
+        id: "number", accessorKey: "number", header: "Number",
+        cell: ({ row }) => <MonoCell value={row.original.number} />,
+      },
+      {
+        id: "supplier", accessorKey: "supplier", header: "Supplier",
+        cell: ({ row }) => (
+          <TextCell value={row.original.supplier} subLine={`Reg ${row.original.supplierReg}`} />
+        ),
+      },
+      {
+        id: "date", accessorKey: "date", header: "Date",
+        cell: ({ row }) => <DateCell value={row.original.date} />,
+      },
+      {
+        id: "status", accessorKey: "status", header: "Status", enableSorting: false,
+        cell: ({ row }) => (
+          <StatusCell tone={STATUS_TONE[row.original.status]} label={row.original.status} />
+        ),
+      },
+      {
+        id: "method", accessorKey: "method", header: "Method", enableSorting: false,
+        cell: ({ row }) => (
+          // The demo and @trf/ui2 resolve to different lucide-react copies, so the
+          // icon component is cast through IconCell's own icon prop type. Real
+          // consumers share one lucide-react and need no cast.
+          <IconCell
+            icon={METHOD_ICON[row.original.method] as React.ComponentProps<typeof IconCell>["icon"]}
+            label={row.original.method}
+          />
+        ),
+      },
+      {
+        id: "totalGross", accessorKey: "totalGross", header: "Total gross",
+        meta: { align: "right" },
+        cell: ({ row }) => <MoneyCell value={eur.format(row.original.totalGross)} />,
+      },
+      {
+        id: "payable", accessorKey: "payable", header: "Payable",
+        meta: { align: "right" },
+        cell: ({ row }) => (
+          <MoneyCell value={row.original.payable === 0 ? "" : eur.format(row.original.payable)} />
+        ),
+      },
+      {
+        id: "actions", header: "", enableSorting: false, meta: { align: "right" },
+        cell: ({ row }) => (
+          <ActionsCell
+            // Icons cast through ActionsCell's own prop type: see the method cell note.
+            actions={[
+              { label: "Download", icon: Download, iconOnly: true },
+              { label: "Open", icon: ExternalLink, iconOnly: true, onClick: () => setOpened(row.original.number) },
+            ] as React.ComponentProps<typeof ActionsCell>["actions"]}
+          />
+        ),
+      },
+    ],
+    []
+  );
+
+  const hasFilters = !!q.search || Object.keys(q.filters).length > 0;
+
+  return (
+    <div className="w-full">
+      <TablePage
+        title="Purchase invoices"
+        description="5000 rows from an in-memory mock: server-side search, filter, sort, and pagination with a flicker-free loading model."
+        primaryAction={<Button size="sm">New invoice</Button>}
+        secondaryActions={
+          <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
+            <RefreshCw /> Reload
+          </Button>
+        }
+        search={{
+          value: q.searchInput,
+          onChange: q.setSearch,
+          placeholder: "Search by number or supplier...",
+        }}
+        columnOptions={
+          <ServerColumnOptions
+            order={dataOrder}
+            onReorder={setDataOrder}
+            visibility={columnVisibility}
+            onToggle={(id, visible) => setColumnVisibility((v) => ({ ...v, [id]: visible }))}
+          />
+        }
+        filters={
+          <TableFilterBar active={hasFilters} onClear={q.clearFilters}>
+            <Field label="Status" htmlFor="sdt-status" className="w-44">
+              <SimpleSelect
+                id="sdt-status"
+                value={q.filters.status ?? ""}
+                onChange={(v) => q.setFilter("status", v)}
+                options={STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                placeholder="All statuses"
+                noneLabel="All statuses"
+              />
+            </Field>
+            <Field label="Method" htmlFor="sdt-method" className="w-44">
+              <SimpleSelect
+                id="sdt-method"
+                value={q.filters.method ?? ""}
+                onChange={(v) => q.setFilter("method", v)}
+                options={METHOD_OPTIONS.map((m) => ({ value: m, label: m }))}
+                placeholder="All methods"
+                noneLabel="All methods"
+              />
+            </Field>
+          </TableFilterBar>
+        }
+        pagination={{
+          pageIndex: q.pageIndex,
+          pageCount: result.data?.pageCount ?? -1,
+          rowCount: result.data?.rowCount,
+          onPageChange: q.setPageIndex,
+        }}
+      >
+        <ServerDataTable<InvoiceRow>
+          columns={columns}
+          data={rows}
+          pageIndex={q.pageIndex}
+          pageSize={q.pageSize}
+          pageCount={result.data?.pageCount ?? -1}
+          rowCount={result.data?.rowCount}
+          onPaginationChange={({ pageIndex, pageSize }) => {
+            if (pageSize !== q.pageSize) q.setPageSize(pageSize);
+            else q.setPageIndex(pageIndex);
+          }}
+          sorting={q.sorting}
+          onSortingChange={q.setSorting}
+          columnVisibility={columnVisibility}
+          onColumnVisibilityChange={setColumnVisibility}
+          columnOrder={columnOrder}
+          onColumnOrderChange={(next) => setDataOrder(next.filter((id) => id !== "actions"))}
+          loading={result.isLoading}
+          fetching={result.isFetching && !result.isLoading}
+          onRowClick={(row) => setOpened(row.number)}
+          skeletonRows={10}
+          emptyMessage="No invoices match your filters."
+        />
+      </TablePage>
+
+      <Text size="xs" tone="muted" className="mt-3 block">
+        Try it: reload for the cold skeleton, then sort a header, page, or type in search (debounced)
+        to see the thin loading line while the previous rows stay put. Revisit a page you have already
+        seen and its rows return instantly from cache, then revalidate.{" "}
+        {opened ? `Opened ${opened} (whole-row click).` : "Click any row to open it."}
+      </Text>
+    </div>
+  );
+}
+
 /* ------------------------------------------------ section: Sidebar (organism) */
 
 function SidebarDemo() {
@@ -1548,6 +1854,7 @@ const GROUPS: GroupDef[] = [
         ),
       },
       { id: "datatable", label: "DataTable", render: () => <InvoiceTable /> },
+      { id: "server-datatable", label: "ServerDataTable", render: () => <ServerDataTableDemo /> },
       { id: "chart", label: "Chart", render: () => <ChartDemo /> },
       { id: "sidebar", label: "App shell / Sidebar", render: () => <SidebarDemo /> },
     ],
