@@ -59,14 +59,14 @@ export function deriveInvoiceStatus(
   if (status === "confirmed" || status === "active") {
     if (paymentStatus === "paid") return { key: "paid", label: "Paid", tone: "success" };
     if (paymentStatus === "partial") {
-      return { key: "partial", label: "Partially paid", tone: "warning" };
+      return { key: "partial", label: "Partial", tone: "warning" };
     }
     // Unpaid or missing payment status: overdue if the due date has passed.
     const due = toDate(dueDate);
     if (due && startOfDay(due) < startOfDay(now ?? new Date())) {
       return { key: "overdue", label: "Overdue", tone: "error" };
     }
-    return { key: "awaiting", label: "Awaiting payment", tone: "info" };
+    return { key: "awaiting", label: "Unpaid", tone: "info" };
   }
 
   // Unknown status: surface it verbatim rather than swallowing it.
