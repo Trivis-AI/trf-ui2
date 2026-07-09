@@ -37,6 +37,22 @@ import {
 } from "../ui/table";
 import { TableProgress } from "./table-progress";
 
+/**
+ * Per-column inline cell-editor descriptor. A column opts a cell into inline
+ * editing by setting `meta.editor` (or the legacy boolean `meta.editable`, which
+ * is treated as a plain text editor). `EditableDataTable` reads this to render the
+ * matching control; the client `DataTable`'s built-in editor honours `editable`.
+ */
+export type CellEditor =
+  | { type: "text"; placeholder?: string }
+  | { type: "number"; min?: number; max?: number; step?: number; placeholder?: string }
+  | {
+      type: "select";
+      options: { value: string; label: React.ReactNode }[];
+      placeholder?: string;
+    }
+  | { type: "switch" };
+
 // Shared column meta: lets columns opt into inline editing and per-column
 // alignment. Declared here (the shared render core) so both DataTable and
 // ServerDataTable pick it up; do NOT re-declare it elsewhere or TS reports a
@@ -50,6 +66,8 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     editable?: boolean;
     align?: "left" | "right" | "center";
+    /** Inline editor descriptor read by EditableDataTable. */
+    editor?: CellEditor;
   }
 }
 

@@ -312,6 +312,15 @@ export type {
 // TanStack-powered DataTable — sort, filter, column reorder, inline edit.
 export { DataTable } from "./components/data-table";
 export type { DataTableProps } from "./components/data-table";
+
+// Generic "edit one record" modal — schema-ish fields over Dialog + Field.
+export { RowEditModal } from "./components/row-edit-modal";
+export type {
+  RowEditModalProps,
+  RowEditField,
+  RowEditFieldType,
+  RowEditFieldOption,
+} from "./components/row-edit-modal";
 // Re-exported so apps type their columns without importing @tanstack/react-table directly.
 // (TanStack's `Row` is aliased to avoid colliding with the layout `Row` component.)
 export type { ColumnDef, CellContext, Row as DataTableRow } from "@tanstack/react-table";

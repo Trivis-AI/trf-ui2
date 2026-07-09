@@ -15,6 +15,13 @@ export type { TableViewProps } from "./table-view";
 export { ServerDataTable } from "./server-data-table";
 export type { ServerDataTableProps } from "./server-data-table";
 
+// The inline-edit table (reads the meta.editor / meta.editable seam).
+export { EditableDataTable } from "./editable-data-table";
+export type { EditableDataTableProps } from "./editable-data-table";
+
+// Per-column inline editor descriptor (used by EditableDataTable / DataTable).
+export type { CellEditor } from "./table-view";
+
 // The full-width page organism.
 export { TablePage } from "./table-page";
 export type { TablePageProps } from "./table-page";

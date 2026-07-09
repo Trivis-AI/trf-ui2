@@ -39,6 +39,7 @@ import {
 import {
   ServerDataTable, TablePage, TableFilterBar, TableColumnOptions, useTableQuery,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
+  EditableDataTable, RowEditModal, type RowEditField,
 } from "@trf/ui2";
 import {
   queryTable, STATUS_OPTIONS, METHOD_OPTIONS,
@@ -1407,6 +1408,159 @@ function ServerDataTableDemo() {
   );
 }
 
+/* -------------------------------------------- section: EditableDataTable */
+
+type TaxRate = {
+  id: string;
+  code: string;
+  name: string;
+  rate: number;
+  domain: "sales" | "purchase";
+  active: boolean;
+};
+
+function EditableDataTableDemo() {
+  const [rows, setRows] = useState<TaxRate[]>([
+    { id: "1", code: "STD22", name: "Standard rate", rate: 22, domain: "sales", active: true },
+    { id: "2", code: "RED9", name: "Reduced rate", rate: 9, domain: "sales", active: true },
+    { id: "3", code: "ZERO", name: "Zero-rated", rate: 0, domain: "sales", active: false },
+    { id: "4", code: "PUR22", name: "Purchase standard", rate: 22, domain: "purchase", active: true },
+  ]);
+
+  const columns: ColumnDef<TaxRate>[] = [
+    { id: "code", accessorKey: "code", header: "Code", meta: { editor: { type: "text" } } },
+    { id: "name", accessorKey: "name", header: "Name", meta: { editor: { type: "text" } } },
+    {
+      id: "rate", accessorKey: "rate", header: "Rate %",
+      meta: { align: "right", editor: { type: "number", min: 0, max: 100, step: 0.1 } },
+    },
+    {
+      id: "domain", accessorKey: "domain", header: "Domain",
+      meta: {
+        editor: {
+          type: "select",
+          options: [
+            { value: "sales", label: "Sales" },
+            { value: "purchase", label: "Purchase" },
+          ],
+        },
+      },
+    },
+    {
+      id: "active", accessorKey: "active", header: "Active",
+      meta: { align: "center", editor: { type: "switch" } },
+    },
+  ];
+
+  return (
+    <div className="w-full max-w-3xl">
+      <Text size="xs" tone="muted" className="mb-2">
+        Every cell edits inline: type into text / number (Enter commits, Esc reverts), pick the
+        domain, toggle Active. Edits update the row in place — no navigation to a separate page.
+      </Text>
+      <EditableDataTable<TaxRate>
+        columns={columns}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellEdit={(rowId, columnId, value) =>
+          setRows((prev) =>
+            prev.map((r) => (r.id === rowId ? { ...r, [columnId]: value } : r))
+          )
+        }
+      />
+    </div>
+  );
+}
+
+/* ------------------------------------------------ section: RowEditModal */
+
+type Currency = {
+  code: string;
+  name: string;
+  symbol: string;
+  rate: number;
+  isDefault: boolean;
+};
+
+function RowEditModalDemo() {
+  const [rows, setRows] = useState<Currency[]>([
+    { code: "EUR", name: "Euro", symbol: "€", rate: 1, isDefault: true },
+    { code: "USD", name: "US Dollar", symbol: "$", rate: 0.92, isDefault: false },
+    { code: "GBP", name: "Pound Sterling", symbol: "£", rate: 1.17, isDefault: false },
+  ]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Currency | null>(null);
+
+  const fields: RowEditField[] = [
+    { key: "code", label: "Code", required: true, description: "ISO 4217, e.g. EUR." },
+    { key: "name", label: "Name", required: true },
+    { key: "symbol", label: "Symbol" },
+    {
+      key: "rate", label: "Rate to base", type: "number", step: 0.0001, required: true,
+      validate: (v) => (Number(v) > 0 ? null : "Rate must be greater than zero."),
+    },
+    {
+      key: "isDefault", label: "Default currency", type: "switch",
+      description: "The org's base currency.",
+    },
+  ];
+
+  const columns: ColumnDef<Currency>[] = [
+    {
+      id: "code", accessorKey: "code", header: "Code",
+      cell: ({ row }) => <MonoCell value={row.original.code} />,
+    },
+    { id: "name", accessorKey: "name", header: "Name" },
+    { id: "symbol", accessorKey: "symbol", header: "Symbol" },
+    {
+      id: "rate", accessorKey: "rate", header: "Rate", meta: { align: "right" },
+      cell: ({ getValue }) => (getValue() as number).toFixed(4),
+    },
+    {
+      id: "default", header: "",
+      cell: ({ row }) => (row.original.isDefault ? <Badge variant="success">Default</Badge> : null),
+    },
+    {
+      id: "actions", header: "", meta: { align: "right" },
+      cell: ({ row }) => (
+        <ActionsCell
+          actions={[
+            {
+              label: "Edit", icon: Pencil,
+              onClick: () => {
+                setEditing(row.original);
+                setOpen(true);
+              },
+            },
+          ] as React.ComponentProps<typeof ActionsCell>["actions"]}
+        />
+      ),
+    },
+  ];
+
+  return (
+    <div className="w-full max-w-2xl">
+      <Text size="xs" tone="muted" className="mb-2">
+        Click Edit to change a currency in a modal instead of a separate page. Validation blocks a
+        zero rate; Save is simulated (600ms) with a pending state, and closes on success.
+      </Text>
+      <DataTable columns={columns} data={rows} enableSorting={false} />
+      <RowEditModal<Currency>
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? `Edit ${editing.code}` : "Edit currency"}
+        description="Update the currency and save without leaving the list."
+        fields={fields}
+        value={editing}
+        onSubmit={async (next) => {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          setRows((prev) => prev.map((c) => (c.code === editing?.code ? next : c)));
+        }}
+      />
+    </div>
+  );
+}
+
 /* ------------------------------------------------ section: Sidebar (organism) */
 
 function SidebarDemo() {
@@ -1865,6 +2019,8 @@ const GROUPS: GroupDef[] = [
       },
       { id: "datatable", label: "DataTable", render: () => <InvoiceTable /> },
       { id: "server-datatable", label: "ServerDataTable", render: () => <ServerDataTableDemo /> },
+      { id: "editable-datatable", label: "Editable data table", render: () => <EditableDataTableDemo /> },
+      { id: "row-edit-modal", label: "Row edit modal", render: () => <RowEditModalDemo /> },
       { id: "chart", label: "Chart", render: () => <ChartDemo /> },
       { id: "sidebar", label: "App shell / Sidebar", render: () => <SidebarDemo /> },
     ],
