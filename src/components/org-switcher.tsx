@@ -90,15 +90,22 @@ export function OrgSwitcher({
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      {/* Width follows the longest org name (up to a cap) instead of a fixed panel width. */}
+      {/* Width follows the longest org name (up to a cap) instead of a fixed panel width.
+          Height follows the org count up to the space Radix reports below the trigger,
+          so long lists (20+ orgs) use the viewport instead of CommandList's 18rem cap. */}
       <PopoverContent
-        className={cn("w-auto min-w-64 max-w-[min(24rem,90vw)] p-0", className)}
+        className={cn(
+          "flex w-auto min-w-64 max-w-[min(24rem,90vw)] flex-col overflow-hidden p-0",
+          "max-h-[var(--radix-popover-content-available-height)]",
+          className
+        )}
         align={align}
         side={side}
+        collisionPadding={8}
       >
         <Command filter={substringFilter}>
           {showSearch && <CommandInput placeholder={searchPlaceholder} />}
-          <CommandList>
+          <CommandList className="max-h-none min-h-0">
             {loading ? (
               <div className="py-6 text-center text-sm text-muted-foreground">{loadingText}</div>
             ) : (
