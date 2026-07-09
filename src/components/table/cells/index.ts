@@ -53,5 +53,9 @@ export type { AvatarCellProps } from "./avatar-cell";
 export { ThumbnailCell } from "./thumbnail-cell";
 export type { ThumbnailCellProps } from "./thumbnail-cell";
 
-export { CellHoverCard } from "./hover-card-seam";
-export type { HoverCardSeamProps } from "./hover-card-seam";
+export { CellHoverCard, AmountBreakdown } from "./hover-card-seam";
+export type {
+  HoverCardSeamProps,
+  AmountBreakdownProps,
+  AmountBreakdownRow,
+} from "./hover-card-seam";

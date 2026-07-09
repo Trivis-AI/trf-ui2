@@ -39,7 +39,7 @@ import {
 import {
   ServerDataTable, TablePage, TableFilterBar, TableColumnOptions, useTableQuery,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
-  EditableDataTable, RowEditModal, type RowEditField,
+  AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
 } from "@trf/ui2";
 import {
   queryTable, STATUS_OPTIONS, METHOD_OPTIONS,
@@ -1276,7 +1276,29 @@ function ServerDataTableDemo() {
       {
         id: "totalGross", accessorKey: "totalGross", header: "Total gross",
         meta: { align: "right" },
-        cell: ({ row }) => <MoneyCell value={eur.format(row.original.totalGross)} />,
+        cell: ({ row }) => {
+          // Mock rows only carry gross + payable; derive a plausible Net / VAT
+          // (22%) split so the hover card shows a full breakdown. Real pages pass
+          // the actual net / tax / gross / payable fields.
+          const gross = row.original.totalGross;
+          const net = Math.round((gross / 1.22) * 100) / 100;
+          const vat = Math.round((gross - net) * 100) / 100;
+          return (
+            <MoneyCell
+              value={eur.format(gross)}
+              hoverCard={
+                <AmountBreakdown
+                  rows={[
+                    { label: "Net", value: eur.format(net) },
+                    { label: "VAT (22%)", value: eur.format(vat) },
+                    { label: "Gross", value: eur.format(gross) },
+                    { label: "Payable", value: eur.format(row.original.payable), emphasis: true },
+                  ]}
+                />
+              }
+            />
+          );
+        },
       },
       {
         id: "payable", accessorKey: "payable", header: "Payable",
