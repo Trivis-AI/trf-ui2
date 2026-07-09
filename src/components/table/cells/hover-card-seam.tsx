@@ -28,6 +28,21 @@ export interface HoverCardSeamProps {
 const OPEN_DELAY = 120;
 const CLOSE_DELAY = 120;
 
+// Per-instance controller shape used by the module-level single-open guard.
+interface CardController {
+  clear: () => void;
+  open: () => void;
+  close: () => void;
+}
+
+// Only one hover card may be open at a time. Each cell renders its own Popover with
+// its own open-state and timers, and Popover instances do not coordinate — so when
+// the pointer travels between cells the previous card's close timer races the next
+// card's open, and on some browsers/event timings both stay open (a stacked "dual"
+// card). This module-level reference to the currently-open card lets a card that is
+// opening force-close any other synchronously, which is the real dismissal guarantee.
+let activeCard: CardController | null = null;
+
 export function CellHoverCard({
   hoverCard,
   children,
@@ -47,28 +62,50 @@ function HoverCardImpl({
   const [open, setOpen] = React.useState(false);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clear = React.useCallback(() => {
-    if (timer.current) {
-      clearTimeout(timer.current);
-      timer.current = null;
-    }
-  }, []);
+  // Stable per-instance controller (created once) so `activeCard` can identify and
+  // force-close exactly this card. Methods read stable refs / setState only.
+  const controller = React.useRef<CardController | null>(null);
+  if (controller.current === null) {
+    const self: CardController = {
+      clear: () => {
+        if (timer.current) {
+          clearTimeout(timer.current);
+          timer.current = null;
+        }
+      },
+      open: () => {
+        self.clear();
+        // Close whichever other card is open before we take its place.
+        if (activeCard && activeCard !== self) activeCard.close();
+        activeCard = self;
+        setOpen(true);
+      },
+      close: () => {
+        self.clear();
+        if (activeCard === self) activeCard = null;
+        setOpen(false);
+      },
+    };
+    controller.current = self;
+  }
+  const card = controller.current;
 
-  const schedule = React.useCallback(
-    (next: boolean, delay: number) => {
-      clear();
-      timer.current = setTimeout(() => setOpen(next), delay);
-    },
-    [clear]
-  );
+  const schedule = (fn: () => void, delay: number) => {
+    card.clear();
+    timer.current = setTimeout(fn, delay);
+  };
+  const openSoon = () => schedule(card.open, OPEN_DELAY);
+  const closeSoon = () => schedule(card.close, CLOSE_DELAY);
 
-  React.useEffect(() => clear, [clear]);
+  // On unmount, drop the timer and release the global slot if we hold it.
+  React.useEffect(() => () => card.close(), [card]);
 
-  const openSoon = () => schedule(true, OPEN_DELAY);
-  const closeSoon = () => schedule(false, CLOSE_DELAY);
+  // Route Radix-driven changes (Escape, outside interaction) through the guard too,
+  // so the global slot stays in sync.
+  const onOpenChange = (next: boolean) => (next ? card.open() : card.close());
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange}>
       {/*
         asChild merges the trigger (ref, aria-*, and these hover/focus handlers)
         onto the cell's own single root element, so there is no extra DOM node and
@@ -92,7 +129,7 @@ function HoverCardImpl({
           // Do not steal focus on open (this is a hover reveal, not a click
           // dialog); keep the trigger focused so blur can still close it.
           onOpenAutoFocus={(e) => e.preventDefault()}
-          onMouseEnter={clear}
+          onMouseEnter={card.clear}
           onMouseLeave={closeSoon}
           className={cn(
             "z-50 w-auto min-w-56 max-w-xs rounded-md border border-border bg-popover p-3",
