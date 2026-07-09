@@ -47,9 +47,13 @@ mechanism (localStorage first, server-backed later) rather than one-offs. A "Tab
 - [ ] **Archetype-B sub-tables.** Migrate the read-only detail tables to reuse the cell renderers:
       payment allocations, import-job lists, depreciation entries, delivery dispatch, invoice
       line-item display. (Consistency; still old hand-rolled markup.)
-- [ ] **backitems / frontitems inventory migration.** The biggest one — frontitems was never
-      migrated to ServerDataTable, and backitems has a breaking bare-array -> {items,total} shape
-      change (coordinate like payments). Do only if inventory lists actually hurt.
+- [x] **backitems / frontitems inventory migration.** DONE (2026-07-09) — frontitems Item list on
+      ServerDataTable, backitems `{items,total,page,limit}` contract + sort. Live on prod.
+- [ ] **Ledger Periods page inline edits.** The Periods sub-table now uses whole-row click (done
+      2026-07-09). Fiscal Years + Quarters are still hand-rolled inline tables with per-row Save
+      buttons — prime candidates to convert to ui2 `EditableDataTable` (commit-on-blur, drop the
+      explicit Save). Jaak flagged **Quarters** specifically (ledger > periods > quarters) as the
+      perfect inline-editing-table candidate.
 
 ## Reserved seams (built to support, not implemented)
 
