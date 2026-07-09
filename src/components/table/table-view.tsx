@@ -232,7 +232,10 @@ export function TableView<TData>({
     : undefined;
 
   const selectionHead = enableRowSelection ? (
-    <TableHead className={cn("w-10", headStickyClass)}>
+    <TableHead
+      className={cn("w-10", enableSelectAll && "cursor-pointer", headStickyClass)}
+      onClick={enableSelectAll ? () => table.toggleAllRowsSelected() : undefined}
+    >
       {enableSelectAll ? (
         <Checkbox
           checked={
@@ -242,6 +245,7 @@ export function TableView<TData>({
                 ? "indeterminate"
                 : false
           }
+          onClick={(e) => e.stopPropagation()}
           onCheckedChange={(v) => table.toggleAllRowsSelected(!!v)}
           aria-label="Select all rows"
         />
@@ -328,10 +332,17 @@ export function TableView<TData>({
                   className={cn(clickable && "cursor-pointer", rowClassName?.(row.original))}
                 >
                   {enableRowSelection && (
-                    <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                    <TableCell
+                      className={cn("w-10", row.getCanSelect() && "cursor-pointer")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (row.getCanSelect()) row.toggleSelected();
+                      }}
+                    >
                       <Checkbox
                         checked={row.getIsSelected()}
                         disabled={!row.getCanSelect()}
+                        onClick={(e) => e.stopPropagation()}
                         onCheckedChange={(v) => row.toggleSelected(!!v)}
                         aria-label="Select row"
                       />
