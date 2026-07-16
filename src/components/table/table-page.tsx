@@ -63,7 +63,8 @@ export function TablePage({
   className,
 }: TablePageProps) {
   return (
-    <div className={cn("mx-auto flex w-full flex-col gap-4 p-4", pageSizeClass(size), className)}>
+    // px-6 matches Page's gutter so full-width list pages and constrained pages share the same left edge.
+    <div className={cn("mx-auto flex w-full flex-col gap-4 px-6 py-6", pageSizeClass(size), className)}>
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
