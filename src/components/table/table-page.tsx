@@ -2,6 +2,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { pageSizeClass, type PageSize } from "../page";
 import { H1 } from "../typography";
+import { Field } from "../ui/field";
 import { TableSearch, TablePagination } from "./table-toolbar";
 
 export interface TablePageProps {
@@ -21,6 +22,8 @@ export interface TablePageProps {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
+    /** Optional label above the input, aligning it with Field-wrapped filters. */
+    label?: React.ReactNode;
   };
   /** A TableColumnOptions menu (pass iconOnly), right-aligned on the filter row. */
   columnOptions?: React.ReactNode;
@@ -88,13 +91,21 @@ export function TablePage({
       {/* Filter row: search, filters, and column options share one row */}
       {(search || filters || columnOptions) && (
         <div className="flex flex-wrap items-end gap-3">
-          {search && (
+          {search && (search.label != null ? (
+            <Field label={search.label}>
+              <TableSearch
+                value={search.value}
+                onChange={search.onChange}
+                placeholder={search.placeholder}
+              />
+            </Field>
+          ) : (
             <TableSearch
               value={search.value}
               onChange={search.onChange}
               placeholder={search.placeholder}
             />
-          )}
+          ))}
           {filters}
           {columnOptions && <div className="ml-auto">{columnOptions}</div>}
         </div>
