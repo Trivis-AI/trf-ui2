@@ -4,7 +4,8 @@
   "readBeforeWritingUI": [
     "13-ai-coding-guidelines.md",
     "03-design-tokens.md",
-    "07-component-architecture.md"
+    "07-component-architecture.md",
+    "17-app-layout-conventions.md"
   ],
   "readBeforeMigrating": [
     "15-migration-infra.md",
@@ -24,7 +25,8 @@
     "14-migration-guide.md": "v1→v2 component mapping table, AppShell migration pattern, per-app process, and common gotchas.",
     "15-migration-infra.md": "Branch naming convention (feat/trf-ui2-adoption), test server strategy, tag pinning rules, migration order for all 13 remaining apps, and per-app checklist.",
     "16-component-graduation.md": "Post-migration plan: which app-local components graduate into trf-ui2 (EntityCombobox, Select empty-value, StepCard, StatementTable, ActionPill, EditableGrid), build order, and the phase-4 replacement checklist.",
-    "open-questions.md": "Living parking lot: unresolved decisions and future plans (i18n, analytics, typography scale, theming). File questions here instead of guessing."
+    "open-questions.md": "Living parking lot: unresolved decisions and future plans (i18n, analytics, typography scale, theming). File questions here instead of guessing.",
+    "17-app-layout-conventions.md": "Suite-wide app layout/nav rules: page width (TablePage full / Page xl via router helper), shell breadcrumbs instead of inline back links (ShellCrumb), useBlocker dirty guard, list-page recipe, QueryClient defaults, icons-not-glyphs."
   },
   "components": {
     "AppShell": "08-ui-components/sidebar.md",
@@ -79,7 +81,7 @@
     "CellHoverCard": "08-ui-components/server-data-table.md",
     "StatementTable": "08-ui-components/statement-table.md",
     "EditableGrid": "08-ui-components/editable-grid.md",
-    "Logo": "(TRF brand mark \u2014 see src/components/logo.tsx; currentColor, defaults to text-primary)",
+    "Logo": "(TRF brand mark — see src/components/logo.tsx; currentColor, defaults to text-primary)",
     "Attachment": "08-ui-components/attachment.md",
     "AttachmentDropzone": "08-ui-components/attachment-dropzone.md",
     "useFileDrop": "08-ui-components/attachment-dropzone.md",
