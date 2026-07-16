@@ -1,7 +1,7 @@
 {
   "name": "@trf/ui2",
   "private": true,
-  "version": "7.0.22",
+  "version": "7.0.23",
   "type": "module",
   "description": "TRF design system & component library (shadcn-style, Radix + Tailwind v4, owned source).",
   "scripts": {
@@ -17,7 +17,8 @@
     "./styles/tokens.css": "./src/styles/tokens.css"
   },
   "files": [
-    "src"
+    "src",
+    "docs"
   ],
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
