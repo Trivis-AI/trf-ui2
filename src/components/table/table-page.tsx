@@ -5,7 +5,9 @@ import { H1 } from "../typography";
 import { TableSearch, TablePagination } from "./table-toolbar";
 
 export interface TablePageProps {
-  title: React.ReactNode;
+  /** Optional since the app-shell breadcrumb bar names the page; omit together
+   * with the actions to drop the header row entirely. */
+  title?: React.ReactNode;
   description?: React.ReactNode;
 
   // Header actions: structured so order and variant cannot drift page to page.
@@ -65,21 +67,23 @@ export function TablePage({
   return (
     // px-6 matches Page's gutter so full-width list pages and constrained pages share the same left edge.
     <div className={cn("mx-auto flex w-full flex-col gap-4 px-6 py-6", pageSizeClass(size), className)}>
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <H1>{title}</H1>
-          {description != null && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+      {/* Header (skipped entirely when the shell bar carries title and actions) */}
+      {(title != null || description != null || primaryAction || secondaryActions) && (
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            {title != null && <H1>{title}</H1>}
+            {description != null && (
+              <p className="text-sm text-muted-foreground">{description}</p>
+            )}
+          </div>
+          {(secondaryActions || primaryAction) && (
+            <div className="flex shrink-0 items-center gap-2">
+              {secondaryActions}
+              {primaryAction}
+            </div>
           )}
         </div>
-        {(secondaryActions || primaryAction) && (
-          <div className="flex shrink-0 items-center gap-2">
-            {secondaryActions}
-            {primaryAction}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Filter row: search, filters, and column options share one row */}
       {(search || filters || columnOptions) && (

@@ -45,6 +45,17 @@ import { ShellCrumb } from '@trf/app-shell'
 - Cancel buttons on forms are form actions, not navigation chrome; they stay.
 - Full-bleed screens (chat) can pass `topBar={false}` to `AppShellLayout`.
 
+Since app-shell v0.30.0 the bar also carries the page's actions and status, and pages
+drop their `PageHeader`/`TablePage` heading (the crumb already names the page):
+
+- `<ShellBarActions>` portals the page's action buttons into the right side of the
+  crumb row. Workflow actions keep text labels; utility actions (attach, copy, new,
+  delete) are icon buttons (`size="sm" className="px-2"`, `title` + `aria-label`).
+- `<ShellBarMeta>` portals status badge + meta text into a second bar row.
+- The bar is desktop-only: pages render the same nodes again in a `md:hidden`
+  fallback row so mobile keeps them (share one JSX variable; keep hidden file
+  inputs and similar ref-holders outside the shared node so refs stay unique).
+
 ## 3. Unsaved-changes guard
 
 Guard in-app navigation with react-router's `useBlocker` driving the ui2 `ConfirmDialog`,
@@ -61,8 +72,12 @@ Reference: frontpurchase `src/pages/invoices/InvoiceEdit.tsx`.
 
 ## 4. List page recipe
 
-`useTableQuery` (state + queryKey) > `TablePage` (title, `primaryAction`, `search`,
-`TableFilterBar` filters, `TableColumnOptions`, `pagination`) > `ServerDataTable`.
+`useTableQuery` (state + queryKey) > `TablePage` (`search`, `TableFilterBar` filters,
+`TableColumnOptions`, `pagination`) > `ServerDataTable`.
+
+- No `title` on `TablePage` (optional since ui2 v7.0.24): the shell bar names the page.
+  The primary action ("New X") goes in `<ShellBarActions>`, with a `md:hidden`
+  fallback row inside the page for mobile.
 
 - react-query: `placeholderData: keepPreviousData` on the list query (flicker-free
   refetch; pass `fetching={query.isFetching && !query.isLoading}`).
