@@ -314,7 +314,8 @@ export function TableFilterBar({ children, active, onClear, className }: TableFi
     <div className={cn("flex flex-wrap items-end gap-3", className)}>
       {children}
       {active && onClear && (
-        <Button variant="primary" size="sm" onClick={onClear}>
+        // md matches the h-9 filter controls, so the items-end row stays flush.
+        <Button variant="primary" size="md" onClick={onClear}>
           <X />
           Clear
         </Button>
