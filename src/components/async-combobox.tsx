@@ -145,7 +145,7 @@ export function AsyncCombobox<T>({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[var(--radix-popover-trigger-width)] min-w-[12rem] p-0"
+        className="w-auto min-w-[max(var(--radix-popover-trigger-width),12rem)] max-w-[26rem] p-0"
       >
         {/* shouldFilter={false}: results are already filtered server-side. */}
         <Command shouldFilter={false}>
