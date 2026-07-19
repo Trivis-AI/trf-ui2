@@ -234,14 +234,12 @@ export function TableView<TData>({
     table.setColumnOrder(arrayMove(order, oldIndex, newIndex));
   }
 
-  // Sticks below the app shell's top bar (which publishes its measured height as
-  // --trf-topbar-h); 0 when there is no shell. Requires no scroll-container
-  // ancestors between the th and the page scroller, which only holds at xl+
-  // (below xl the overflow-x wrapper stays on and would become the sticky's
-  // scroll container, shoving the header down over the rows) — so sticky
-  // positioning itself is xl-gated to match the wrapper below.
+  // The table owns its scrollport (the bordered wrapper scrolls both axes, capped
+  // to the viewport minus shell/page chrome), so the header sticks to the
+  // wrapper's top edge at every viewport width — no breakpoint gating and no
+  // dependence on the page scroller or the shell's --trf-topbar-h offset.
   const headStickyClass = stickyHeader
-    ? "xl:sticky xl:top-[var(--trf-topbar-h,0px)] z-10 bg-background"
+    ? "sticky top-0 z-10 bg-background"
     : undefined;
 
   const selectionHead = enableRowSelection ? (
@@ -267,10 +265,9 @@ export function TableView<TData>({
   ) : null;
 
   const tableEl = (
-    // Sticky needs the page scroller to be the nearest scroll container, so at xl+
-    // the horizontal-scroll wrapper backs off (full-width list pages fit there);
-    // below xl the table keeps its horizontal scroll and the header rides along.
-    <Table className={className} containerClassName={stickyHeader ? "xl:overflow-x-visible" : undefined}>
+    // With the outer wrapper as the scrollport, the inner overflow wrapper must
+    // not trap the sticky header — it backs off entirely when sticky is on.
+    <Table className={className} containerClassName={stickyHeader ? "overflow-x-visible" : undefined}>
       <TableHeader>
         {bulkBar ? (
           // Selection active: the column-header row becomes the bulk toolbar.
@@ -391,7 +388,15 @@ export function TableView<TData>({
   return (
     <div
       ref={wrapperRef}
-      className="relative overflow-clip rounded-lg border border-border"
+      className={cn(
+        "relative rounded-lg border border-border",
+        // Scrollport mode: both axes scroll inside the table, capped so header
+        // and pagination stay reachable. --trf-table-chrome is the estimated
+        // page chrome around the table; apps may override it.
+        stickyHeader
+          ? "overflow-auto max-h-[calc(100dvh-var(--trf-topbar-h,0px)-var(--trf-table-chrome,13rem))]"
+          : "overflow-clip",
+      )}
     >
       {enableColumnReorder ? (
         <DndContext
