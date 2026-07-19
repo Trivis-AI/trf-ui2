@@ -54,6 +54,8 @@ export interface EntityComboboxProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  /** Style of the underlying Input — pass "quiet" inside editable table cells. */
+  inputVariant?: "default" | "quiet";
 }
 
 /**
@@ -85,6 +87,7 @@ export function EntityCombobox({
   disabled,
   required,
   className,
+  inputVariant,
 }: EntityComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -141,6 +144,7 @@ export function EntityCombobox({
         id={id}
         type="text"
         autoComplete="off"
+        variant={inputVariant}
         value={query}
         onChange={(e) => handleInput(e.target.value)}
         onKeyDown={(e) => {
