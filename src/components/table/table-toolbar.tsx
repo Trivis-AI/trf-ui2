@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronLeft, ChevronRight, Columns3, GripVertical, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Columns3Cog, GripVertical, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -206,7 +206,7 @@ export function TableColumnOptions({
           title="Columns"
           className={className}
         >
-          <Columns3 />
+          <Columns3Cog />
           {!iconOnly && "Columns"}
         </Button>
       </PopoverTrigger>
@@ -306,7 +306,7 @@ export interface TableFilterBarProps {
 }
 
 /**
- * Wraps filter controls with uniform spacing and shows a ghost "Clear" button
+ * Wraps filter controls with uniform spacing and shows a primary "Clear" button
  * automatically whenever any filter is active.
  */
 export function TableFilterBar({ children, active, onClear, className }: TableFilterBarProps) {
@@ -314,7 +314,7 @@ export function TableFilterBar({ children, active, onClear, className }: TableFi
     <div className={cn("flex flex-wrap items-end gap-3", className)}>
       {children}
       {active && onClear && (
-        <Button variant="ghost" size="sm" onClick={onClear}>
+        <Button variant="primary" size="sm" onClick={onClear}>
           <X />
           Clear
         </Button>
