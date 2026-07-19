@@ -236,9 +236,12 @@ export function TableView<TData>({
 
   // Sticks below the app shell's top bar (which publishes its measured height as
   // --trf-topbar-h); 0 when there is no shell. Requires no scroll-container
-  // ancestors between the th and the page scroller — see the wrapper classes below.
+  // ancestors between the th and the page scroller, which only holds at xl+
+  // (below xl the overflow-x wrapper stays on and would become the sticky's
+  // scroll container, shoving the header down over the rows) — so sticky
+  // positioning itself is xl-gated to match the wrapper below.
   const headStickyClass = stickyHeader
-    ? "sticky top-[var(--trf-topbar-h,0px)] z-10 bg-background"
+    ? "xl:sticky xl:top-[var(--trf-topbar-h,0px)] z-10 bg-background"
     : undefined;
 
   const selectionHead = enableRowSelection ? (
