@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronLeft, ChevronRight, Columns3Cog, GripVertical, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, GripVertical, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -206,7 +206,7 @@ export function TableColumnOptions({
           title="Columns"
           className={className}
         >
-          <Columns3Cog />
+          <SlidersHorizontal />
           {!iconOnly && "Columns"}
         </Button>
       </PopoverTrigger>
