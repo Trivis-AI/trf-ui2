@@ -50,7 +50,7 @@ const [period, setPeriod] = useState<DateRange>();
 | `value?` | `Date` (single) / `DateRange` (range) | Controlled selection. |
 | `onChange?` | `(date \| undefined)` / `(range \| undefined)` | Fires on select. Single mode closes the popover. |
 | `placeholder?` | `string` | Trigger text when empty. |
-| `formatDate?` | `(date: Date) => string` | Trigger label formatter. Defaults to a locale medium date (`09 Jun 2026`). |
+| `formatDate?` | `(date: Date) => string` | Trigger label formatter. Defaults to the shared locale-numeric date (`09.06.2026` for et-EE, see `datetime.md`). |
 | `captionLayout?` | `"label"` \| `"dropdown"` \| `"dropdown-months"` \| `"dropdown-years"` | Header nav. Default `"label"` (month title + arrows). `"dropdown"` adds month **and** year dropdowns for fast jumping. |
 | `startMonth?` / `endMonth?` | `Date` | Bound the year dropdown. Default ±10 years around now when a dropdown layout is used. |
 | `disabledDates?` | `Matcher \| Matcher[]` | react-day-picker matcher for non-selectable dates (greyed out). E.g. `{ after: new Date() }` to forbid future dates. Distinct from the boolean `disabled` (which disables the whole trigger). |
@@ -141,8 +141,9 @@ const [dueAt, setDueAt] = useState<Date>();
 
 Selecting a day keeps the current time (or seeds it from "now" on the first pick) and the popover
 stays open so the time can be set too; changing the time updates the same `Date`. Props: `value`,
-`onChange`, `placeholder`, `formatDateTime?` (defaults to a locale date + 24h time,
-`09 Jun 2026, 14:30`), `minuteStep?` (time field granularity, default 5), plus the same
+`onChange`, `placeholder`, `formatDateTime?` (defaults to the shared locale date + 24h time,
+`09.06.2026, 14:30` for et-EE, see `datetime.md`), `minuteStep?` (time field granularity,
+default 5), plus the same
 `captionLayout?` / `startMonth?` / `endMonth?` / `disabledDates?` navigation props as `DatePicker`,
 and `id` / `disabled` / `className`.
 

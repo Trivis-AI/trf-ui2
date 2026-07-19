@@ -2,6 +2,7 @@ import * as React from "react";
 import { CalendarClock, Clock } from "lucide-react";
 import type { Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
+import { formatDateTime as formatDateTimeShared, useDateTimeLocale } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 
@@ -12,7 +13,7 @@ export interface DateTimePickerProps {
   onChange?: (date: Date | undefined) => void;
   /** Trigger text when nothing is selected. */
   placeholder?: string;
-  /** Format the trigger label. Defaults to a locale date + 24h time (`09 Jun 2026, 14:30`). */
+  /** Format the trigger label. Defaults to the shared locale date + 24h time (`09.06.2026, 14:30`). */
   formatDateTime?: (date: Date) => string;
   /** Minute granularity of the time field (the native step). Default 5. */
   minuteStep?: number;
@@ -32,15 +33,8 @@ export interface DateTimePickerProps {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const defaultFormat = (date: Date) =>
-  new Intl.DateTimeFormat(undefined, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
+// Shared locale-aware format (lib/datetime.ts) so triggers match DateCell everywhere.
+const defaultFormat = (date: Date) => formatDateTimeShared(date);
 
 /**
  * Token-styled date **and** time picker — `DatePicker`'s trigger + a `Calendar` popover with a
@@ -63,6 +57,8 @@ export function DateTimePicker({
   className,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
+  // Re-render when the suite locale changes (it can arrive after mount via async token mint).
+  useDateTimeLocale();
 
   // Default the year dropdown to a ±10-year window around now when a dropdown layout is used.
   const usesDropdown = captionLayout !== "label";

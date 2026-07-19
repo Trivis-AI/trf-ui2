@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, X } from "lucide-react";
 import { dateMatchModifiers } from "react-day-picker";
 import type { DateRange, Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
+import { formatDate as formatDateShared, useDateTimeLocale } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 
@@ -11,7 +12,7 @@ export type { DateRange, Matcher };
 interface DatePickerBaseProps {
   /** Trigger text when nothing is selected. */
   placeholder?: string;
-  /** Format a single date for the trigger label. Defaults to a locale medium date. */
+  /** Format a single date for the trigger label. Defaults to the shared locale medium date. */
   formatDate?: (date: Date) => string;
   /**
    * Calendar header navigation. `"dropdown"` (default) shows month + year dropdowns for fast
@@ -62,10 +63,8 @@ export interface RangeDatePickerProps extends DatePickerBaseProps {
 
 export type DatePickerProps = SingleDatePickerProps | RangeDatePickerProps;
 
-const defaultFormat = (date: Date) =>
-  new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", year: "numeric" }).format(
-    date
-  );
+// Shared locale-aware format (lib/datetime.ts) so triggers match DateCell everywhere.
+const defaultFormat = (date: Date) => formatDateShared(date);
 
 /**
  * Token-styled date picker — a `Button`-like trigger that opens a `Popover` with a `Calendar`.
@@ -86,6 +85,8 @@ export function DatePicker(props: DatePickerProps) {
     className,
   } = props;
   const [open, setOpen] = React.useState(false);
+  // Re-render when the suite locale changes (it can arrive after mount via async token mint).
+  useDateTimeLocale();
 
   // When a dropdown layout is used without explicit bounds, default the year dropdown to a usable
   // window (past-heavy for accounting: historical periods/dates are common) around now, otherwise

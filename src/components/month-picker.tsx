@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
+import { formatMonth, useDateTimeLocale } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
 
@@ -21,8 +22,8 @@ export interface MonthPickerProps {
   className?: string;
 }
 
-const defaultFormatMonth = (date: Date) =>
-  new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(date);
+// Shared locale-aware format (lib/datetime.ts) so triggers match the rest of the suite.
+const defaultFormatMonth = (date: Date) => formatMonth(date);
 
 /**
  * Whole-month picker — a `Button`-like trigger that opens a `Popover` with a 12-month grid and
@@ -42,6 +43,8 @@ export function MonthPicker({
 }: MonthPickerProps) {
   const [open, setOpen] = React.useState(false);
   const [viewYear, setViewYear] = React.useState(() => (value ?? new Date()).getFullYear());
+  // Re-render (and rebuild the month-name grid) when the suite locale changes.
+  const locale = useDateTimeLocale();
 
   // Re-centre the grid on the selected (or current) year each time the popover opens.
   React.useEffect(() => {
@@ -50,9 +53,9 @@ export function MonthPicker({
   }, [open]);
 
   const months = React.useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(undefined, { month: "short" });
+    const fmt = new Intl.DateTimeFormat(locale, { month: "short" });
     return Array.from({ length: 12 }, (_, m) => fmt.format(new Date(2000, m, 1)));
-  }, []);
+  }, [locale]);
 
   const label = value ? formatMonth(value) : undefined;
   const canPrev = minYear == null || viewYear > minYear;

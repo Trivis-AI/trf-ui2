@@ -1,4 +1,5 @@
 import { cn } from "../../../lib/utils";
+import { formatDate, formatDateTime, useDateTimeLocale } from "../../../lib/datetime";
 
 // Empty placeholder glyph for table cells. The long dash is the agreed data
 // convention for a missing value (per the table plan), not prose copy.
@@ -17,56 +18,25 @@ export interface DateCellProps {
   value: string | number | Date | null | undefined;
   /** Range end. When present the cell renders "start – end". */
   to?: string | number | Date | null | undefined;
-  /** `date` -> "08 Jul 2026"; `datetime` -> "08 Jul 2026, 14:30" (24h). Default "date". */
+  /** `date` -> "25.06.2026" (locale-numeric); `datetime` adds ", 14:30" (24h). Default "date". */
   variant?: DateCellVariant;
   className?: string;
 }
 
-// The single canonical table date format (matches DatePicker / DateTimePicker).
-const dateFmt = new Intl.DateTimeFormat(undefined, {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-const dateTimeFmt = new Intl.DateTimeFormat(undefined, {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-function toDate(value: string | number | Date | null | undefined): Date | null {
-  if (value == null || value === "") return null;
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-  if (typeof value === "string") {
-    // Date-only "YYYY-MM-DD": parse as LOCAL so it never shifts a day across
-    // timezones the way new Date("YYYY-MM-DD") (parsed as UTC midnight) would.
-    // Full ISO datetimes (with a time / "T") fall through to new Date below.
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-    if (m) {
-      const local = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-      return Number.isNaN(local.getTime()) ? null : local;
-    }
-  }
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
 function format(value: string | number | Date | null | undefined, variant: DateCellVariant): string | null {
-  const d = toDate(value);
-  if (!d) return null;
-  return (variant === "datetime" ? dateTimeFmt : dateFmt).format(d);
+  const s = variant === "datetime" ? formatDateTime(value) : formatDate(value);
+  return s || null;
 }
 
 /**
- * The one canonical date cell. Formats date, datetime, or a date range with a
- * single agreed format, so no page hand-rolls date formatting. Falls back to the
- * empty-value glyph for missing or unparseable input.
+ * The one canonical date cell. Formats date, datetime, or a date range with the shared
+ * locale-aware formatters (see `lib/datetime.ts` — locale set via `setDateTimeLocale`),
+ * so no page hand-rolls date formatting. Falls back to the empty-value glyph for missing
+ * or unparseable input.
  */
 export function DateCell({ value, to, variant = "date", className }: DateCellProps) {
+  // Subscribe so cells re-format when the app sets the locale after mount (async token mint).
+  useDateTimeLocale();
   const start = format(value, variant);
 
   if (to !== undefined) {

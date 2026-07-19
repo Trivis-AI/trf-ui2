@@ -31,6 +31,7 @@ import {
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
   ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig,
+  setDateTimeLocale, useDateTimeLocale, formatDate, formatDateTime, formatMonth,
 } from "@trf/ui2";
 import {
   AreaChart as RAreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -916,6 +917,38 @@ function FloatingWindowDemo() {
 
 /* --------------------------------------------------- section: DatePicker */
 
+// Suite-wide locale switcher: everything below (pickers, DateCell, the plain formatters)
+// re-formats live. Apps call setDateTimeLocale(dateTimeLocaleFromToken(token)) at startup.
+function DateTimeLocaleDemo() {
+  const locale = useDateTimeLocale();
+  const sample = new Date(2026, 5, 25, 14, 30);
+  return (
+    <div className="rounded-md border border-border p-4 sm:col-span-2">
+      <Row className="mb-3 items-center gap-3">
+        <Text weight="semibold">Date/time locale</Text>
+        <SimpleSelect
+          id="dt-locale"
+          value={locale ?? ""}
+          onChange={(v) => setDateTimeLocale(v || undefined)}
+          options={[
+            { value: "et-EE", label: "et-EE (Estonian)" },
+            { value: "en-GB", label: "en-GB (English)" },
+            { value: "lv-LV", label: "lv-LV (Latvian)" },
+            { value: "lt-LT", label: "lt-LT (Lithuanian)" },
+          ]}
+          placeholder="Browser default"
+          noneLabel="Browser default"
+          className="w-56"
+        />
+      </Row>
+      <Text size="sm" className="text-muted-foreground">
+        formatDate → {formatDate(sample)} · formatDateTime → {formatDateTime(sample)} · formatMonth →{" "}
+        {formatMonth(sample)} · DateCell → <DateCell value={sample} variant="datetime" />
+      </Text>
+    </div>
+  );
+}
+
 function DatePickerDemo() {
   const [date, setDate] = useState<Date>();
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date(2026, 5, 9));
@@ -929,6 +962,7 @@ function DatePickerDemo() {
   const [meeting, setMeeting] = useState<Date>();
   return (
     <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
+      <DateTimeLocaleDemo />
       <Field label="Due date" htmlFor="dp-empty" description="Single date, nothing selected.">
         <DatePicker id="dp-empty" value={date} onChange={setDate} placeholder="Pick a date…" />
       </Field>

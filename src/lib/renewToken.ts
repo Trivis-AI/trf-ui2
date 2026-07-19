@@ -16,6 +16,7 @@
 // seeded into the cache, so sessions created before the cutover keep working.
 
 import { useEffect, useRef, useState } from 'react';
+import { setDateTimeLocale, dateTimeLocaleFromToken } from './datetime';
 
 const ACCOUNT_COOKIE = 'jwt_token';        // account session, set at login on the apex
 const LEGACY_PREFIX = 'trf_jwt_';          // pre-cutover per-org cookies
@@ -73,6 +74,10 @@ function cacheKey(slug: string): string {
 
 function writeCache(slug: string, token: string): void {
   mem.set(slug, token);
+  // Every org token funnels through here (mint, reload, legacy migration), so this is the
+  // one spot that keeps the suite date/time locale in sync with the account's language
+  // claim — zero per-app wiring. No-op when the resolved locale hasn't changed.
+  setDateTimeLocale(dateTimeLocaleFromToken(token));
   try {
     sessionStorage.setItem(cacheKey(slug), token);
   } catch {
@@ -87,6 +92,7 @@ function readCache(slug: string): string | null {
     const s = sessionStorage.getItem(cacheKey(slug));
     if (s) {
       mem.set(slug, s);
+      setDateTimeLocale(dateTimeLocaleFromToken(s));
       return s;
     }
   } catch {
