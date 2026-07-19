@@ -145,18 +145,25 @@ function HeaderLabel<TData>({ header }: { header: Header<TData, unknown> }) {
   );
 }
 
-function DraggableHeader<TData>({ header }: { header: Header<TData, unknown> }) {
+function DraggableHeader<TData>({
+  header,
+  stickyClass,
+}: {
+  header: Header<TData, unknown>;
+  stickyClass?: string;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: header.column.id,
   });
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 1 : 0,
+    // While dragging, rise above the (sticky, z-10) sibling headers.
+    zIndex: isDragging ? 20 : undefined,
   };
   const align = header.column.columnDef.meta?.align;
   return (
-    <TableHead ref={setNodeRef} style={style} colSpan={header.colSpan} className={alignClass(align)}>
+    <TableHead ref={setNodeRef} style={style} colSpan={header.colSpan} className={cn(alignClass(align), stickyClass)}>
       <div className={cn("flex items-center gap-1", align === "right" && "justify-end")}>
         <span
           {...attributes}
@@ -227,8 +234,11 @@ export function TableView<TData>({
     table.setColumnOrder(arrayMove(order, oldIndex, newIndex));
   }
 
+  // Sticks below the app shell's top bar (which publishes its measured height as
+  // --trf-topbar-h); 0 when there is no shell. Requires no scroll-container
+  // ancestors between the th and the page scroller — see the wrapper classes below.
   const headStickyClass = stickyHeader
-    ? "sticky top-0 z-10 bg-background"
+    ? "sticky top-[var(--trf-topbar-h,0px)] z-10 bg-background"
     : undefined;
 
   const selectionHead = enableRowSelection ? (
@@ -254,7 +264,10 @@ export function TableView<TData>({
   ) : null;
 
   const tableEl = (
-    <Table className={className}>
+    // Sticky needs the page scroller to be the nearest scroll container, so at xl+
+    // the horizontal-scroll wrapper backs off (full-width list pages fit there);
+    // below xl the table keeps its horizontal scroll and the header rides along.
+    <Table className={className} containerClassName={stickyHeader ? "xl:overflow-x-visible" : undefined}>
       <TableHeader>
         {bulkBar ? (
           // Selection active: the column-header row becomes the bulk toolbar.
@@ -274,7 +287,7 @@ export function TableView<TData>({
                   strategy={horizontalListSortingStrategy}
                 >
                   {hg.headers.map((header) => (
-                    <DraggableHeader key={header.id} header={header} />
+                    <DraggableHeader key={header.id} header={header} stickyClass={headStickyClass} />
                   ))}
                 </SortableContext>
               ) : (
@@ -375,7 +388,7 @@ export function TableView<TData>({
   return (
     <div
       ref={wrapperRef}
-      className="relative overflow-hidden rounded-lg border border-border"
+      className="relative overflow-clip rounded-lg border border-border"
     >
       {enableColumnReorder ? (
         <DndContext

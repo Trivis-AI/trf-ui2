@@ -6,9 +6,16 @@ import { cn } from "../../lib/utils";
  * For sorting/filtering/column-reorder/inline-edit, use DataTable (TanStack).
  */
 
-function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.HTMLAttributes<HTMLTableElement> & {
+  /** Extra classes for the overflow wrapper (e.g. `xl:overflow-x-visible` so sticky headers work). */
+  containerClassName?: string;
+}) {
   return (
-    <div className="relative w-full overflow-x-auto">
+    <div className={cn("relative w-full overflow-x-auto", containerClassName)}>
       <table className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );
