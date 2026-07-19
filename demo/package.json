@@ -12,11 +12,11 @@
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource-variable/geist-mono": "^5.2.8",
     "@trf/ui2": "file:..",
-    "lucide-react": "^0.469.0",
+    "lucide-react": "^1.25.0",
     "react": "^19.1.0",
     "react-day-picker": "^10.0.1",
-    "recharts": "^3.9.1",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "recharts": "^3.9.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.17",
