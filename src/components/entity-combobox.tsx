@@ -32,8 +32,9 @@ export interface EntityComboboxProps {
   items: EntityComboboxItem[];
   /** Fires when a primary suggestion is chosen. The dropdown closes itself. */
   onPick: (item: EntityComboboxItem) => void;
-  /** Badge text on primary rows. */
-  pickLabel?: string;
+  /** Badge text on primary rows. Pass null/"" to drop the badge (the row itself
+   *  is obviously clickable; the badge earns its place only when rows differ). */
+  pickLabel?: string | null;
 
   /** Secondary group shown under a header (e.g. business-registry results). */
   fallbackItems?: EntityComboboxItem[];
@@ -45,8 +46,8 @@ export interface EntityComboboxProps {
   fallbackLoadingText?: string;
   /** Fires when a secondary row is chosen (e.g. import-from-registry). */
   onFallbackPick?: (item: EntityComboboxItem) => void;
-  /** Badge text on secondary rows. */
-  fallbackPickLabel?: string;
+  /** Badge text on secondary rows. Pass null/"" to drop it. */
+  fallbackPickLabel?: string | null;
   /** Disable secondary rows while an import is in flight. */
   fallbackBusy?: boolean;
 
@@ -268,9 +269,11 @@ export function EntityCombobox({
               onClick={() => pick(item)}
             >
               {renderRow(item)}
-              <Badge variant="secondary" className="shrink-0">
-                {pickLabel}
-              </Badge>
+              {pickLabel ? (
+                <Badge variant="secondary" className="shrink-0">
+                  {pickLabel}
+                </Badge>
+              ) : null}
             </li>
           ))}
           {fallbackLoading && (
@@ -303,9 +306,11 @@ export function EntityCombobox({
                   onClick={() => pickFallback(item)}
                 >
                   {renderRow(item)}
-                  <Badge variant="warning" className="shrink-0">
-                    {fallbackPickLabel}
-                  </Badge>
+                  {fallbackPickLabel ? (
+                    <Badge variant="warning" className="shrink-0">
+                      {fallbackPickLabel}
+                    </Badge>
+                  ) : null}
                 </li>
                 );
               })}
