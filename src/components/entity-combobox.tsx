@@ -95,6 +95,7 @@ export function EntityCombobox({
   const listRef = React.useRef<HTMLUListElement>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
   const [anchor, setAnchor] = React.useState<{ top: number; left: number; width: number } | null>(null);
+  const listId = React.useId();
   React.useEffect(() => () => clearTimeout(timer.current), []);
 
   // Close on click/tap outside. The list is portalled, so it is not inside
@@ -109,9 +110,21 @@ export function EntityCombobox({
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open]);
 
+  // Primary items then fallback rows — one flat list so the arrow keys walk the
+  // whole dropdown, matching what the user sees.
+  const options = React.useMemo(
+    () => [
+      ...items.map((item) => ({ item, kind: "primary" as const })),
+      ...(fallbackLoading ? [] : fallbackItems.map((item) => ({ item, kind: "fallback" as const }))),
+    ],
+    [items, fallbackItems, fallbackLoading]
+  );
+  const [activeIndex, setActiveIndex] = React.useState(-1);
+
   const handleInput = (next: string) => {
     onQueryChange(next);
     setOpen(true);
+    setActiveIndex(-1);
     clearTimeout(timer.current);
     if (!next.trim()) return;
     timer.current = setTimeout(() => onSearch(next), debounceMs);
@@ -119,6 +132,7 @@ export function EntityCombobox({
 
   const pick = (item: EntityComboboxItem) => {
     setOpen(false);
+    setActiveIndex(-1);
     onPick(item);
   };
 
@@ -129,6 +143,59 @@ export function EntityCombobox({
 
   const hasContent = items.length > 0 || fallbackItems.length > 0 || fallbackLoading;
   const showDropdown = open && hasContent && !disabled;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Escape") {
+      // Consumers may bind Escape too (e.g. reverting a table row); when the
+      // dropdown is open Escape belongs to it alone.
+      if (showDropdown) e.stopPropagation();
+      setOpen(false);
+      setActiveIndex(-1);
+      return;
+    }
+    if (e.key === "Tab") {
+      setOpen(false);
+      setActiveIndex(-1);
+      return;
+    }
+    if (!showDropdown) {
+      if (e.key === "ArrowDown" && hasContent) {
+        e.preventDefault();
+        setOpen(true);
+        setActiveIndex(0);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (options.length === 0 ? -1 : (i + 1) % options.length));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (options.length === 0 ? -1 : i <= 0 ? options.length - 1 : i - 1));
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActiveIndex(options.length - 1);
+    } else if (e.key === "Enter" && activeIndex >= 0 && activeIndex < options.length) {
+      // Only swallow Enter when a row is highlighted, so plain typing + Enter
+      // still reaches the surrounding form.
+      e.preventDefault();
+      e.stopPropagation();
+      const option = options[activeIndex];
+      if (option.kind === "primary") pick(option.item);
+      else pickFallback(option.item);
+    }
+  };
+
+  // Keep the highlighted row visible when arrowing past the visible window.
+  React.useEffect(() => {
+    if (activeIndex < 0) return;
+    listRef.current
+      ?.querySelector(`[data-option-index="${activeIndex}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
 
   React.useLayoutEffect(() => {
     if (!showDropdown) return;
@@ -168,14 +235,16 @@ export function EntityCombobox({
         variant={inputVariant}
         value={query}
         onChange={(e) => handleInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setOpen(false);
-        }}
+        onKeyDown={handleKeyDown}
         disabled={disabled}
         required={required}
         placeholder={placeholder}
         role="combobox"
         aria-expanded={showDropdown}
+        aria-autocomplete="list"
+        aria-activedescendant={
+          showDropdown && activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined
+        }
       />
       {showDropdown && anchor && createPortal(
         <ul
@@ -187,12 +256,15 @@ export function EntityCombobox({
           style={{ top: anchor.top, left: anchor.left, minWidth: anchor.width }}
           className="fixed z-50 max-h-64 w-max max-w-[28rem] list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
         >
-          {items.map((item) => (
+          {items.map((item, i) => (
             <li
               key={item.key}
+              id={`${listId}-option-${i}`}
+              data-option-index={i}
               role="option"
-              aria-selected={false}
-              className={rowCls}
+              aria-selected={activeIndex === i}
+              className={cn(rowCls, activeIndex === i && "bg-accent text-accent-foreground")}
+              onMouseEnter={() => setActiveIndex(i)}
               onClick={() => pick(item)}
             >
               {renderRow(item)}
@@ -213,12 +285,21 @@ export function EntityCombobox({
                   {fallbackLabel}
                 </li>
               )}
-              {fallbackItems.map((item) => (
+              {fallbackItems.map((item, i) => {
+                const index = items.length + i;
+                return (
                 <li
                   key={item.key}
+                  id={`${listId}-option-${index}`}
+                  data-option-index={index}
                   role="option"
-                  aria-selected={false}
-                  className={cn(rowCls, fallbackBusy && "pointer-events-none opacity-50")}
+                  aria-selected={activeIndex === index}
+                  className={cn(
+                    rowCls,
+                    activeIndex === index && "bg-accent text-accent-foreground",
+                    fallbackBusy && "pointer-events-none opacity-50"
+                  )}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => pickFallback(item)}
                 >
                   {renderRow(item)}
@@ -226,7 +307,8 @@ export function EntityCombobox({
                     {fallbackPickLabel}
                   </Badge>
                 </li>
-              ))}
+                );
+              })}
             </>
           )}
         </ul>,
