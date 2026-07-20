@@ -9,7 +9,10 @@ export const Label = React.forwardRef<
   <LabelPrimitive.Root
     ref={ref}
     className={cn(
-      "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+      // Muted by default: labels stay scannable at medium weight without
+      // competing with the values they describe (full-contrast labels made
+      // dense forms read as walls of bold text).
+      "text-sm font-medium leading-none text-muted-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
       className
     )}
     {...props}
