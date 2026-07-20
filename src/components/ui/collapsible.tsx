@@ -51,7 +51,10 @@ export function Collapsible({
     <div
       className={cn(
         "rounded-lg transition-colors",
-        tintWhenOpen && open && "bg-muted/40 p-3",
+        // Padding is constant in both states — only the tint toggles — so the
+        // header does not shift when the section opens.
+        tintWhenOpen && "p-3",
+        tintWhenOpen && open && "bg-muted/40",
         className
       )}
     >
@@ -60,15 +63,15 @@ export function Collapsible({
         onClick={toggle}
         aria-expanded={open}
         aria-controls={contentId}
-        className="flex items-center gap-1 rounded-md text-xs font-medium text-primary outline-none transition-colors hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_svg]:size-4"
+        className="flex w-full items-center justify-between gap-2 rounded-md text-xs font-medium text-primary outline-none transition-colors hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&_svg]:size-4"
       >
+        {label}
         <ChevronDown
           className={cn(
-            "transition-transform duration-200 motion-reduce:transition-none",
+            "shrink-0 transition-transform duration-200 motion-reduce:transition-none",
             open && "rotate-180"
           )}
         />
-        {label}
       </button>
       <div
         id={contentId}
