@@ -138,6 +138,8 @@ export {
 // --- Phase 2: forms & feedback ---
 
 export { Checkbox } from "./components/ui/checkbox";
+export { Collapsible } from "./components/ui/collapsible";
+export type { CollapsibleProps } from "./components/ui/collapsible";
 export { Switch } from "./components/ui/switch";
 export { RadioGroup, RadioGroupItem } from "./components/ui/radio-group";
 
