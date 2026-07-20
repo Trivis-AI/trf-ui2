@@ -159,7 +159,9 @@ export function EntityCombobox({
       {showDropdown && (
         <ul
           role="listbox"
-          className="absolute inset-x-0 z-10 mt-1 max-h-64 list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
+          // z-50: the list must clear sticky table chrome (headers, pinned action
+          // cells) and later sibling rows, which sit at z-10 in editable tables.
+          className="absolute inset-x-0 z-50 mt-1 max-h-64 list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
         >
           {items.map((item) => (
             <li
