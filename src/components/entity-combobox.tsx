@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../lib/utils";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -91,14 +92,18 @@ export function EntityCombobox({
 }: EntityComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLUListElement>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [anchor, setAnchor] = React.useState<{ top: number; left: number; width: number } | null>(null);
   React.useEffect(() => () => clearTimeout(timer.current), []);
 
-  // Close on click/tap outside.
+  // Close on click/tap outside. The list is portalled, so it is not inside
+  // rootRef — check it separately or picking an option would close first.
   React.useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!rootRef.current?.contains(target) && !listRef.current?.contains(target)) setOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
@@ -125,12 +130,28 @@ export function EntityCombobox({
   const hasContent = items.length > 0 || fallbackItems.length > 0 || fallbackLoading;
   const showDropdown = open && hasContent && !disabled;
 
+  React.useLayoutEffect(() => {
+    if (!showDropdown) return;
+    const track = () => {
+      const r = rootRef.current?.getBoundingClientRect();
+      if (r) setAnchor({ top: r.bottom + 4, left: r.left, width: r.width });
+    };
+    track();
+    // Capture phase so scrolling of any ancestor (table scrollport, page) is seen.
+    window.addEventListener("scroll", track, true);
+    window.addEventListener("resize", track);
+    return () => {
+      window.removeEventListener("scroll", track, true);
+      window.removeEventListener("resize", track);
+    };
+  }, [showDropdown, items.length, fallbackItems.length, fallbackLoading]);
+
   const rowCls =
     "flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground";
 
   const renderRow = (item: EntityComboboxItem) => (
     <div className="min-w-0">
-      <span className="font-medium">{item.title}</span>
+      <span className="block truncate font-medium">{item.title}</span>
       {item.code && <span className="ml-2 text-xs text-muted-foreground">{item.code}</span>}
       {item.description && (
         <div className="text-xs text-muted-foreground">{item.description}</div>
@@ -156,12 +177,15 @@ export function EntityCombobox({
         role="combobox"
         aria-expanded={showDropdown}
       />
-      {showDropdown && (
+      {showDropdown && anchor && createPortal(
         <ul
+          ref={listRef}
           role="listbox"
-          // z-50: the list must clear sticky table chrome (headers, pinned action
-          // cells) and later sibling rows, which sit at z-10 in editable tables.
-          className="absolute inset-x-0 z-50 mt-1 max-h-64 list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
+          // Portalled to the body and fixed-positioned: inside editable tables the
+          // scrollport and sticky cells would otherwise clip or cover the list.
+          // Width grows with the longest option, floored at the input's width.
+          style={{ top: anchor.top, left: anchor.left, minWidth: anchor.width }}
+          className="fixed z-50 max-h-64 w-max max-w-[28rem] list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
         >
           {items.map((item) => (
             <li
@@ -205,7 +229,8 @@ export function EntityCombobox({
               ))}
             </>
           )}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );
