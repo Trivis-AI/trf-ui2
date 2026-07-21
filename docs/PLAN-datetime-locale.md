@@ -26,7 +26,7 @@
 | frontcrm | v7.0.45 | DONE on staging (v7.0.17): 5 pages migrated; prod pending verify |
 | frontreports | v7.0.45 | DONE on staging (v7.0.11): 4 report pages migrated; prod pending verify |
 | frontpurchase | v7.0.37 | engine active via bump, no known hand-rolled sites |
-| frontai | v7.0.16 | BLOCKED: repo on feat/settings-tabs with uncommitted WIP; sites: `HistoryPage.tsx:77`, `settings/SettingsPage.tsx:418,494` |
+| frontai | v7.0.45 | DONE on staging (v7.8.21): GeneralSection + HistoryPage migrated; prod pending verify |
 | frontsettings | v7.0.16 | WAITING for user go-ahead (ongoing work); sites: `api-keys/APIKeyList.tsx:15`, `mcp-keys/MCPKeyList.tsx:66`, `einvoice/EInvoice.tsx:16` |
 | frontlogin | v7.0.16 | not migrated; hosts the Language selector |
 
