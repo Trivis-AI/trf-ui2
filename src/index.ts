@@ -9,12 +9,19 @@ export {
   getDateTimeLocale,
   useDateTimeLocale,
   dateTimeLocaleFromToken,
+  setDateTimePrefs,
+  getDateTimePrefs,
+  useDateTimePrefs,
+  dateTimePrefsFromToken,
+  DATE_FORMAT_PRESETS,
+  TIME_FORMAT_PRESETS,
   toDate,
   formatDate,
   formatTime,
   formatDateTime,
   formatMonth,
 } from "./lib/datetime";
+export type { DateTimePrefs, DateFormatPreset, TimeFormatPreset } from "./lib/datetime";
 
 // --- Brand ---
 export { Logo } from "./components/logo";

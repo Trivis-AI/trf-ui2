@@ -31,7 +31,8 @@ import {
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
   ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig,
-  setDateTimeLocale, useDateTimeLocale, formatDate, formatDateTime, formatMonth,
+  setDateTimePrefs, getDateTimePrefs, useDateTimePrefs, formatDate, formatDateTime, formatMonth,
+  DATE_FORMAT_PRESETS, TIME_FORMAT_PRESETS,
 } from "@trf/ui2";
 import {
   AreaChart as RAreaChart, Area, CartesianGrid, XAxis, YAxis,
@@ -917,19 +918,23 @@ function FloatingWindowDemo() {
 
 /* --------------------------------------------------- section: DatePicker */
 
-// Suite-wide locale switcher: everything below (pickers, DateCell, the plain formatters)
-// re-formats live. Apps call setDateTimeLocale(dateTimeLocaleFromToken(token)) at startup.
+// Suite-wide date/time preference switchers: everything below (pickers, DateCell, the
+// plain formatters) re-formats live. Apps get these from the org JWT automatically
+// (renewToken cache → setDateTimePrefs(dateTimePrefsFromToken(token))).
 function DateTimeLocaleDemo() {
-  const locale = useDateTimeLocale();
+  useDateTimePrefs();
+  const prefs = getDateTimePrefs();
   const sample = new Date(2026, 5, 25, 14, 30);
+  const set = (patch: Partial<ReturnType<typeof getDateTimePrefs>>) =>
+    setDateTimePrefs({ ...prefs, ...patch });
   return (
     <div className="rounded-md border border-border p-4 sm:col-span-2">
-      <Row className="mb-3 items-center gap-3">
-        <Text weight="semibold">Date/time locale</Text>
+      <Row className="mb-3 items-center gap-3" wrap>
+        <Text weight="semibold">Date/time prefs</Text>
         <SimpleSelect
           id="dt-locale"
-          value={locale ?? ""}
-          onChange={(v) => setDateTimeLocale(v || undefined)}
+          value={prefs.locale ?? ""}
+          onChange={(v) => set({ locale: v || undefined })}
           options={[
             { value: "et-EE", label: "et-EE (Estonian)" },
             { value: "en-GB", label: "en-GB (English)" },
@@ -938,7 +943,25 @@ function DateTimeLocaleDemo() {
           ]}
           placeholder="Browser default"
           noneLabel="Browser default"
-          className="w-56"
+          className="w-48"
+        />
+        <SimpleSelect
+          id="dt-dateformat"
+          value={prefs.dateFormat ?? ""}
+          onChange={(v) => set({ dateFormat: (v || undefined) as never })}
+          options={DATE_FORMAT_PRESETS.map((p) => ({ value: p, label: p }))}
+          placeholder="Date: from locale"
+          noneLabel="Date: from locale"
+          className="w-44"
+        />
+        <SimpleSelect
+          id="dt-timeformat"
+          value={prefs.timeFormat ?? ""}
+          onChange={(v) => set({ timeFormat: (v || undefined) as never })}
+          options={TIME_FORMAT_PRESETS.map((p) => ({ value: p, label: p }))}
+          placeholder="Time: 24h"
+          noneLabel="Time: 24h"
+          className="w-32"
         />
       </Row>
       <Text size="sm" className="text-muted-foreground">

@@ -2,7 +2,7 @@ import * as React from "react";
 import { CalendarClock, Clock } from "lucide-react";
 import type { Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
-import { formatDateTime as formatDateTimeShared, useDateTimeLocale } from "../lib/datetime";
+import { formatDateTime as formatDateTimeShared, useDateTimePrefs } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 
@@ -57,8 +57,8 @@ export function DateTimePicker({
   className,
 }: DateTimePickerProps) {
   const [open, setOpen] = React.useState(false);
-  // Re-render when the suite locale changes (it can arrive after mount via async token mint).
-  useDateTimeLocale();
+  // Re-render when suite date/time prefs change (they can arrive after mount via async token mint).
+  useDateTimePrefs();
 
   // Default the year dropdown to a ±10-year window around now when a dropdown layout is used.
   const usesDropdown = captionLayout !== "label";

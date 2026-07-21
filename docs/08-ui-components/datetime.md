@@ -11,8 +11,11 @@ or the components built on them (`DateCell`, `DatePicker`, `DateTimePicker`, `Mo
 - Dates: fully numeric in the locale's own order and punctuation: `25.06.2026` (et-EE),
   `25/06/2026` (en-GB). Compact and scannable in accounting tables; month names would bloat
   columns (et-EE "medium" would spell out `25. juuni 2026`).
-- Times: always 24h `HH:mm`, regardless of locale (finance-suite convention).
+- Times: 24h `HH:mm` by default (finance-suite convention); `12h` is a per-account opt-in.
 - Datetimes: `formatDate + ", " + formatTime`: `25.06.2026, 14:30`.
+- Explicit overrides: an account can pick a fixed date preset (`DD.MM.YYYY`, `DD/MM/YYYY`,
+  `YYYY-MM-DD`, `MMM D, YYYY`) and time preset (`24h`/`12h`) in account settings; these win
+  over the locale default and travel in the JWT (`a.df`, `a.tf`).
 
 ## Locale resolution
 
@@ -38,10 +41,13 @@ DateCell/picker subscribes via `useDateTimeLocale()` so it re-formats live.
 
 | Export | What it does |
 | --- | --- |
-| `setDateTimeLocale(locale?)` | Set the suite locale (`undefined` = browser default). |
-| `getDateTimeLocale()` | Current locale, or `undefined`. |
-| `useDateTimeLocale()` | React subscription to the locale (re-render on change). |
-| `dateTimeLocaleFromToken(token?)` | Resolve locale from a TRF JWT. Never throws. |
+| `setDateTimePrefs({locale?, dateFormat?, timeFormat?})` | Set all display prefs at once. |
+| `getDateTimePrefs()` / `useDateTimePrefs()` | Read / subscribe to all prefs. |
+| `dateTimePrefsFromToken(token?)` | Resolve locale + format overrides from a TRF JWT. Never throws. |
+| `DATE_FORMAT_PRESETS` / `TIME_FORMAT_PRESETS` | The valid preset lists (for settings UIs). |
+| `setDateTimeLocale(locale?)` | Locale-only setter (kept for compat; prefer setDateTimePrefs). |
+| `getDateTimeLocale()` / `useDateTimeLocale()` | Locale-only read / subscription. |
+| `dateTimeLocaleFromToken(token?)` | Locale-only token resolve (kept for compat). |
 | `toDate(value)` | Parse `Date`/epoch/ISO string; `YYYY-MM-DD` parses as LOCAL (no day shift). |
 | `formatDate(value)` | `25.06.2026` (locale-numeric). `""` when missing/unparseable. |
 | `formatTime(value)` | `14:30` (24h). |

@@ -14,7 +14,24 @@
 
 import * as React from "react";
 
+/** Explicit date-format presets a user can pick in account settings (JWT claim `a.df`).
+ *  When set, they win over the locale-derived format. */
+export const DATE_FORMAT_PRESETS = ["DD.MM.YYYY", "DD/MM/YYYY", "YYYY-MM-DD", "MMM D, YYYY"] as const;
+export type DateFormatPreset = (typeof DATE_FORMAT_PRESETS)[number];
+
+/** Time-format presets (JWT claim `a.tf`). Default (unset) is 24h. */
+export const TIME_FORMAT_PRESETS = ["24h", "12h"] as const;
+export type TimeFormatPreset = (typeof TIME_FORMAT_PRESETS)[number];
+
+export interface DateTimePrefs {
+  locale: string | undefined;
+  dateFormat: DateFormatPreset | undefined;
+  timeFormat: TimeFormatPreset | undefined;
+}
+
 let currentLocale: string | undefined;
+let currentDateFormat: DateFormatPreset | undefined;
+let currentTimeFormat: TimeFormatPreset | undefined;
 const listeners = new Set<() => void>();
 
 // Account locale values ("et"/"en" today) → full BCP 47 tags so date output is
@@ -43,24 +60,36 @@ interface Formatters {
 
 let formatters: Formatters | null = null;
 
+// A user-picked date preset renders identically in every locale; implemented with a fixed
+// Intl locale per preset so punctuation/order can't drift with the viewer's browser.
+const PRESET_LOCALE: Record<DateFormatPreset, [string, Intl.DateTimeFormatOptions]> = {
+  "DD.MM.YYYY": ["et-EE", { day: "2-digit", month: "2-digit", year: "numeric" }],
+  "DD/MM/YYYY": ["en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }],
+  "YYYY-MM-DD": ["sv-SE", { year: "numeric", month: "2-digit", day: "2-digit" }],
+  "MMM D, YYYY": ["en-US", { month: "short", day: "numeric", year: "numeric" }],
+};
+
 function getFormatters(): Formatters {
   if (!formatters) {
+    // Explicit user preset wins; otherwise the suite-wide default: fully numeric in the
+    // locale's own order and punctuation ("25.06.2026" et-EE, "25/06/2026" en-GB).
+    // Numeric beats month names in accounting tables: compact, scannable. (dateStyle
+    // "medium" would spell the month out in Estonian: "25. juuni 2026".)
+    const [dateLocale, dateOpts]: [string | undefined, Intl.DateTimeFormatOptions] =
+      currentDateFormat
+        ? PRESET_LOCALE[currentDateFormat]
+        : [currentLocale, { day: "2-digit", month: "2-digit", year: "numeric" }];
     formatters = {
-      // The suite-wide date format is fully numeric in the locale's own order and
-      // punctuation: "25.06.2026" (et-EE), "25/06/2026" (en-GB). Numeric beats month
-      // names in accounting tables: compact, scannable, sortable by eye. (dateStyle
-      // "medium" would spell the month out in Estonian: "25. juuni 2026".)
-      date: new Intl.DateTimeFormat(currentLocale, {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-      // Time is always 24h regardless of locale — finance suite convention.
-      time: new Intl.DateTimeFormat(currentLocale, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
+      date: new Intl.DateTimeFormat(dateLocale, dateOpts),
+      // Time defaults to 24h (finance suite convention); "12h" is a user opt-in.
+      time:
+        currentTimeFormat === "12h"
+          ? new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+          : new Intl.DateTimeFormat(currentLocale, {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            }),
       month: new Intl.DateTimeFormat(currentLocale, { month: "long", year: "numeric" }),
     };
   }
@@ -85,11 +114,40 @@ function canonicalize(tag: string | null | undefined): string | undefined {
  * codes ("et", "en") or full tags ("et-EE"); invalid input falls back to the browser.
  */
 export function setDateTimeLocale(locale: string | undefined): void {
-  const next = canonicalize(locale);
-  if (next === currentLocale) return;
-  currentLocale = next;
+  setDateTimePrefs({ locale, dateFormat: currentDateFormat, timeFormat: currentTimeFormat });
+}
+
+function asDatePreset(v: string | null | undefined): DateFormatPreset | undefined {
+  return DATE_FORMAT_PRESETS.includes(v as DateFormatPreset) ? (v as DateFormatPreset) : undefined;
+}
+
+function asTimePreset(v: string | null | undefined): TimeFormatPreset | undefined {
+  return TIME_FORMAT_PRESETS.includes(v as TimeFormatPreset) ? (v as TimeFormatPreset) : undefined;
+}
+
+/**
+ * Set all display preferences at once (locale + explicit format overrides). Unknown or
+ * missing values fall back to the locale-derived defaults. One change notification.
+ */
+export function setDateTimePrefs(prefs: {
+  locale?: string | null;
+  dateFormat?: string | null;
+  timeFormat?: string | null;
+}): void {
+  const nextLocale = canonicalize(prefs.locale);
+  const nextDate = asDatePreset(prefs.dateFormat);
+  const nextTime = asTimePreset(prefs.timeFormat);
+  if (nextLocale === currentLocale && nextDate === currentDateFormat && nextTime === currentTimeFormat) return;
+  currentLocale = nextLocale;
+  currentDateFormat = nextDate;
+  currentTimeFormat = nextTime;
   formatters = null;
   listeners.forEach((fn) => fn());
+}
+
+/** The full current preference set. */
+export function getDateTimePrefs(): DateTimePrefs {
+  return { locale: currentLocale, dateFormat: currentDateFormat, timeFormat: currentTimeFormat };
 }
 
 /** The locale formatters currently use, or undefined when on the browser default. */
@@ -110,25 +168,55 @@ export function useDateTimeLocale(): string | undefined {
   return React.useSyncExternalStore(subscribe, getDateTimeLocale, getDateTimeLocale);
 }
 
+function prefsKey(): string {
+  return `${currentLocale ?? ""}|${currentDateFormat ?? ""}|${currentTimeFormat ?? ""}`;
+}
+
+/**
+ * Subscribe to ALL date/time preferences (locale + format overrides) from a component.
+ * Returns a composite key that changes whenever any preference changes; DateCell and the
+ * pickers use this so a format override arriving after mount re-renders them.
+ */
+export function useDateTimePrefs(): string {
+  return React.useSyncExternalStore(subscribe, prefsKey, prefsKey);
+}
+
 /**
  * Resolve the display locale from a TRF org/session JWT: the account's chosen language
  * (`a.l`) wins, else the org country (`o.c`), else undefined (browser default).
  * Tolerates missing/malformed tokens — never throws.
  */
 export function dateTimeLocaleFromToken(token: string | null | undefined): string | undefined {
-  if (!token) return undefined;
+  return dateTimePrefsFromToken(token).locale;
+}
+
+/**
+ * Resolve all display preferences from a TRF org/session JWT: locale from the account
+ * language claim (`a.l`) else the org country claim (`o.c`), plus the explicit format
+ * overrides (`a.df`, `a.tf`) when the account has picked them.
+ * Tolerates missing/malformed tokens — never throws.
+ */
+export function dateTimePrefsFromToken(token: string | null | undefined): DateTimePrefs {
+  const empty: DateTimePrefs = { locale: undefined, dateFormat: undefined, timeFormat: undefined };
+  if (!token) return empty;
   try {
     const parts = token.split(".");
-    if (parts.length < 2) return undefined;
+    if (parts.length < 2) return empty;
     const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
     const json = new TextDecoder().decode(Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)));
-    const claims = JSON.parse(json) as { a?: { l?: string }; o?: { c?: string } };
+    const claims = JSON.parse(json) as {
+      a?: { l?: string; df?: string; tf?: string };
+      o?: { c?: string };
+    };
     const fromAccount = canonicalize(claims?.a?.l);
-    if (fromAccount) return fromAccount;
     const country = (claims?.o?.c ?? "").trim();
-    return COUNTRY_LOCALE[country];
+    return {
+      locale: fromAccount ?? COUNTRY_LOCALE[country],
+      dateFormat: asDatePreset(claims?.a?.df),
+      timeFormat: asTimePreset(claims?.a?.tf),
+    };
   } catch {
-    return undefined;
+    return empty;
   }
 }
 

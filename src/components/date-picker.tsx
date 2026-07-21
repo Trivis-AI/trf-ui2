@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, X } from "lucide-react";
 import { dateMatchModifiers } from "react-day-picker";
 import type { DateRange, Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
-import { formatDate as formatDateShared, useDateTimeLocale } from "../lib/datetime";
+import { formatDate as formatDateShared, useDateTimePrefs } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
 
@@ -85,8 +85,8 @@ export function DatePicker(props: DatePickerProps) {
     className,
   } = props;
   const [open, setOpen] = React.useState(false);
-  // Re-render when the suite locale changes (it can arrive after mount via async token mint).
-  useDateTimeLocale();
+  // Re-render when suite date/time prefs change (they can arrive after mount via async token mint).
+  useDateTimePrefs();
 
   // When a dropdown layout is used without explicit bounds, default the year dropdown to a usable
   // window (past-heavy for accounting: historical periods/dates are common) around now, otherwise

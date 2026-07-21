@@ -1,5 +1,5 @@
 import { cn } from "../../../lib/utils";
-import { formatDate, formatDateTime, useDateTimeLocale } from "../../../lib/datetime";
+import { formatDate, formatDateTime, useDateTimePrefs } from "../../../lib/datetime";
 
 // Empty placeholder glyph for table cells. The long dash is the agreed data
 // convention for a missing value (per the table plan), not prose copy.
@@ -35,8 +35,8 @@ function format(value: string | number | Date | null | undefined, variant: DateC
  * or unparseable input.
  */
 export function DateCell({ value, to, variant = "date", className }: DateCellProps) {
-  // Subscribe so cells re-format when the app sets the locale after mount (async token mint).
-  useDateTimeLocale();
+  // Subscribe so cells re-format when prefs (locale/format) arrive after mount (async token mint).
+  useDateTimePrefs();
   const start = format(value, variant);
 
   if (to !== undefined) {
