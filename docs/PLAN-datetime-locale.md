@@ -41,3 +41,14 @@
 
 - Calendar popover internals (react-day-picker month/weekday headings) still render in
   English; needs a date-fns locale object if we care. Parked.
+
+## Format picker (July 21, task #24 in Trivis tasks)
+
+Explicit per-account date/time format overrides, shipped to staging:
+- ui2 v7.0.46: DATE_FORMAT_PRESETS + TIME_FORMAT_PRESETS, setDateTimePrefs /
+  dateTimePrefsFromToken (JWT claims a.df / a.tf), auto-wired via the token cache.
+- backlogin v7.0.20: DateFormat/TimeFormat on Account, whitelisted in UpdateProfile,
+  minted + refreshed like the locale claim.
+- frontlogin v7.0.15: pickers in Account settings (From language / 24h defaults).
+- Apps honor the overrides once they bump to ui2 v7.0.46+ (all currently on v7.0.45
+  or lower); fold into the next routine bump round.
