@@ -27,7 +27,7 @@
 | frontreports | v7.0.45 | DONE on staging (v7.0.11): 4 report pages migrated; prod pending verify |
 | frontpurchase | v7.0.37 | engine active via bump, no known hand-rolled sites |
 | frontai | v7.0.45 | DONE on staging (v7.8.21): GeneralSection + HistoryPage migrated; prod pending verify |
-| frontsettings | v7.0.16 | WAITING for user go-ahead (ongoing work); sites: `api-keys/APIKeyList.tsx:15`, `mcp-keys/MCPKeyList.tsx:66`, `einvoice/EInvoice.tsx:16` |
+| frontsettings | v7.0.45 | DONE on staging (v7.0.12): EInvoice, EmailImport, APIKeyList, MCPKeyList migrated; prod pending verify |
 | frontlogin | v7.0.16 | not migrated; hosts the Language selector |
 
 ## Next steps
