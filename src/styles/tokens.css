@@ -79,6 +79,19 @@
      (25), --warning (75) and --success (150), so code never reads as a status. */
   --code: oklch(0.48 0.17 290);
 
+  /* Syntax colours for fenced code blocks. Tokens rather than an imported
+     editor theme, so blocks follow the app's light/dark switch instead of
+     carrying their own hardcoded palette. Hues are spread far enough apart to
+     stay separable, and clear of --destructive (25) / --warning (75) /
+     --success (150) so code never reads as a status. */
+  --syntax-keyword: oklch(0.52 0.19 305);
+  --syntax-string: oklch(0.48 0.13 150);
+  --syntax-number: oklch(0.52 0.15 40);
+  --syntax-comment: oklch(0.58 0.02 240);
+  --syntax-function: oklch(0.50 0.16 250);
+  --syntax-type: oklch(0.50 0.12 195);
+  --syntax-punctuation: oklch(0.45 0.02 240);
+
   --border: oklch(0.89 0.012 240);
   --input: oklch(0.89 0.012 240);
   --ring: oklch(0.22 0.018 240);
@@ -132,6 +145,15 @@
 
   /* Lifted for the dark surface, same hue. */
   --code: oklch(0.82 0.13 290);
+
+  /* Same hues, lifted for the dark surface. */
+  --syntax-keyword: oklch(0.80 0.14 305);
+  --syntax-string: oklch(0.80 0.13 150);
+  --syntax-number: oklch(0.82 0.12 40);
+  --syntax-comment: oklch(0.62 0.02 240);
+  --syntax-function: oklch(0.80 0.12 250);
+  --syntax-type: oklch(0.82 0.10 195);
+  --syntax-punctuation: oklch(0.72 0.02 240);
 
   --border: oklch(0.32 0.02 240);
   --input: oklch(0.34 0.02 240);
@@ -576,6 +598,13 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-code: var(--code);
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-type: var(--syntax-type);
+  --color-syntax-punctuation: var(--syntax-punctuation);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -747,3 +776,52 @@
     transform: translateX(400%);
   }
 }
+
+
+/* ── Syntax highlighting ──────────────────────────────────────────────────────
+   highlight.js tags tokens with hljs-* classes. Mapping them to the --syntax-*
+   tokens keeps fenced code blocks on the same palette as the rest of the app in
+   both themes, instead of shipping a separate stylesheet per theme. */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-doctag,
+.hljs-name { color: var(--syntax-keyword); }
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta .hljs-string { color: var(--syntax-string); }
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-selector-attr,
+.hljs-selector-pseudo { color: var(--syntax-number); }
+
+.hljs-comment,
+.hljs-quote,
+.hljs-meta { color: var(--syntax-comment); font-style: italic; }
+
+.hljs-title,
+.hljs-title.function_,
+.hljs-built_in { color: var(--syntax-function); }
+
+.hljs-type,
+.hljs-class .hljs-title,
+.hljs-title.class_,
+.hljs-params,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr { color: var(--syntax-type); }
+
+.hljs-punctuation,
+.hljs-operator,
+.hljs-subst { color: var(--syntax-punctuation); }
+
+.hljs-deletion { color: var(--destructive); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }

@@ -1,7 +1,38 @@
 import * as React from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import bash from "highlight.js/lib/languages/bash";
+import css from "highlight.js/lib/languages/css";
+import diff from "highlight.js/lib/languages/diff";
+import go from "highlight.js/lib/languages/go";
+import javascript from "highlight.js/lib/languages/javascript";
+import json from "highlight.js/lib/languages/json";
+import sql from "highlight.js/lib/languages/sql";
+import typescript from "highlight.js/lib/languages/typescript";
+import xml from "highlight.js/lib/languages/xml";
+import yaml from "highlight.js/lib/languages/yaml";
 import { cn } from "../lib/utils";
+
+/**
+ * Only the languages this product is written in, registered explicitly.
+ * highlight.js ships ~190 grammars and pulls all of them in if you let it
+ * auto-register; this keeps the bundle to the ones that actually appear in TRF
+ * code blocks. tsx/jsx map onto the typescript/javascript grammars, and xml
+ * covers html and svg.
+ *
+ * Colours come from the --syntax-* tokens (see styles/tokens.css), not from a
+ * highlight.js theme stylesheet, so blocks follow the app's light/dark switch.
+ */
+const LANGUAGES = {
+  bash, css, diff, go, javascript, json, sql, typescript, xml, yaml,
+};
+
+const REHYPE_PLUGINS = [
+  // detect: false so an unfenced or unknown language is left as plain text
+  // rather than guessed at, which mislabels short snippets more often than not.
+  [rehypeHighlight, { languages: LANGUAGES, detect: false, ignoreMissing: true }],
+] as const;
 
 export interface MarkdownProps {
   /** Markdown source string (e.g. an AI response). */
@@ -172,7 +203,11 @@ export function Markdown({ children, className, components }: MarkdownProps) {
     // and under pre-wrap each one renders as a stray blank line. The DOM
     // structure carries the layout, never the source whitespace.
     <div className={cn("whitespace-normal text-sm leading-relaxed", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={merged}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={REHYPE_PLUGINS as never}
+        components={merged}
+      >
         {children}
       </ReactMarkdown>
     </div>

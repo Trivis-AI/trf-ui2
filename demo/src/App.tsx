@@ -1138,6 +1138,35 @@ const total = invoices.reduce((sum, i) => sum + i.payable, 0);
 ## Image
 
 ![Cashflow trend for Q3](https://placehold.co/640x160/orange/white?text=Cashflow+Q3)
+
+
+## Code blocks
+
+\`\`\`typescript
+export async function listTasks(token: string, page = 1): Promise<PaginatedTasks> {
+  // Only whitelisted sort keys ever reach the backend.
+  const res = await api.get("/v1/tasks?page=" + page, { headers: { Bearer: token } })
+  return res.data as PaginatedTasks
+}
+\`\`\`
+
+\`\`\`go
+func (s *GormStore) CountTasksBy(ctx context.Context, groupBy string) (int64, error) {
+	col, ok := allowedTaskCountGroupBy[groupBy]
+	if !ok {
+		return 0, ErrInvalidGroupBy // never interpolate a raw client string
+	}
+	return s.count(ctx, col)
+}
+\`\`\`
+
+\`\`\`sql
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_due_at ON tasks (due_at);
+\`\`\`
+
+\`\`\`bash
+npm install github:Trivis-AI/trf-ui2#v7.0.54 && npm run build
+\`\`\`
 `;
 
 function MarkdownDemo() {
