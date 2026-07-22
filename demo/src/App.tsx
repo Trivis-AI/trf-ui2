@@ -24,7 +24,7 @@ import {
   FloatingWindow, FloatingWindowClose, FloatingWindowContent, FloatingWindowHeader, FloatingWindowTitle, FloatingWindowTrigger,
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
-  CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
+  Board, CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
   Logo, PageHeader, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -1190,6 +1190,88 @@ type Consumer struct {
 \`\`\`
 `;
 
+/* ---------------------------------------------------------- section: Board */
+
+type BoardTask = { id: string; columnId: string; swimlaneId?: string; title: string; due: string };
+
+const BOARD_COLUMNS = [
+  { id: "waiting", label: "Waiting", tone: "neutral" as const },
+  { id: "in_progress", label: "In progress", tone: "warning" as const },
+  { id: "testing", label: "Testing", tone: "info" as const },
+  { id: "completed", label: "Completed", tone: "success" as const },
+];
+
+const BOARD_LANES = [
+  { id: "jaak", label: "Jaak Parik" },
+  { id: "tom", label: "Tom Riiberg" },
+  { id: "none", label: "Unassigned" },
+];
+
+const INITIAL_BOARD_TASKS: BoardTask[] = [
+  { id: "51", columnId: "waiting", swimlaneId: "jaak", title: "Chase Acme for overdue INV-2044", due: "21.07.2026" },
+  { id: "38", columnId: "waiting", swimlaneId: "jaak", title: "Review Q2 purchase imports", due: "24.07.2026" },
+  { id: "42", columnId: "in_progress", swimlaneId: "jaak", title: "Fix VAT rounding on credit notes", due: "12.07.2026" },
+  { id: "29", columnId: "in_progress", swimlaneId: "tom", title: "Vendor snapshot refresh", due: "—" },
+  { id: "47", columnId: "testing", swimlaneId: "tom", title: "Add assignee filter to tasks", due: "25.07.2026" },
+  { id: "63", columnId: "completed", swimlaneId: "tom", title: "Bump @trf/ui2", due: "19.07.2026" },
+  { id: "55", columnId: "waiting", swimlaneId: "none", title: "Decide on Kanban column order", due: "31.07.2026" },
+];
+
+function BoardDemo() {
+  const [tasks, setTasks] = useState(INITIAL_BOARD_TASKS);
+  const [lanes, setLanes] = useState(true);
+  const [moved, setMoved] = useState<string>();
+
+  const counts = (id: string) => tasks.filter((t) => t.columnId === id).length;
+
+  return (
+    <div>
+      <Row gap={4} className="mb-4">
+        <Label className="flex items-center gap-2 text-sm font-normal">
+          <Switch checked={lanes} onCheckedChange={setLanes} />
+          Swimlanes by assignee
+        </Label>
+        <Button variant="ghost" size="sm" onClick={() => setTasks(INITIAL_BOARD_TASKS)}>Reset</Button>
+      </Row>
+
+      <Board<BoardTask>
+        columns={BOARD_COLUMNS.map((c) => ({
+          id: c.id,
+          label: c.label,
+          icon: <StatusBadge tone={c.tone} className="size-2 p-0" />,
+          badge: <Badge variant="secondary">{counts(c.id)}</Badge>,
+        }))}
+        swimlanes={lanes ? BOARD_LANES.map((l) => ({
+          id: l.id,
+          label: l.label,
+          meta: `${tasks.filter((t) => t.swimlaneId === l.id).length} tasks`,
+        })) : undefined}
+        items={tasks}
+        emptyCell={<Text size="xs" tone="muted">Drop here</Text>}
+        renderCard={(task) => (
+          <div className="rounded-md border border-border bg-card p-2.5">
+            <Text size="xs" tone="muted" mono>#{task.id}</Text>
+            <Text size="sm" weight="medium" className="mt-1">{task.title}</Text>
+            <Text size="xs" tone="muted" mono className="mt-1">{task.due}</Text>
+          </div>
+        )}
+        onMove={(item, to) => {
+          setTasks((prev) => prev.map((t) => (t.id === item.id
+            ? { ...t, columnId: to.columnId, swimlaneId: to.swimlaneId ?? t.swimlaneId }
+            : t)));
+          setMoved(`#${item.id} → ${to.columnId}${to.swimlaneId ? ` / ${to.swimlaneId}` : ""}`);
+        }}
+      />
+
+      <Text size="xs" tone="muted" className="mt-3 block">
+        Drag a card between columns to change its status, or across a swimlane to reassign it.
+        Empty columns stay visible: a status with nothing in it is information too.{" "}
+        {moved ? `Last move: ${moved}.` : ""}
+      </Text>
+    </div>
+  );
+}
+
 function MarkdownEditorDemo() {
   const [value, setValue] = useState(
     "Select some text and hit **Bold**, or drop the caret on an empty line and\nhit the code-block button.\n"
@@ -2090,6 +2172,7 @@ const GROUPS: GroupDef[] = [
       },
       { id: "markdown", label: "Markdown", render: () => <MarkdownDemo /> },
       { id: "markdown-editor", label: "Markdown editor", render: () => <MarkdownEditorDemo /> },
+      { id: "board", label: "Board", render: () => <BoardDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
