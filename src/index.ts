@@ -353,6 +353,9 @@ export type { ColumnDef, CellContext, Row as DataTableRow } from "@tanstack/reac
 // renderers (StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell,
 // BooleanCell, MeterCell, BadgeListCell, LinkCell, ActionsCell, AvatarCell,
 // ThumbnailCell, CellHoverCard). See src/components/table/index.ts.
+export { MultiSelect } from "./components/multi-select";
+export type { MultiSelectProps, MultiSelectOption } from "./components/multi-select";
+
 export { Board } from "./components/board";
 export type { BoardProps, BoardColumn, BoardSwimlane, BoardItem } from "./components/board";
 

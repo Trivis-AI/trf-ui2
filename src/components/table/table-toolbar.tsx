@@ -22,6 +22,7 @@ import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { SearchInput } from "../ui/search-input";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
+import { Separator } from "../ui/separator";
 
 /* -------------------------------------------------------- TableSearch */
 
@@ -99,6 +100,17 @@ export interface TableColumnOptionsProps {
   enableReorder?: boolean;
   /** Render a compact icon-only trigger (for attaching to the table's top-right). */
   iconOnly?: boolean;
+  /**
+   * Extra view options shown above the column list, e.g. a density switch or a
+   * board's "show empty lanes". Keeps a page to one options button rather than
+   * growing a second one beside it.
+   *
+   * View options only: anything that changes which rows match is a filter and
+   * belongs in the filter bar, where it stays visible.
+   */
+  viewOptions?: React.ReactNode;
+  /** Heading above `viewOptions`. Default "View". */
+  viewOptionsLabel?: React.ReactNode;
   className?: string;
 }
 
@@ -167,6 +179,8 @@ export function TableColumnOptions({
   onOrderChange,
   enableReorder = true,
   iconOnly = false,
+  viewOptions,
+  viewOptionsLabel = "View",
   className,
 }: TableColumnOptionsProps) {
   const sensors = useSensors(
@@ -211,6 +225,15 @@ export function TableColumnOptions({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-60 p-2">
+        {viewOptions != null && (
+          <>
+            <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
+              {viewOptionsLabel}
+            </p>
+            <div className="flex flex-col gap-1 px-1.5 pb-2">{viewOptions}</div>
+            <Separator className="mb-2" />
+          </>
+        )}
         <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">Columns</p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>

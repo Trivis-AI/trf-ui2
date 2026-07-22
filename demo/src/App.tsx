@@ -24,7 +24,7 @@ import {
   FloatingWindow, FloatingWindowClose, FloatingWindowContent, FloatingWindowHeader, FloatingWindowTitle, FloatingWindowTrigger,
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
-  Board, CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
+  Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
   Logo, PageHeader, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -1190,6 +1190,55 @@ type Consumer struct {
 \`\`\`
 `;
 
+/* ---------------------------------------------------- section: MultiSelect */
+
+const MS_STATUSES = [
+  { value: "waiting", label: "Waiting", group: "open" },
+  { value: "in_progress", label: "In progress", group: "open" },
+  { value: "testing", label: "Testing", group: "open" },
+  { value: "completed", label: "Completed", group: "done" },
+  { value: "cancelled", label: "Cancelled", group: "done" },
+];
+
+function MultiSelectDemo() {
+  // Default: everything that is not terminal. No "Completed" by name, so a
+  // renamed or custom terminal status behaves the same.
+  const [statuses, setStatuses] = useState(
+    MS_STATUSES.filter((s) => s.group === "open").map((s) => s.value)
+  );
+  const [people, setPeople] = useState<string[]>([]);
+  const many = Array.from({ length: 14 }, (_, i) => ({
+    value: `u${i}`,
+    label: ["Jaak Parik", "Tom Riiberg", "Marta Kask", "Liis Tamm", "Peeter Oja"][i % 5] + ` ${i + 1}`,
+  }));
+
+  return (
+    <Stack gap={6} className="max-w-xl">
+      <Field label="Status" description="Terminal statuses sit below the separator and start unselected.">
+        <MultiSelect
+          options={MS_STATUSES}
+          value={statuses}
+          onChange={setStatuses}
+          allLabel="All statuses"
+          emptyLabel="No statuses"
+        />
+      </Field>
+      <Field label="Responsible" description="Search appears automatically past eight options.">
+        <MultiSelect
+          options={many}
+          value={people}
+          onChange={setPeople}
+          allLabel="All assignees"
+          emptyLabel="Anyone"
+        />
+      </Field>
+      <Text size="xs" tone="muted">
+        Selected statuses: {statuses.join(", ") || "(none)"}
+      </Text>
+    </Stack>
+  );
+}
+
 /* ---------------------------------------------------------- section: Board */
 
 type BoardTask = { id: string; columnId: string; swimlaneId?: string; title: string; due: string };
@@ -2173,6 +2222,7 @@ const GROUPS: GroupDef[] = [
       { id: "markdown", label: "Markdown", render: () => <MarkdownDemo /> },
       { id: "markdown-editor", label: "Markdown editor", render: () => <MarkdownEditorDemo /> },
       { id: "board", label: "Board", render: () => <BoardDemo /> },
+      { id: "multi-select", label: "Multi select", render: () => <MultiSelectDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
