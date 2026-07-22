@@ -157,7 +157,10 @@ const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
 
 // In an auto-layout table a w-px cell collapses to its content width, so the
 // spare width lands on the columns that did not ask for this.
-const WIDTH_MIN = "w-px whitespace-nowrap";
+// px-2 rather than the cell default px-3: content-sized columns sit next to each
+// other, so the default gutter reads as a gap between unrelated values. cn()
+// runs through tailwind-merge, so this wins over TableCell's own px-3.
+const WIDTH_MIN = "w-px whitespace-nowrap px-2";
 // width:100% takes the slack; max-width:0 stops the content from setting the
 // column's preferred width, which is what keeps the table inside its container.
 const WIDTH_FILL = "w-full max-w-0";
