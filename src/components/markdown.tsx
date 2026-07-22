@@ -29,9 +29,12 @@ const LANGUAGES = {
 };
 
 const REHYPE_PLUGINS = [
-  // detect: false so an unfenced or unknown language is left as plain text
-  // rather than guessed at, which mislabels short snippets more often than not.
-  [rehypeHighlight, { languages: LANGUAGES, detect: false, ignoreMissing: true }],
+  // detect: true so a fence with no language after the backticks still gets
+  // highlighted. Auto-detection is only risky against highlight.js's full
+  // ~190-grammar set; against the ten registered above it has few ways to go
+  // wrong, and the alternative is that ```-only blocks render with no colour at
+  // all, which is how most people write a fence.
+  [rehypeHighlight, { languages: LANGUAGES, detect: true, ignoreMissing: true }],
 ] as const;
 
 export interface MarkdownProps {
@@ -135,7 +138,7 @@ const baseComponents = {
   pre: ({ node, className, ...props }) => (
     <pre
       className={cn(
-        "mb-2 overflow-x-auto rounded-md bg-muted p-3 text-xs text-code last:mb-0",
+        "mb-2 overflow-x-auto rounded-md bg-muted p-3 text-xs text-foreground last:mb-0",
         "[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-inherit",
         className
       )}

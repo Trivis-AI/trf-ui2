@@ -1167,6 +1167,12 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tasks_due_at ON tasks (due_at);
 \`\`\`bash
 npm install github:Trivis-AI/trf-ui2#v7.0.54 && npm run build
 \`\`\`
+
+An unlabelled fence (no language after the backticks):
+
+\`\`\`
+SELECT id, title FROM tasks WHERE completed_at IS NULL ORDER BY due_at;
+\`\`\`
 `;
 
 function MarkdownDemo() {
