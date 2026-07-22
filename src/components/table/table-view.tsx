@@ -84,6 +84,12 @@ export interface TableViewProps<TData> {
   /** Background refetch with rows on screen: show the header progress line, keep rows. */
   fetching?: boolean;
   onRowClick?: (row: TData) => void;
+  /**
+   * With `renderSubRow`, clicking anywhere on a row toggles its detail. Safe
+   * alongside inline editors and links, which stop propagation themselves.
+   * Combines with `onRowClick`: both run.
+   */
+  expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
   /** Pin the header to the top of the scroll container. Default true. */
   stickyHeader?: boolean;
@@ -189,6 +195,7 @@ export function TableView<TData>({
   loading = false,
   fetching = false,
   onRowClick,
+  expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
   virtualize: _virtualize = false,
@@ -340,13 +347,21 @@ export function TableView<TData>({
           </TableRow>
         ) : (
           rows.map((row) => {
-            const clickable = !!onRowClick;
+            const canExpandHere = expandOnRowClick && !!renderSubRow;
+            const clickable = !!onRowClick || canExpandHere;
             const subRow = renderSubRow && row.getIsExpanded() ? renderSubRow(row.original) : null;
             return (
               <React.Fragment key={row.id}>
                 <TableRow
                   data-state={row.getIsSelected() ? "selected" : undefined}
-                  onClick={clickable ? () => onRowClick?.(row.original) : undefined}
+                  onClick={
+                    clickable
+                      ? () => {
+                          if (canExpandHere) row.toggleExpanded();
+                          onRowClick?.(row.original);
+                        }
+                      : undefined
+                  }
                   className={cn(clickable && "cursor-pointer", rowClassName?.(row.original))}
                 >
                   {enableRowSelection && (

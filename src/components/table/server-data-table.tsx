@@ -75,6 +75,8 @@ export interface ServerDataTableProps<TData> {
 
   // Interaction / presentation.
   onRowClick?: (row: TData) => void;
+  /** With `renderSubRow`, clicking anywhere on a row toggles its detail. */
+  expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
   /** Default true. */
   stickyHeader?: boolean;
@@ -120,6 +122,7 @@ export function ServerDataTable<TData>({
   loading = false,
   fetching = false,
   onRowClick,
+  expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
   virtualize = false,
@@ -235,6 +238,7 @@ export function ServerDataTable<TData>({
       loading={loading}
       fetching={fetching}
       onRowClick={onRowClick}
+      expandOnRowClick={expandOnRowClick}
       rowClassName={rowClassName}
       stickyHeader={stickyHeader}
       virtualize={virtualize}
