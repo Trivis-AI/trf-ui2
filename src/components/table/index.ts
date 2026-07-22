@@ -19,8 +19,14 @@ export type { ServerDataTableProps } from "./server-data-table";
 export { EditableDataTable } from "./editable-data-table";
 export type { EditableDataTableProps } from "./editable-data-table";
 
-// Per-column inline editor descriptor (used by EditableDataTable / DataTable).
+// Per-column inline editor descriptor (used by EditableDataTable / DataTable /
+// ServerDataTable).
 export type { CellEditor } from "./table-view";
+
+// The quiet inline-edit cell ServerDataTable swaps in for editable columns.
+// Exported mainly so a page can compose it directly in a custom cell.
+export { InlineEditCell } from "./inline-edit-cell";
+export type { InlineEditCellProps } from "./inline-edit-cell";
 
 // The full-width page organism.
 export { TablePage } from "./table-page";

@@ -1293,7 +1293,16 @@ function ServerDataTableDemo() {
     })
   );
 
-  const rows = result.data?.rows ?? [];
+  // Inline edits are held locally so the demo can show the committed value
+  // straight away. A real page updates its query cache optimistically and rolls
+  // back if the write fails.
+  const [edits, setEdits] = useState<Record<string, Partial<InvoiceRow>>>({});
+  const [inlineReadOnly, setInlineReadOnly] = useState(false);
+
+  const rows = useMemo(
+    () => (result.data?.rows ?? []).map((r) => (edits[r.number] ? { ...r, ...edits[r.number] } : r)),
+    [result.data?.rows, edits]
+  );
   const columnOrder = useMemo(() => [...dataOrder, "actions"], [dataOrder]);
 
   const columns: ColumnDef<InvoiceRow>[] = useMemo(
@@ -1313,13 +1322,27 @@ function ServerDataTableDemo() {
         cell: ({ row }) => <DateCell value={row.original.date} />,
       },
       {
+        // Inline-editable: the cell still renders StatusCell, so it reads
+        // identically to a non-editable status column until you hover it.
         id: "status", accessorKey: "status", header: "Status", enableSorting: false,
+        meta: {
+          editor: {
+            type: "select",
+            options: STATUS_OPTIONS.map((s) => ({ value: s, label: s })),
+          },
+        },
         cell: ({ row }) => (
           <StatusCell tone={STATUS_TONE[row.original.status]} label={row.original.status} />
         ),
       },
       {
         id: "method", accessorKey: "method", header: "Method", enableSorting: false,
+        meta: {
+          editor: {
+            type: "select",
+            options: METHOD_OPTIONS.map((m) => ({ value: m, label: m })),
+          },
+        },
         cell: ({ row }) => (
           // The demo and @trf/ui2 resolve to different lucide-react copies, so the
           // icon component is cast through IconCell's own icon prop type. Real
@@ -1469,6 +1492,10 @@ function ServerDataTableDemo() {
               <Button variant="ghost" size="sm" onClick={() => setSelected({})}>Cancel</Button>
             </>
           }
+          onCellEdit={(rowId, columnId, value) =>
+            setEdits((prev) => ({ ...prev, [rowId]: { ...prev[rowId], [columnId]: value } }))
+          }
+          readOnly={inlineReadOnly}
           loading={result.isLoading}
           fetching={result.isFetching && !result.isLoading}
           onRowClick={(row) => setOpened(row.number)}
@@ -1477,11 +1504,29 @@ function ServerDataTableDemo() {
         />
       </TablePage>
 
+      <Row gap={3} className="mt-3">
+        <Label className="flex items-center gap-2 text-sm font-normal">
+          <Switch checked={inlineReadOnly} onCheckedChange={setInlineReadOnly} />
+          Read-only (no write permission)
+        </Label>
+        {Object.keys(edits).length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setEdits({})}>
+            Reset {Object.keys(edits).length} edit(s)
+          </Button>
+        )}
+      </Row>
+
       <Text size="xs" tone="muted" className="mt-3 block">
         Try it: reload for the cold skeleton, then sort a header, page, or type in search (debounced)
         to see the thin loading line while the previous rows stay put. Revisit a page you have already
         seen and its rows return instantly from cache, then revalidate.{" "}
         {opened ? `Opened ${opened} (whole-row click).` : "Click any row to open it."}
+      </Text>
+      <Text size="xs" tone="muted" className="mt-1 block">
+        Inline editing: <strong>Status</strong> and <strong>Method</strong> are editable. They render
+        as ordinary cells until you hover them, then reveal a chevron and open on click. Editing a
+        cell does not trigger the row click. Flip the switch above to see how the same columns read
+        without write permission.
       </Text>
     </div>
   );

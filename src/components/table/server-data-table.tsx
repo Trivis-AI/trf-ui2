@@ -3,6 +3,7 @@ import {
   getCoreRowModel,
   getExpandedRowModel,
   useReactTable,
+  type CellContext,
   type ColumnDef,
   type OnChangeFn,
   type SortingState,
@@ -10,6 +11,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { TableView } from "./table-view";
+import { InlineEditCell } from "./inline-edit-cell";
 
 // Resolve a TanStack updater (value or (prev) => next) against the current value.
 function resolveUpdater<T>(updater: Updater<T>, current: T): T {
@@ -50,6 +52,17 @@ export interface ServerDataTableProps<TData> {
   getRowId?: (row: TData) => string;
   /** Bulk toolbar shown in place of the column-header row while rows are selected. */
   bulkActions?: React.ReactNode;
+
+  // Inline editing (optional). Columns opt in with `meta.editor`; without this
+  // handler those columns render normally, so adding an editor descriptor is
+  // inert until the page is ready to persist the change.
+  //
+  // Fires on commit: immediately for select and switch, on blur/Enter for text
+  // and number. The page owns persistence — optimistically update the row, then
+  // roll back and surface the failure if the write is rejected.
+  onCellEdit?: (rowId: string, columnId: string, value: unknown) => void;
+  /** Render inline editors as plain display cells (e.g. no write permission). */
+  readOnly?: boolean;
 
   // Expandable detail sub-row. Toggle a row via row.toggleExpanded() from a cell.
   renderSubRow?: (row: TData) => React.ReactNode;
@@ -101,6 +114,8 @@ export function ServerDataTable<TData>({
   onSelectedRowIdsChange,
   getRowId,
   bulkActions,
+  onCellEdit,
+  readOnly = false,
   renderSubRow,
   loading = false,
   fetching = false,
@@ -155,9 +170,26 @@ export function ServerDataTable<TData>({
     onPaginationChange(resolveUpdater(updater, { pageIndex, pageSize }));
   };
 
+  // Swap editable columns to the quiet inline editor, keeping their original
+  // `cell` as the read display so an editable column looks identical to a
+  // non-editable one until you reach for it. Inert without `onCellEdit`.
+  const resolvedColumns = React.useMemo(() => {
+    if (!onCellEdit) return columns;
+    return columns.map((col) => {
+      if (!col.meta?.editor && !col.meta?.editable) return col;
+      const display = col.cell;
+      return {
+        ...col,
+        cell: (ctx: CellContext<TData, unknown>) => (
+          <InlineEditCell ctx={ctx} display={display} />
+        ),
+      } as ColumnDef<TData, any>;
+    });
+  }, [columns, onCellEdit]);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: resolvedColumns,
     state: {
       pagination: { pageIndex, pageSize },
       sorting: sorting ?? [],
@@ -182,6 +214,19 @@ export function ServerDataTable<TData>({
     ...(renderSubRow
       ? { getExpandedRowModel: getExpandedRowModel(), getRowCanExpand: () => true }
       : {}),
+    meta: {
+      inlineEditReadOnly: readOnly,
+      // row.index indexes the current page's `data`, which is what the server
+      // just returned, so data[rowIndex] is the edited row. Resolve it to the
+      // caller's id; without getRowId, TanStack ids rows by index and so do we.
+      updateData: onCellEdit
+        ? (rowIndex, columnId, value) => {
+            const original = data[rowIndex];
+            if (!original) return;
+            onCellEdit(getRowId ? getRowId(original) : String(rowIndex), columnId, value);
+          }
+        : undefined,
+    },
   });
 
   return (

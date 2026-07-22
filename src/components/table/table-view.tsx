@@ -61,6 +61,11 @@ declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface TableMeta<TData extends RowData> {
     updateData?: (rowIndex: number, columnId: string, value: unknown) => void;
+    /**
+     * Set by ServerDataTable's `readOnly` prop. Inline editors then render their
+     * plain display cell with no affordance, for permission-gated views.
+     */
+    inlineEditReadOnly?: boolean;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
