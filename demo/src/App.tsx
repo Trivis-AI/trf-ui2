@@ -1388,7 +1388,7 @@ function ServerDataTableDemo() {
         ),
       },
       {
-        id: "actions", header: "", enableSorting: false, meta: { align: "right" },
+        id: "actions", header: "", enableSorting: false, meta: { align: "right", sticky: "right" },
         cell: ({ row }) => (
           <ActionsCell
             // Icons cast through ActionsCell's own prop type: see the method cell note.

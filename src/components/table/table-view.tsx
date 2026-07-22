@@ -71,6 +71,17 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData extends RowData, TValue> {
     editable?: boolean;
     align?: "left" | "right" | "center";
+    /**
+     * Pin the column to the right edge, so row actions stay reachable when the
+     * table scrolls horizontally. Matches the invoice-rows treatment: opaque
+     * background with a left border, so content slides underneath.
+     *
+     * Pinning needs a horizontally scrolling ancestor. `stickyHeader` (default
+     * on) sets the table's own wrapper to overflow-x-visible so the header can
+     * stick to the page, which means the nearest scroll container is whatever
+     * the page provides. The border and opaque background apply either way.
+     */
+    sticky?: "right";
     /** Inline editor descriptor read by EditableDataTable. */
     editor?: CellEditor;
   }
@@ -124,6 +135,11 @@ function alignClass(align?: "left" | "right" | "center") {
   return undefined;
 }
 
+// Canonical pinned-column treatment, shared by the header and body cells so the
+// two never drift apart.
+const STICKY_HEAD = "sticky right-0 z-10 bg-background";
+const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
+
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ChevronUp className="size-3.5" />;
   if (dir === "desc") return <ChevronDown className="size-3.5" />;
@@ -174,7 +190,16 @@ function DraggableHeader<TData>({
   };
   const align = header.column.columnDef.meta?.align;
   return (
-    <TableHead ref={setNodeRef} style={style} colSpan={header.colSpan} className={cn(alignClass(align), stickyClass)}>
+    <TableHead
+      ref={setNodeRef}
+      style={style}
+      colSpan={header.colSpan}
+      className={cn(
+        alignClass(align),
+        stickyClass,
+        header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
+      )}
+    >
       <div className={cn("flex items-center gap-1", align === "right" && "justify-end")}>
         <span
           {...attributes}
@@ -309,7 +334,8 @@ export function TableView<TData>({
                     colSpan={header.colSpan}
                     className={cn(
                       alignClass(header.column.columnDef.meta?.align),
-                      headStickyClass
+                      headStickyClass,
+                      header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
                   >
                     {header.isPlaceholder ? null : <HeaderLabel header={header} />}
@@ -384,7 +410,10 @@ export function TableView<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={alignClass(cell.column.columnDef.meta?.align)}
+                      className={cn(
+                        alignClass(cell.column.columnDef.meta?.align),
+                        cell.column.columnDef.meta?.sticky === "right" && STICKY_CELL
+                      )}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
