@@ -28,7 +28,49 @@ const LANGUAGES = {
   bash, css, diff, go, javascript, json, sql, typescript, xml, yaml,
 };
 
+// Every name and alias the grammars above answer to, so an unrecognised fence
+// tag can be told apart from a real one.
+const KNOWN_LANGUAGES = new Set([
+  "bash", "sh", "zsh",
+  "css",
+  "diff", "patch",
+  "go", "golang",
+  "javascript", "js", "jsx", "mjs", "cjs",
+  "json", "jsonc",
+  "sql",
+  "typescript", "ts", "tsx", "mts", "cts",
+  "xml", "html", "xhtml", "rss", "atom", "svg", "plist", "xsd", "xsl",
+  "yaml", "yml",
+]);
+
+/**
+ * Drops a `language-*` class the tokeniser cannot use, so auto-detection gets a
+ * chance at the block instead.
+ *
+ * rehype-highlight skips a block whose language it does not recognise, and does
+ * not fall back to detection. That turns a mistyped or unsupported tag into a
+ * completely unhighlighted block: pasting a Go file whose `package` line ended
+ * up on the fence produced `language-package` and no colour at all. Stripping
+ * the class first means the block is treated as untagged and detected.
+ */
+function rehypeDropUnknownLanguage() {
+  return (tree: unknown) => {
+    const visit = (node: any) => {
+      if (node?.tagName === "code" && Array.isArray(node.properties?.className)) {
+        const classes: string[] = node.properties.className;
+        const tag = classes.find((c) => c.startsWith("language-"));
+        if (tag && !KNOWN_LANGUAGES.has(tag.slice("language-".length).toLowerCase())) {
+          node.properties.className = classes.filter((c) => c !== tag);
+        }
+      }
+      for (const child of node?.children ?? []) visit(child);
+    };
+    visit(tree);
+  };
+}
+
 const REHYPE_PLUGINS = [
+  rehypeDropUnknownLanguage,
   // detect: true so a fence with no language after the backticks still gets
   // highlighted. Auto-detection is only risky against highlight.js's full
   // ~190-grammar set; against the ten registered above it has few ways to go

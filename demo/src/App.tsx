@@ -24,7 +24,7 @@ import {
   FloatingWindow, FloatingWindowClose, FloatingWindowContent, FloatingWindowHeader, FloatingWindowTitle, FloatingWindowTrigger,
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
-  CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, SearchInput, SecretReveal,
+  CopyField, EmptyState, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
   Logo, PageHeader, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -1173,7 +1173,45 @@ An unlabelled fence (no language after the backticks):
 \`\`\`
 SELECT id, title FROM tasks WHERE completed_at IS NULL ORDER BY due_at;
 \`\`\`
+
+A fence tagged with something that is not a language (here the first line of a
+Go file landed on the fence). It should still be detected:
+
+\`\`\`package
+import (
+	"context"
+	"encoding/json"
+)
+
+// Consumer is the single writer for payments.
+type Consumer struct {
+	resolver *tenant.Resolver
+}
+\`\`\`
 `;
+
+function MarkdownEditorDemo() {
+  const [value, setValue] = useState(
+    "Select some text and hit **Bold**, or drop the caret on an empty line and\nhit the code-block button.\n"
+  );
+  return (
+    <div className="max-w-3xl">
+      <Field label="Notes">
+        <MarkdownEditor
+          value={value}
+          onChange={setValue}
+          rows={10}
+          textareaClassName="font-mono text-sm"
+          placeholder="Markdown supported…"
+        />
+      </Field>
+      <div className="mt-6 rounded-md border border-border p-4">
+        <Text size="xs" tone="muted" className="mb-2 block uppercase tracking-wide">Rendered</Text>
+        <Markdown>{value}</Markdown>
+      </div>
+    </div>
+  );
+}
 
 function MarkdownDemo() {
   return (
@@ -2051,6 +2089,7 @@ const GROUPS: GroupDef[] = [
         ),
       },
       { id: "markdown", label: "Markdown", render: () => <MarkdownDemo /> },
+      { id: "markdown-editor", label: "Markdown editor", render: () => <MarkdownEditorDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },

@@ -353,6 +353,9 @@ export type { ColumnDef, CellContext, Row as DataTableRow } from "@tanstack/reac
 // renderers (StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell,
 // BooleanCell, MeterCell, BadgeListCell, LinkCell, ActionsCell, AvatarCell,
 // ThumbnailCell, CellHoverCard). See src/components/table/index.ts.
+export { MarkdownEditor } from "./components/markdown-editor";
+export type { MarkdownEditorProps } from "./components/markdown-editor";
+
 export * from "./components/table";
 
 // --- Permissions ---
