@@ -87,8 +87,16 @@ declare module "@tanstack/react-table" {
      * table's spare width. Use it on every column with predictable, short
      * content (id, status, date, actions) so the one free-text column gets the
      * remaining space rather than every column growing equally.
+     *
+     * "fill" marks the single column that should take that remaining space.
+     * It is not the same as leaving the column unset: an unset column still
+     * reports its content's full width as its preferred width, so one long
+     * unbreakable value widens the table past its container and pushes the
+     * other columns out of view. "fill" claims zero preferred width and all the
+     * spare width, so the cell is bounded by the container and its content
+     * ellipsizes. Pair it with a cell that truncates.
      */
-    width?: "min";
+    width?: "min" | "fill";
     /** Inline editor descriptor read by EditableDataTable. */
     editor?: CellEditor;
   }
@@ -150,6 +158,9 @@ const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
 // In an auto-layout table a w-px cell collapses to its content width, so the
 // spare width lands on the columns that did not ask for this.
 const WIDTH_MIN = "w-px whitespace-nowrap";
+// width:100% takes the slack; max-width:0 stops the content from setting the
+// column's preferred width, which is what keeps the table inside its container.
+const WIDTH_FILL = "w-full max-w-0";
 
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ChevronUp className="size-3.5" />;
@@ -209,6 +220,7 @@ function DraggableHeader<TData>({
         alignClass(align),
         stickyClass,
         header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
+        header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
         header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
       )}
     >
@@ -348,6 +360,8 @@ export function TableView<TData>({
                       alignClass(header.column.columnDef.meta?.align),
                       headStickyClass,
                       header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
+        header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
+                      header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                       header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
                   >
@@ -426,6 +440,7 @@ export function TableView<TData>({
                       className={cn(
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
+                        cell.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                         cell.column.columnDef.meta?.sticky === "right" && STICKY_CELL
                       )}
                     >
