@@ -82,6 +82,13 @@ declare module "@tanstack/react-table" {
      * the page provides. The border and opaque background apply either way.
      */
     sticky?: "right";
+    /**
+     * "min" sizes the column to its content instead of letting it absorb the
+     * table's spare width. Use it on every column with predictable, short
+     * content (id, status, date, actions) so the one free-text column gets the
+     * remaining space rather than every column growing equally.
+     */
+    width?: "min";
     /** Inline editor descriptor read by EditableDataTable. */
     editor?: CellEditor;
   }
@@ -140,6 +147,10 @@ function alignClass(align?: "left" | "right" | "center") {
 const STICKY_HEAD = "sticky right-0 z-10 bg-background";
 const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
 
+// In an auto-layout table a w-px cell collapses to its content width, so the
+// spare width lands on the columns that did not ask for this.
+const WIDTH_MIN = "w-px whitespace-nowrap";
+
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ChevronUp className="size-3.5" />;
   if (dir === "desc") return <ChevronDown className="size-3.5" />;
@@ -197,6 +208,7 @@ function DraggableHeader<TData>({
       className={cn(
         alignClass(align),
         stickyClass,
+        header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
         header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
       )}
     >
@@ -335,6 +347,7 @@ export function TableView<TData>({
                     className={cn(
                       alignClass(header.column.columnDef.meta?.align),
                       headStickyClass,
+                      header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
                       header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
                   >
@@ -412,6 +425,7 @@ export function TableView<TData>({
                       key={cell.id}
                       className={cn(
                         alignClass(cell.column.columnDef.meta?.align),
+                        cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
                         cell.column.columnDef.meta?.sticky === "right" && STICKY_CELL
                       )}
                     >

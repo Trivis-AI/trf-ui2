@@ -1308,7 +1308,7 @@ function ServerDataTableDemo() {
   const columns: ColumnDef<InvoiceRow>[] = useMemo(
     () => [
       {
-        id: "number", accessorKey: "number", header: "Number",
+        id: "number", accessorKey: "number", header: "Number", meta: { width: "min" },
         cell: ({ row }) => <MonoCell value={row.original.number} />,
       },
       {
@@ -1318,7 +1318,7 @@ function ServerDataTableDemo() {
         ),
       },
       {
-        id: "date", accessorKey: "date", header: "Date",
+        id: "date", accessorKey: "date", header: "Date", meta: { width: "min" },
         cell: ({ row }) => <DateCell value={row.original.date} />,
       },
       {
@@ -1388,7 +1388,7 @@ function ServerDataTableDemo() {
         ),
       },
       {
-        id: "actions", header: "", enableSorting: false, meta: { align: "right", sticky: "right" },
+        id: "actions", header: "", enableSorting: false, meta: { align: "right", sticky: "right", width: "min" },
         cell: ({ row }) => (
           <ActionsCell
             // Icons cast through ActionsCell's own prop type: see the method cell note.
