@@ -73,6 +73,12 @@
   --warning: oklch(0.78 0.15 75);
   --warning-foreground: oklch(0.28 0.05 75);
 
+  /* Inline and block code inside prose. A hue of its own so code reads as code
+     at a glance: foreground made it identical to body text, and muted made it
+     fainter than the text around it. Violet (290) is clear of --destructive
+     (25), --warning (75) and --success (150), so code never reads as a status. */
+  --code: oklch(0.48 0.17 290);
+
   --border: oklch(0.89 0.012 240);
   --input: oklch(0.89 0.012 240);
   --ring: oklch(0.22 0.018 240);
@@ -123,6 +129,9 @@
 
   --warning: oklch(0.8 0.15 75);
   --warning-foreground: oklch(0.26 0.05 75);
+
+  /* Lifted for the dark surface, same hue. */
+  --code: oklch(0.82 0.13 290);
 
   --border: oklch(0.32 0.02 240);
   --input: oklch(0.34 0.02 240);
@@ -566,6 +575,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-code: var(--code);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);

@@ -88,14 +88,14 @@ const baseComponents = {
   // Inline code. Block code is the same <code> nested in <pre>, where the
   // `pre` styles below neutralise this background/padding.
   //
-  // Colour is set explicitly rather than inherited: inside muted body text,
-  // inherited colour put muted-foreground on a muted chip, which was too low
-  // contrast to read. `foreground` rather than a status colour, so code does not
-  // read as carrying success/warning meaning it doesn't have.
+  // Colour is set explicitly rather than inherited: inherited put
+  // muted-foreground on a muted chip, too faint to read, and plain `foreground`
+  // was legible but identical to the body text around it, so code did not read
+  // as code. `--code` is its own token, with a hue clear of every status colour.
   code: ({ node, className, ...props }) => (
     <code
       className={cn(
-        "rounded bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground",
+        "rounded bg-muted px-1 py-0.5 font-mono text-[0.85em] text-code",
         className
       )}
       {...props}
@@ -104,7 +104,7 @@ const baseComponents = {
   pre: ({ node, className, ...props }) => (
     <pre
       className={cn(
-        "mb-2 overflow-x-auto rounded-md bg-muted p-3 text-xs text-foreground last:mb-0",
+        "mb-2 overflow-x-auto rounded-md bg-muted p-3 text-xs text-code last:mb-0",
         "[&>code]:bg-transparent [&>code]:p-0 [&>code]:text-inherit",
         className
       )}
