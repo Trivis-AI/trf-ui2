@@ -27,6 +27,9 @@ router URL adapter.
 | `TableFilterBar` | component | Wraps filter controls with uniform spacing and an auto "Clear" button. |
 | `TableProgress` | component | The thin header progress line for background refetches. |
 | `TableView` | component | Shared presentational core (internal; `DataTable` and `ServerDataTable` both render through it). |
+| `EditableDataTable<TData>` | component | Client-side table with a live editor in every editable cell. See [Inline editing](#inline-editing). |
+| `InlineEditCell` | component | The quiet inline-edit cell `ServerDataTable` swaps in for editable columns. |
+| `CellEditor` | type | Per-column editor descriptor, read from `ColumnMeta.editor`. |
 | cell renderers | components | Standard cell content: see [Cell renderers](#cell-renderers). |
 
 ## Quick start
@@ -188,6 +191,52 @@ helper used inside `ColumnDef.cell`, composing existing ui2 primitives.
 
 Guardrail: reach for a standard cell before hand-rolling markup. Custom cells are
 allowed (`ColumnDef.cell` takes arbitrary React) but reviewed against these.
+
+## Inline editing
+
+A column opts in through its meta, not through a separate columns array:
+
+```tsx
+{
+  accessorKey: "rate",
+  header: "Rate",
+  meta: {
+    align: "right",
+    editor: { type: "number", min: 0, step: 0.01 },
+  },
+}
+```
+
+`CellEditor` is one of:
+
+- `{ type: "text", placeholder? }`
+- `{ type: "number", min?, max?, step?, placeholder? }`
+- `{ type: "select", options: { value, label }[], placeholder? }`
+- `{ type: "switch" }`
+
+Text and number commit on blur or Enter and revert on Escape; select and switch commit
+immediately. (`meta.editable: true` is the legacy spelling for a plain text editor.)
+
+There are **two presentations**, and the difference is deliberate:
+
+| | `EditableDataTable` | `ServerDataTable` + `InlineEditCell` |
+|---|---|---|
+| Cell at rest | A live control in every editable cell | The column's normal rendered content |
+| Affordance | Always visible | Appears on hover / keyboard focus, opens on click |
+| Fits | A short config grid where editing **is** the point | A list view that is read most of the time |
+
+A screenful of always-open selects turns into visual noise that competes with the data, so a list
+view stays quiet. The affordance is visible *before* the click, never only after it: a cell that
+looks static but reacts to clicks is worse than either extreme.
+
+`InlineEditCell` renders the column's own `cell` output for its display state, so an editable
+column never diverges from the read-only version of the same column. `ServerDataTable`'s
+`readOnly` prop drops every inline affordance, for permission-gated views.
+
+`EditableDataTable` props: `columns`, `data`, `getRowId`, `onCellEdit(rowId, columnId, value)`,
+`enableSorting` (default `false`), `onRowClick`, `rowClassName`, `loading`, `fetching`,
+`stickyHeader` (default `false`), `emptyMessage`, `skeletonRows`, `className`. You own the data:
+apply the edit in `onCellEdit`.
 
 ## Rules
 

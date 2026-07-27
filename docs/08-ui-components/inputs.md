@@ -1,6 +1,7 @@
-# Inputs — Input, Textarea, Field
+# Inputs: Input, Textarea, Field, SearchInput, CopyField
 
-> **Status: ready** · `import { Input, Textarea, Field } from "@trf/ui2"` · source: `src/components/ui/{input,textarea,field}.tsx`
+> **Status: ready** · `import { Input, Textarea, Field, SearchInput, CopyField } from "@trf/ui2"` ·
+> source: `src/components/ui/{input,textarea,field,search-input}.tsx`, `src/components/copy-field.tsx`
 
 ## Input / Textarea
 
@@ -29,6 +30,30 @@ Composes a `Label` + control + helper/error text. Wrap every form control in a `
 Props: `label`, `htmlFor`, `description`, `error` (replaces description, turns destructive),
 `required` (adds a marker). Works with `Input`, `Textarea`, `Select`, `Combobox`.
 
+## SearchInput — search field with icon + clear
+
+A leading magnifier icon over a standard `Input`, plus an optional trailing clear button. Purely
+presentational: it forwards every `Input` prop (`value`, `onChange`, `placeholder`, …) and the ref
+to the underlying `<input>`, so callers own the state.
+
+```tsx
+import { SearchInput } from "@trf/ui2";
+
+<SearchInput
+  value={q}
+  onChange={(e) => setQ(e.target.value)}
+  onClear={() => setQ("")}
+  placeholder="Search contacts…"
+/>
+```
+
+The clear button appears only when there is a value **and** `onClear` is provided. Omit `onClear`
+for a plain, no-clear search field. The native WebKit cancel button is suppressed so the clear
+affordance is the only one.
+
+For a table's own quick filter use [`TableSearch`](server-data-table.md), which adds debouncing and
+wires to `useTableQuery`. `SearchInput` is the primitive underneath it, for everything else.
+
 ## CopyField — read-only value + copy button
 
 A read-only value paired with a copy-to-clipboard button — for secrets, invite links, IDs. Owns
@@ -54,4 +79,5 @@ app's toast from `onCopy`. For a one-time secret in a dismissable banner, use
 ## Related
 
 - [Select](select.md) · [Combobox](combobox.md) · [form-controls](form-controls.md) ·
-  [SecretReveal](feedback.md)
+  [SecretReveal](feedback.md) · [MarkdownEditor](markdown.md) ·
+  [TableSearch](server-data-table.md)
