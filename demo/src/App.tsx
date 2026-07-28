@@ -13,6 +13,7 @@ import {
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
   AppShell, Badge, Button, cn, type ColumnDef, DataTable,
+  BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
   Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
@@ -1352,6 +1353,112 @@ function MarkdownDemo() {
   );
 }
 
+/* -------------------------------------------------- section: Brand marks */
+
+function BrandMarksDemo() {
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div>
+        <Text size="xs" tone="muted" className="mb-3 block">
+          Third-party marks Lucide does not carry, shared from `@trf/ui2` so every service uses the
+          same file. `size` sets the box the mark fits into; the aspect ratio is kept, so the
+          portrait Apple mark is never squashed.
+        </Text>
+        <div className="flex flex-wrap items-end gap-8">
+          {BRAND_MARKS.map((m) => (
+            <div key={m.name} className="flex flex-col items-center gap-3">
+              <div className="flex items-end gap-4">
+                {[16, 24, 32, 48].map((s) => (
+                  <BrandMark key={s} name={m.name} size={s} />
+                ))}
+              </div>
+              <Text size="xs" mono tone="muted">
+                {m.name} · {m.monochrome ? "currentColor" : "fixed brand colors"}
+              </Text>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <Text size="xs" tone="muted" className="mb-3 block">
+          Monochrome marks inherit `currentColor` like a Lucide icon, so they follow the surrounding
+          text token and need no styling on an inverted surface. Multicolor marks keep the brand
+          palette and ignore text color, as their guidelines require.
+        </Text>
+        <div className="flex flex-wrap items-start gap-4">
+          {[
+            { surface: "border border-border", mark: <AppleMark size={28} />, caption: "default" },
+            { surface: "bg-primary", mark: <AppleMark size={28} className="text-primary-foreground" />, caption: "text-primary-foreground" },
+            { surface: "bg-foreground", mark: <AppleMark size={28} className="text-background" />, caption: "text-background" },
+            { surface: "border border-border", mark: <GoogleMark size={28} />, caption: "on a light chip" },
+          ].map((c, i) => (
+            <div key={i} className="flex w-24 flex-col items-center gap-1.5">
+              <div className={cn("flex size-14 items-center justify-center rounded-lg", c.surface)}>{c.mark}</div>
+              <Text size="xs" tone="muted" className="text-center">{c.caption}</Text>
+            </div>
+          ))}
+          <div className="flex w-24 flex-col items-center gap-1.5">
+            <div className="flex size-14 items-center justify-center rounded-lg bg-primary opacity-60">
+              <GoogleMark size={28} />
+            </div>
+            <Text size="xs" tone="muted" className="text-center">don't — put it on a light chip instead</Text>
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <Text size="xs" tone="muted" className="mb-3 block">
+          The real use case — sign-in buttons. Inside a `Button` the mark is constrained to 16px by
+          `[&_svg]:size-4`, same as a Lucide icon, and stays decorative (the label carries the
+          name). Apple's uses `variant="inverse"` — dark fill with a light mark in light mode, white
+          fill with a dark mark in dark mode, per Apple's guidelines. Toggle the theme.
+        </Text>
+        <div className="flex w-full max-w-xs flex-col gap-2">
+          <Button variant="secondary" className="justify-center">
+            <GoogleMark /> Continue with Google
+          </Button>
+          <Button variant="inverse" className="justify-center">
+            <AppleMark /> Continue with Apple
+          </Button>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div className="w-full max-w-md overflow-hidden rounded-lg border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>name</TableHead>
+              <TableHead>Mark</TableHead>
+              <TableHead>Tintable</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {BRAND_MARKS.map((m) => (
+              <TableRow key={m.name}>
+                <TableCell className="font-mono">{m.name}</TableCell>
+                <TableCell><BrandMark name={m.name} size={20} /></TableCell>
+                <TableCell>{m.monochrome ? "yes" : "no"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Text size="xs" tone="muted">
+        Adding one is two steps: drop the SVG in `src/assets/`, add an entry to `MARKS` in
+        `src/components/brand-mark.tsx`. This page and `BRAND_MARKS` pick it up automatically. See
+        `src/assets/README.md`.
+      </Text>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------- section: Colors */
 
 const COLOR_TOKENS = [
@@ -1972,6 +2079,7 @@ const GROUPS: GroupDef[] = [
           </>
         ),
       },
+      { id: "brand-marks", label: "Brand marks", render: () => <BrandMarksDemo /> },
       { id: "colors", label: "Colors", render: () => <ColorsSection /> },
       {
         id: "typography", label: "Typography", render: () => (
@@ -2007,6 +2115,7 @@ const GROUPS: GroupDef[] = [
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="destructive">Destructive</Button>
+            <Button variant="inverse">Inverse</Button>
             <Button variant="ghost">Ghost</Button>
             <Button variant="link">Link</Button>
             <Button size="sm">Small</Button>

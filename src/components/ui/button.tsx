@@ -15,6 +15,9 @@ const buttonVariants = cva(
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         success:
           "bg-success text-success-foreground hover:bg-success/90",
+        // Inverted against the page: dark fill in light mode, light fill in dark mode. For
+        // marks that must sit on a contrasting surface — Apple's sign-in button above all.
+        inverse: "bg-foreground text-background hover:bg-foreground/90",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

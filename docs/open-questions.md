@@ -96,6 +96,11 @@ verified. Mono + tabular-nums applied to table numbers. See `08-ui-components/ty
   lands.
 - **Multi-tenant theming:** one TRF brand vs per-org / white-label theming — affects token
   architecture (one theme vs themeable-per-tenant).
+- **Raster shared assets:** vector brand marks are solved (inline SVG via `BrandMark`, see
+  `08-ui-components/brand-mark.md`). **Illustrations / PNG-JPG assets have no shared path** —
+  inlining them into raw-source ui2 would bloat every consumer's bundle, and there is no shared
+  static host for them today. Decide between a static asset host (e.g. under `ui.trf.is`) and
+  per-app `public/` copies when the first one is actually needed.
 
 ---
 

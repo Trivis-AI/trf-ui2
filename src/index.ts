@@ -26,6 +26,9 @@ export type { DateTimePrefs, DateFormatPreset, TimeFormatPreset } from "./lib/da
 // --- Brand ---
 export { Logo } from "./components/logo";
 export type { LogoProps } from "./components/logo";
+// Third-party brand marks (Apple, Google, …) — shared across services, see src/assets/README.md.
+export { BrandMark, AppleMark, GoogleMark, BRAND_MARKS } from "./components/brand-mark";
+export type { BrandMarkProps, BrandMarkName } from "./components/brand-mark";
 
 // --- App shell & sidebar ---
 export {

@@ -86,6 +86,9 @@
     "StatementTable": "08-ui-components/statement-table.md",
     "EditableGrid": "08-ui-components/editable-grid.md",
     "Logo": "(TRF brand mark — see src/components/logo.tsx; currentColor, defaults to text-primary)",
+    "BrandMark": "08-ui-components/brand-mark.md",
+    "AppleMark": "08-ui-components/brand-mark.md",
+    "GoogleMark": "08-ui-components/brand-mark.md",
     "Attachment": "08-ui-components/attachment.md",
     "AttachmentDropzone": "08-ui-components/attachment-dropzone.md",
     "useFileDrop": "08-ui-components/attachment-dropzone.md",
@@ -197,6 +200,7 @@
     "08-ui-components/row-edit-modal.md": "ready",
     "08-ui-components/org-switcher.md": "ready",
     "08-ui-components/avatar.md": "ready",
+    "08-ui-components/brand-mark.md": "ready",
     "08-ui-components/collapsible.md": "ready",
     "14-migration-guide.md": "ready",
     "15-migration-infra.md": "ready"

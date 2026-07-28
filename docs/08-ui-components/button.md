@@ -9,7 +9,7 @@ another element (e.g. a router `<Link>`).
 
 | Prop | Type | Default | Notes |
 |---|---|---|---|
-| `variant` | `primary \| secondary \| destructive \| ghost \| link` | `primary` | Visual intent. |
+| `variant` | `primary \| secondary \| destructive \| success \| inverse \| ghost \| link` | `primary` | Visual intent. |
 | `size` | `sm \| md \| lg \| icon \| icon-xs` | `md` | `icon`/`icon-xs` are square; pass an `aria-label`. `icon-xs` is for dense contexts (e.g. `Attachment` actions). |
 | `asChild` | `boolean` | `false` | Render the child as the button, merging styles onto it. |
 | ...rest | `button` attributes | — | `onClick`, `disabled`, `type`, etc. |
@@ -33,6 +33,10 @@ import { Save, Search } from "lucide-react";
 - **Action copy is short** (1–3 words), Sentence case.
 - **One primary button per view/section.** Use `secondary`/`ghost` for the rest.
 - **Destructive actions** use `variant="destructive"` and should confirm via a Dialog.
+- **`inverse` is for contrast against the page, not for emphasis** — `bg-foreground` /
+  `text-background`, so it is dark-on-light in light mode and white-on-dark in dark mode. Its one
+  intended use is the Apple sign-in button ([BrandMark](brand-mark.md)); reach for `primary` for
+  anything that just needs to stand out.
 - Icons are **Lucide only**, auto-sized to `size-4`. Icon-only → `aria-label`.
 - Don't wrap Button to add a className — pass `className`; `cn()` merges it safely.
 
