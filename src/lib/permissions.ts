@@ -21,6 +21,8 @@ const SERVICE_SLOTS = {
   REPORTS:   9,
   SETTINGS:  10,
   TABLES:    11,
+  DOCRENDER: 12,
+  FILES:     13,
 } as const;
 
 export type ServiceKey = keyof typeof SERVICE_SLOTS;
