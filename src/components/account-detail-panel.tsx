@@ -74,14 +74,18 @@ export interface AccountDetailTarget {
   accountCodes?: string[];
   column: AccountDetailColumn;
   /**
-   * The figure this was opened from, for the reconciliation strip. Debit-positive
-   * for opening/closing; for turnover pass both sides.
+   * The figure this was opened from, for the reconciliation strip, in whichever
+   * form the source report states it:
    *
-   * Statement lines are presented flipped for liabilities, equity and revenue —
-   * pass the figure ALREADY converted to debit-positive, so the panel never has
-   * to know about taxonomy signs.
+   *   {debit, credit} — a turnover sheet, which gives both sides separately
+   *   {balance}       — an accumulated position (opening/closing, balance sheet)
+   *   {net}           — a period movement stated as one number (income statement)
+   *
+   * All debit-positive. Statement lines are presented flipped for liabilities,
+   * equity and revenue, so pass the figure ALREADY converted — the panel never
+   * has to know about taxonomy signs.
    */
-  expected?: { debit: string; credit: string } | { balance: string };
+  expected?: { debit: string; credit: string } | { balance: string } | { net: string };
 }
 
 export interface AccountDetailPanelProps {
@@ -300,7 +304,8 @@ export function AccountDetailPanel({
    *
    * Turnover is checked per side. Opening and closing are one signed
    * debit-positive balance, compared against the summary's closing figure at the
-   * end of the queried range.
+   * end of the queried range. A net figure is compared against the movement
+   * within the range only.
    */
   const reconciliation = React.useMemo(() => {
     const expected = target?.expected;
@@ -310,6 +315,12 @@ export function AccountDetailPanel({
         ok: sameCent(num(summary.closing), num(expected.balance)),
         text: fmt(num(expected.balance)),
       };
+    }
+    if ("net" in expected) {
+      // Movement within the range, so opening is deliberately excluded — an
+      // income-statement line is a flow, not a position.
+      const movement = num(summary.turnover_debit) - num(summary.turnover_credit);
+      return { ok: sameCent(movement, num(expected.net)), text: fmt(num(expected.net)) };
     }
     return {
       ok:
