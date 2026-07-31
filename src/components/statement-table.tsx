@@ -17,6 +17,12 @@ export interface StatementRow {
   indent?: number;
   /** One entry per value column. Ignored for `header` rows. */
   values?: Array<string | number | null | undefined>;
+  /**
+   * When true and `onDrill` is set, this row's figures become clickable — the
+   * statement's own opt-in, since only the caller knows which rows resolve to
+   * an account set (header, total and computed rows do not).
+   */
+  drillable?: boolean;
 }
 
 export interface StatementTableProps {
@@ -30,6 +36,15 @@ export interface StatementTableProps {
    * Override for currency, decimals, or a fixed locale.
    */
   formatValue?: (value: string | number | null | undefined) => string;
+  /**
+   * Opens the detail behind one figure. Receives the row index and the column
+   * index, because a figure is only identified by both: on a multi-period
+   * statement each column is a different date or period.
+   *
+   * Rows must also set `drillable`. Without this prop the table renders exactly
+   * as before, so existing callers are unaffected.
+   */
+  onDrill?: (rowIndex: number, colIndex: number) => void;
   className?: string;
 }
 
@@ -54,6 +69,7 @@ export function StatementTable({
   labelHeader,
   valueHeaders,
   formatValue = defaultFormat,
+  onDrill,
   className,
 }: StatementTableProps) {
   const colCount = 1 + valueHeaders.length;
@@ -97,11 +113,33 @@ export function StatementTable({
               >
                 {row.label}
               </TableCell>
-              {valueHeaders.map((_, col) => (
-                <TableCell key={col} className="text-right font-mono tabular-nums">
-                  {formatValue(row.values?.[col])}
-                </TableCell>
-              ))}
+              {valueHeaders.map((_, col) => {
+                const canDrill = Boolean(onDrill && row.drillable);
+                return (
+                  <TableCell
+                    key={col}
+                    className={cn(
+                      "text-right font-mono tabular-nums",
+                      canDrill && "cursor-pointer hover:underline"
+                    )}
+                    role={canDrill ? "button" : undefined}
+                    tabIndex={canDrill ? 0 : undefined}
+                    onClick={canDrill ? () => onDrill!(i, col) : undefined}
+                    onKeyDown={
+                      canDrill
+                        ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              onDrill!(i, col);
+                            }
+                          }
+                        : undefined
+                    }
+                  >
+                    {formatValue(row.values?.[col])}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           );
         })}

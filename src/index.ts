@@ -323,6 +323,16 @@ export {
 export { StatementTable } from "./components/statement-table";
 export type { StatementTableProps, StatementRow } from "./components/statement-table";
 
+export { AccountDetailPanel, accountDetailRange } from "./components/account-detail-panel";
+export type {
+  AccountDetailPanelProps,
+  AccountDetailTarget,
+  AccountDetailColumn,
+  AccountDetailRow,
+  AccountDetailSummary,
+  AccountDetailResponse,
+} from "./components/account-detail-panel";
+
 // Spreadsheet-style editable grid — inline cell editing, add/remove rows & columns.
 export { EditableGrid } from "./components/editable-grid";
 export type {
