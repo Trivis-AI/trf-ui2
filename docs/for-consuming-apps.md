@@ -84,11 +84,29 @@ That's it — single source of truth lives in `@trf/ui2`; every app stays in syn
 
 ## 5. Verify the wiring (do not trust the build)
 
-`tsc && vite build` passes on a broken setup. Tailwind ignores an `@source` glob that matches
-nothing without a warning, so a typo in step 2 silently stops the library's classes from being
-generated, and its components render unstyled. That is not hypothetical: frontsupport had
-`@source "../node_modules/@trf/ui2/dist"` (there is no `dist`, the package ships `src`), which
-cost 64% of the generated CSS across 11 commits while every build stayed green.
+`tsc && vite build` passes on a broken setup, and the failures it hides are silent ones.
+frontsupport shipped 11 green builds with two defects in the five lines above:
+
+- **`@custom-variant dark` missing.** This is the one that rendered wrong. `tokens.css` switches
+  theme values on a `.dark` class, so without that line Tailwind v4 compiles `dark:` to a
+  `prefers-color-scheme` media query instead, and the two disagree. Confirmed three ways: the
+  built bundle carried `@media (prefers-color-scheme:dark)` where it should have carried
+  `:where(.dark,.dark *)`, and a browser A/B under emulated OS dark showed the app's warning
+  banner in bright `amber-400` on a near-white ground instead of the intended `amber-700`.
+- **`@source` pointing at `@trf/ui2/dist`,** which the package does not ship (it ships `src`).
+  Tailwind ignores a glob that matches nothing, so the line did nothing at all. Severity stated
+  honestly: under `@tailwindcss/vite` this is *latent*, because that plugin also scans Vite's
+  module graph and picks up the classes of imported components anyway. An A/B of the real
+  production build put the two stylesheets 1.2 KB apart, the broken one larger. It bites when CSS
+  is built outside Vite, or when a class is referenced somewhere the graph does not reach.
+
+**On measuring this, which is worth more than either finding.** Three defects were suspected;
+one was real. The `dist` typo was first measured by compiling the stylesheet through bare
+postcss, which reported 64% of the CSS missing. That figure was an artifact of the harness: no
+Vite, therefore no module graph. A suspected third defect (fonts installed and never applied)
+turned out not to exist at all, because Tailwind preflight applies the theme font to `<html>`
+and `getComputedStyle` reported Geist either way. Both wrong conclusions came from measuring in
+a simplified reproduction. A/B through `npm run build`, and read the rendered page.
 
 Run the checker instead:
 
@@ -99,12 +117,12 @@ node node_modules/@trf/ui2/scripts/check-consumer.mjs      # or: npx trf-ui2-che
 Two severities:
 
 - **Wiring errors** (exit 1): tokens.css not imported, an `@source` path that does not resolve,
-  the library's source not scanned, the dark variant not wired to `.dark`, `#main` instead of a
-  release tag, no `AGENTS.md` pointer. No app should ever be in this state, so this is safe to
-  gate CI on from day one.
-- **Drift warnings** (exit 0): raw palette colours, off-scale type or radius, `window.confirm`,
-  raw `<select>` / checkbox / `<button className=`, non-Lucide icons, baked arrow glyphs,
-  hand-added `cursor-pointer`. Add `--strict` to fail on these too, once a repo is clean.
+  the dark variant not wired to `.dark`, `#main` instead of a release tag, no `AGENTS.md`
+  pointer. No app should ever be in this state, so this is safe to gate CI on from day one.
+- **Drift warnings** (exit 0): the library's source not declared as a Tailwind source, raw
+  palette colours, off-scale type or radius, `window.confirm`, raw `<select>` / checkbox /
+  `<button className=`, non-Lucide icons, baked arrow glyphs, hand-added `cursor-pointer`,
+  inline styles. Add `--strict` to fail on these too, once a repo is clean.
 
 Wire it into CI ahead of the build, and into the app's own scripts:
 

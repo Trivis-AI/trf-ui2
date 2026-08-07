@@ -18,10 +18,29 @@
  *            on these too, once a repo is clean.
  *
  * Why this exists: docs 13 and 17 are instructions to a reader, and a reader has
- * to be pointed at them. Nothing in `tsc && vite build` notices a wrong @source
- * path or a missing dark variant, because Tailwind ignores a glob that matches
- * nothing. frontsupport shipped 11 commits and 64% of the design system's CSS
- * was never generated. This is the part a machine should check.
+ * to be pointed at them. Nothing in `tsc && vite build` notices a missing dark
+ * variant or a dead @source path. frontsupport shipped 11 green builds with
+ * both. This is the part a machine should check.
+ *
+ * Calibration, learned the hard way while writing this. Of three suspected
+ * stylesheet defects in that repo, exactly one rendered wrong:
+ *
+ *   REAL     missing @custom-variant dark. Confirmed three ways: the compiled
+ *            selector, the production bundle, and a browser A/B under emulated
+ *            OS dark, where a banner rendered in bright amber-400 on a
+ *            near-white ground.
+ *   LATENT   @source pointing at a directory that does not exist. The line does
+ *            nothing, but @tailwindcss/vite also scans Vite's module graph, so
+ *            imported components' classes were generated anyway. A first
+ *            measurement through bare postcss (no module graph) claimed 64% of
+ *            the CSS was missing; an A/B through the real build put the two
+ *            stylesheets 1.2KB apart, the other way.
+ *   NOT REAL fonts "never applied". Tailwind preflight applies the theme font
+ *            to <html>, so getComputedStyle reported Geist either way.
+ *
+ * Two of three suspicions were wrong, and both were wrong because they were
+ * measured in a simplified harness instead of the pipeline the app builds with.
+ * Severities below reflect the corrected picture, not the first impression.
  */
 
 import fs from 'node:fs'
@@ -150,8 +169,8 @@ if (!cssPath && !isApp) {
       err(
         cssRel,
         lineOf(css, m.index),
-        `@source '${spec}' does not exist (resolved to ${rel(resolved)}). Tailwind skips it in silence, so none of those classes are generated.`,
-        'Point it at a real directory, or delete the line.',
+        `@source '${spec}' does not exist (resolved to ${rel(resolved)}). Tailwind skips a glob that matches nothing in silence, so this line does nothing at all.`,
+        'Point it at a real directory, or delete the line. Under @tailwindcss/vite the module graph usually covers the gap, so this is often latent rather than visible: it bites when CSS is built outside Vite, or when a class is only referenced somewhere the graph does not reach.',
       )
     }
   }
@@ -166,11 +185,16 @@ if (!cssPath && !isApp) {
     if (!installed) return /@trf\/ui2\/src\b/.test(spec)
     return fs.existsSync(path.resolve(cssDir, base))
   })
+  // Warning, not an error, and the wording matters. Under @tailwindcss/vite the
+  // module graph already yields the classes of any component the app imports, so
+  // this is defense in depth rather than a live breakage. It earns its place
+  // because the guarantee is narrow: it covers what the graph reaches at build
+  // time, in this bundler, today.
   if (!scansUi2) {
-    err(
+    warn(
       cssRel,
       1,
-      "@trf/ui2's own source is not scanned by Tailwind. Its components reference utilities that will never be generated (bg-secondary, bg-warning, ring-offset-background, bg-popover and so on), so they render unstyled.",
+      "@trf/ui2's own source is not declared as a Tailwind source. Under @tailwindcss/vite the module graph covers imported components, so this may generate correctly today, but the coverage is incidental rather than declared.",
       `Add:  @source "../node_modules/@trf/ui2/src/**/*.{ts,tsx}";`,
     )
   }
@@ -341,6 +365,18 @@ for (const file of walk(SRC)) {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// There is deliberately NO font check here.
+//
+// A first draft warned when an app installed @fontsource packages without
+// declaring `font-family` anywhere, on the theory that tokens.css names Geist
+// but styles nothing itself. Measuring the rendered page killed it: Tailwind v4
+// preflight applies the theme's font to <html>, and tokens.css registers
+// --font-sans through `@theme inline`, so the font is applied whether or not the
+// app repeats it. getComputedStyle reported "Geist Variable" with and without an
+// explicit body rule. The rule would have been a false positive by design.
+// ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // 4. The pointer that makes the docs reachable at all.
