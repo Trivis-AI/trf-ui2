@@ -124,11 +124,33 @@ Two severities:
   `<button className=`, non-Lucide icons, baked arrow glyphs, hand-added `cursor-pointer`,
   inline styles. Add `--strict` to fail on these too, once a repo is clean.
 
-Wire it into CI ahead of the build, and into the app's own scripts:
+Wire it into the app's own scripts:
 
 ```json
 "scripts": { "check:ui2": "trf-ui2-check" }
 ```
+
+In CI, do **not** depend on the app's pinned version. The script imports nothing but Node
+builtins, so fetch it from a tag and run it. That works on an app still pinned to an old ui2,
+which is most of them:
+
+```yaml
+  check-ui2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: Design system wiring check
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/Trivis-AI/trf-ui2/v7.2.8/scripts/check-consumer.mjs -o /tmp/check.mjs
+          node /tmp/check.mjs
+```
+
+Then make the image build `needs: check-ui2`. `npm ci` is only needed so the `@source` paths
+resolve against a real `node_modules`; without it the check still runs and says so.
 
 ## Related
 
