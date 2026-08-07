@@ -67,12 +67,50 @@ This app's UI is built with the TRF design system. Before writing any UI:
 
 1. Read `node_modules/@trf/ui2/docs/STRUCTURE.json` — the manifest. Load only the doc you need.
 2. Must-read first: `node_modules/@trf/ui2/docs/13-ai-coding-guidelines.md`.
-3. Use components from `@trf/ui2` — never recreate Button/Input/Dialog/etc.
-4. Colors/radius/fonts come from tokens only (see `03-design-tokens.md`). No hardcoded values.
+   For page layout, page width, back-nav or list pages, also read
+   `node_modules/@trf/ui2/docs/17-app-layout-conventions.md` (suite-wide rules).
+3. Use components from `@trf/ui2` — never recreate Button/Input/Dialog/Select/Checkbox/etc.
+   Search the barrel first; if it exists, import it.
+4. Colors/radius/fonts come from tokens only (see `03-design-tokens.md`). No hardcoded values,
+   no raw Tailwind palette colours (`amber-500`), no off-scale sizes (`text-[11px]`).
 5. Icons: Lucide only (`05-iconography.md`). Test light + dark mode.
+6. Before committing UI work, run `npx trf-ui2-check`.
 ```
 
+Point 2 names doc 17 deliberately: an agent told to read only doc 13 learns the styling rules
+and none of the layout ones, which is how page-width and back-link drift gets written.
+
 That's it — single source of truth lives in `@trf/ui2`; every app stays in sync via the package.
+
+## 5. Verify the wiring (do not trust the build)
+
+`tsc && vite build` passes on a broken setup. Tailwind ignores an `@source` glob that matches
+nothing without a warning, so a typo in step 2 silently stops the library's classes from being
+generated, and its components render unstyled. That is not hypothetical: frontsupport had
+`@source "../node_modules/@trf/ui2/dist"` (there is no `dist`, the package ships `src`), which
+cost 64% of the generated CSS across 11 commits while every build stayed green.
+
+Run the checker instead:
+
+```bash
+node node_modules/@trf/ui2/scripts/check-consumer.mjs      # or: npx trf-ui2-check
+```
+
+Two severities:
+
+- **Wiring errors** (exit 1): tokens.css not imported, an `@source` path that does not resolve,
+  the library's source not scanned, the dark variant not wired to `.dark`, `#main` instead of a
+  release tag, no `AGENTS.md` pointer. No app should ever be in this state, so this is safe to
+  gate CI on from day one.
+- **Drift warnings** (exit 0): raw palette colours, off-scale type or radius, `window.confirm`,
+  raw `<select>` / checkbox / `<button className=`, non-Lucide icons, baked arrow glyphs,
+  hand-added `cursor-pointer`. Add `--strict` to fail on these too, once a repo is clean.
+
+Wire it into CI ahead of the build, and into the app's own scripts:
+
+```json
+"scripts": { "check:ui2": "trf-ui2-check" }
+```
 
 ## Related
 
