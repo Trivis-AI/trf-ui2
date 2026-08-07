@@ -132,9 +132,27 @@ Wire it into the app's own scripts:
 
 In CI, do **not** depend on the app's pinned version. The script imports nothing but Node
 builtins, so fetch it from a tag and run it. That works on an app still pinned to an old ui2,
-which is most of them:
+which is most of them.
+
+Write it as a **reusable** workflow. `needs:` only resolves within a single workflow, and
+`docker.yml` fires only on `v*` tags, so a standalone file triggered on push would report drift
+without ever blocking an image. Declaring `workflow_call` alongside the normal triggers lets the
+same file do both jobs:
 
 ```yaml
+# .github/workflows/check-ui2.yml
+name: check-ui2
+
+on:
+  workflow_call:          # ← lets the build workflows call it
+  push:
+    branches: [main, trivis]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
   check-ui2:
     runs-on: ubuntu-latest
     steps:
@@ -145,12 +163,32 @@ which is most of them:
       - run: npm ci
       - name: Design system wiring check
         run: |
+          set -euo pipefail
           curl -sSfL https://raw.githubusercontent.com/Trivis-AI/trf-ui2/v7.2.8/scripts/check-consumer.mjs -o /tmp/check.mjs
           node /tmp/check.mjs
 ```
 
-Then make the image build `needs: check-ui2`. `npm ci` is only needed so the `@source` paths
-resolve against a real `node_modules`; without it the check still runs and says so.
+Then call it from each build workflow, so neither a `:prod` nor a `:trivis` image can be built
+from drifted code:
+
+```yaml
+# docker.yml and trivis-build.yaml
+jobs:
+  check-ui2:
+    uses: ./.github/workflows/check-ui2.yml
+
+  build:
+    needs: check-ui2
+```
+
+`npm ci` is only needed so the `@source` paths resolve against a real `node_modules`; without it
+the check still runs and says so. Add `--strict` once the repo reports clean, in the same commit
+that drains it.
+
+Every app in the suite is wired this way as of 2026-08-07. Two are not shaped like the rest:
+frontlogin names its production build `docker-trivis.yml`, and trf-app-shell ships no image, so it
+takes the standalone form with no `workflow_call` and no `needs:`. See
+[18 Drift backlog](18-drift-backlog.md).
 
 ## Related
 
