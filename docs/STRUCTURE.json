@@ -26,7 +26,9 @@
     "15-migration-infra.md": "Branch naming convention (feat/trf-ui2-adoption), test server strategy, tag pinning rules, migration order for all 13 remaining apps, and per-app checklist.",
     "16-component-graduation.md": "Post-migration plan: which app-local components graduate into trf-ui2 (EntityCombobox, Select empty-value, StepCard, StatementTable, ActionPill, EditableGrid), build order, and the phase-4 replacement checklist.",
     "open-questions.md": "Living parking lot: unresolved decisions and future plans (i18n, analytics, typography scale, theming). File questions here instead of guessing.",
-    "17-app-layout-conventions.md": "Suite-wide app layout/nav rules: page width (TablePage full / Page xl via router helper), shell breadcrumbs instead of inline back links (ShellCrumb), useBlocker dirty guard, list-page recipe, QueryClient defaults, icons-not-glyphs."
+    "17-app-layout-conventions.md": "Suite-wide app layout/nav rules: page width (TablePage full / Page xl via router helper), shell breadcrumbs instead of inline back links (ShellCrumb), useBlocker dirty guard, list-page recipe, QueryClient defaults, icons-not-glyphs.",
+    "18-drift-backlog.md": "Drift findings across the consuming apps, and the sequence for draining them. Gate CI first; most findings carry a visual decision and are not a sweep.",
+    "19-app-scaffold.md": "Proposed template repo for a new TRF frontend. What it emits and why, after frontsupport shipped with three silent stylesheet defects and no AGENTS.md."
   },
   "components": {
     "AppShell": "08-ui-components/sidebar.md",
@@ -203,6 +205,8 @@
     "08-ui-components/brand-mark.md": "ready",
     "08-ui-components/collapsible.md": "ready",
     "14-migration-guide.md": "ready",
-    "15-migration-infra.md": "ready"
+    "15-migration-infra.md": "ready",
+    "18-drift-backlog.md": "draft",
+    "19-app-scaffold.md": "draft"
   }
 }
