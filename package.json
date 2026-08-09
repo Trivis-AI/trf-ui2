@@ -1,13 +1,17 @@
 {
   "name": "@trf/ui2",
   "private": true,
-  "version": "7.2.3",
+  "version": "7.2.11",
   "type": "module",
   "description": "TRF design system & component library (shadcn-style, Radix + Tailwind v4, owned source).",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "dev": "npm --prefix demo run dev",
-    "demo:install": "npm --prefix demo install"
+    "demo:install": "npm --prefix demo install",
+    "check:consumer": "node scripts/check-consumer.mjs"
+  },
+  "bin": {
+    "trf-ui2-check": "scripts/check-consumer.mjs"
   },
   "exports": {
     ".": {
@@ -18,7 +22,8 @@
   },
   "files": [
     "src",
-    "docs"
+    "docs",
+    "scripts"
   ],
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

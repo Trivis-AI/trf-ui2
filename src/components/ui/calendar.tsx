@@ -15,6 +15,7 @@ export function Calendar({
   classNames,
   showOutsideDays = true,
   hideNavigation = true,
+  weekStartsOn = 1,
   ...props
 }: CalendarProps) {
   const defaults = getDefaultClassNames();
@@ -24,6 +25,10 @@ export function Calendar({
       // Prev/next month arrows are hidden by default — month/year navigation happens through the
       // dropdowns (captionLayout="dropdown"). Pass hideNavigation={false} to bring the arrows back.
       hideNavigation={hideNavigation}
+      // Weeks start on Monday, not react-day-picker's en-US default of Sunday: every market the
+      // suite serves (EE/LV/LT, en-GB) is Monday-first, and so is ISO 8601. Override per instance
+      // with weekStartsOn={0} if a calendar ever needs Sunday.
+      weekStartsOn={weekStartsOn}
       className={cn("p-3", className)}
       classNames={{
         root: cn("w-fit", defaults.root),

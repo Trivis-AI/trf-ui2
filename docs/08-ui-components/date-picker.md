@@ -160,6 +160,11 @@ import { Calendar } from "@trf/ui2";
 
 It forwards all `react-day-picker` props (`mode`, `numberOfMonths`, `disabled`, `min`/`max`, …).
 
+**Weeks start on Monday.** react-day-picker defaults to Sunday (en-US); `Calendar` sets
+`weekStartsOn={1}` because every market the suite serves (EE/LV/LT, en-GB) is Monday-first, and so
+is ISO 8601. This applies to `DatePicker` and `DateTimePicker` too, since both compose `Calendar`.
+Pass `weekStartsOn={0}` on a single instance if you ever need Sunday.
+
 ## Rules
 
 - Use `DatePicker` (not native `<input type="date">`) when the calendar should match the system or
