@@ -354,6 +354,15 @@ export type {
   RowEditFieldType,
   RowEditFieldOption,
 } from "./components/row-edit-modal";
+// Settle a document where the user is already standing, instead of sending them
+// to the Payments app to finish the job.
+export { RecordPaymentDialog } from "./components/record-payment-dialog";
+export type {
+  RecordPaymentDialogProps,
+  RecordPaymentDialogLabels,
+  RecordPaymentSubmit,
+  PaymentAccountOption,
+} from "./components/record-payment-dialog";
 // Re-exported so apps type their columns without importing @tanstack/react-table directly.
 // (TanStack's `Row` is aliased to avoid colliding with the layout `Row` component.)
 export type { ColumnDef, CellContext, Row as DataTableRow } from "@tanstack/react-table";

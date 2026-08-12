@@ -43,6 +43,7 @@ import {
   ServerDataTable, TablePage, TableFilterBar, TableColumnOptions, useTableQuery,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
   AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
+  RecordPaymentDialog,
 } from "@trf/ui2";
 import {
   queryTable, STATUS_OPTIONS, METHOD_OPTIONS,
@@ -1907,6 +1908,135 @@ function EditableDataTableDemo() {
   );
 }
 
+/* ------------------------------------------- section: RecordPaymentDialog */
+
+const RP_LABELS = {
+  payTitle: "Pay this invoice",
+  recordTitle: "Record payment",
+  payDescription:
+    "Queues the payment on the account below. It books when the bank statement confirms it.",
+  recordDescription: "Marks this invoice paid and writes the journal entries now.",
+  fromAccount: "Paying from",
+  intoAccount: "Received into",
+  change: "change",
+  amount: "Amount",
+  date: "Date",
+  payAction: "Queue payment",
+  recordAction: "Record payment",
+  cancel: "Cancel",
+  noAccounts: "No bank or cash account is set up yet.",
+  working: "Working…",
+};
+
+const RP_ONE_ACCOUNT = [
+  {
+    id: "a1",
+    label: "EE39 7700 7710 0631 1446",
+    kind: "iban" as const,
+    railSentence: "Will be sent to LHV via Connect.",
+    isDefault: true,
+  },
+];
+
+const RP_MANY_ACCOUNTS = [
+  ...RP_ONE_ACCOUNT,
+  {
+    id: "a2",
+    label: "EE96 1010 0120 2362 6229",
+    kind: "iban" as const,
+    railSentence: "Will be added to the next bank file.",
+  },
+  { id: "a3", label: "Kassa", kind: "cash" as const },
+];
+
+function RecordPaymentDialogDemo() {
+  const [open, setOpen] = useState<null | "one" | "many" | "record" | "none">(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = () => {
+    setBusy(true);
+    setTimeout(() => {
+      setBusy(false);
+      setOpen(null);
+    }, 900);
+  };
+
+  return (
+    <Stack gap={3}>
+      <Text tone="muted" size="sm">
+        Settling a document where the user already is. With one account the picker
+        collapses to a sentence — asking someone to choose from a list of one is the
+        archetypal form-not-flow — and the rail is always stated, never asked.
+      </Text>
+      <Row gap={2} className="flex-wrap">
+        <Button onClick={() => setOpen("one")}>Pay · one account</Button>
+        <Button variant="secondary" onClick={() => setOpen("many")}>
+          Pay · several accounts
+        </Button>
+        <Button variant="secondary" onClick={() => setOpen("record")}>
+          Record · sales invoice
+        </Button>
+        <Button variant="secondary" onClick={() => setOpen("none")}>
+          No accounts set up
+        </Button>
+      </Row>
+
+      <RecordPaymentDialog
+        open={open === "one"}
+        onClose={() => setOpen(null)}
+        mode="pay"
+        documentLabel="OS-2026-0042"
+        counterpartyName="Telia Eesti AS"
+        currencyCode="EUR"
+        outstandingAmount="124.50"
+        accounts={RP_ONE_ACCOUNT}
+        busy={busy}
+        onSubmit={submit}
+        labels={RP_LABELS}
+      />
+      <RecordPaymentDialog
+        open={open === "many"}
+        onClose={() => setOpen(null)}
+        mode="pay"
+        documentLabel="OS-2026-0043"
+        counterpartyName="Pukser OÜ"
+        currencyCode="EUR"
+        outstandingAmount="1240.00"
+        accounts={RP_MANY_ACCOUNTS}
+        warning="This IBAN is not among the supplier's known accounts."
+        busy={busy}
+        onSubmit={submit}
+        labels={RP_LABELS}
+      />
+      <RecordPaymentDialog
+        open={open === "record"}
+        onClose={() => setOpen(null)}
+        mode="record"
+        documentLabel="MA-2026-0107"
+        counterpartyName="Oakheart OÜ"
+        currencyCode="EUR"
+        outstandingAmount="89.00"
+        accounts={RP_MANY_ACCOUNTS}
+        defaultAccountId="a3"
+        busy={busy}
+        onSubmit={submit}
+        labels={RP_LABELS}
+      />
+      <RecordPaymentDialog
+        open={open === "none"}
+        onClose={() => setOpen(null)}
+        mode="pay"
+        documentLabel="OS-2026-0044"
+        outstandingAmount="10.00"
+        accounts={[]}
+        busy={busy}
+        onSubmit={submit}
+        labels={RP_LABELS}
+      />
+    </Stack>
+  );
+}
+
 /* ------------------------------------------------ section: RowEditModal */
 
 type Currency = {
@@ -2461,6 +2591,7 @@ const GROUPS: GroupDef[] = [
       { id: "server-datatable", label: "ServerDataTable", render: () => <ServerDataTableDemo /> },
       { id: "editable-datatable", label: "Editable data table", render: () => <EditableDataTableDemo /> },
       { id: "row-edit-modal", label: "Row edit modal", render: () => <RowEditModalDemo /> },
+      { id: "record-payment-dialog", label: "Record payment dialog", render: () => <RecordPaymentDialogDemo /> },
       { id: "chart", label: "Chart", render: () => <ChartDemo /> },
       { id: "sidebar", label: "App shell / Sidebar", render: () => <SidebarDemo /> },
     ],
