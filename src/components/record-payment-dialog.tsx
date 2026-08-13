@@ -83,6 +83,9 @@ export interface RecordPaymentDialogLabels {
   recordDescription: string;
   fromAccount: string;
   intoAccount: string;
+  /** Placeholder shown while no account is chosen — it is an instruction, not a
+   *  name, e.g. "Select the bank to pay from". */
+  selectAccount: string;
   change: string;
   amount: string;
   date: string;
@@ -154,6 +157,21 @@ export function RecordPaymentDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, outstandingAmount, defaultAccountId, defaultDate]);
 
+  // Accounts commonly arrive AFTER the dialog is open, because the caller starts
+  // fetching them when it mounts. The effect above cannot depend on them — its
+  // job is to reset per document, and `accounts` is rebuilt on every render, so
+  // it would wipe the amount on every keystroke. Without this the late arrival
+  // was never seeded: the account read "—" and the submit button stayed dead,
+  // because canSubmit requires an accountId.
+  //
+  // Guarded on an empty choice, so it fills in once and can never overwrite a
+  // selection the user has made. `preferred` is an id string, not an object, so
+  // depending on it does not loop.
+  React.useEffect(() => {
+    if (!open || accountId || !preferred) return;
+    setAccountId(preferred);
+  }, [open, accountId, preferred]);
+
   const chosen = accounts.find((a) => a.id === accountId);
   const amountNumber = Number.parseFloat(amount);
   const amountValid = Number.isFinite(amountNumber) && amountNumber > 0;
@@ -188,11 +206,15 @@ export function RecordPaymentDialog({
             <Alert variant="destructive">
               <AlertDescription>{labels.noAccounts}</AlertDescription>
             </Alert>
-          ) : picking ? (
+            // Nothing chosen yet is a QUESTION, not a statement: show the picker
+            // rather than a sentence naming "—" beside a faint "change" link,
+            // which read as an empty field and gave no hint that the dead submit
+            // button was waiting on it.
+          ) : picking || !chosen ? (
             <Field label={accountFieldLabel} htmlFor="rp-account">
               <Select value={accountId} onValueChange={setAccountId}>
                 <SelectTrigger id="rp-account">
-                  <SelectValue />
+                  <SelectValue placeholder={labels.selectAccount} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
@@ -205,12 +227,13 @@ export function RecordPaymentDialog({
             </Field>
           ) : (
             // The no-question case: state the account, offer a way to change it.
+            // `chosen` is non-null here — the branch above owns the unchosen case.
             <Stack gap={0}>
               <Text size="xs" tone="muted">
                 {accountFieldLabel}
               </Text>
               <Row gap={2} className="items-center">
-                <Text weight="medium">{chosen?.label ?? "—"}</Text>
+                <Text weight="medium">{chosen.label}</Text>
                 {accounts.length > 1 && (
                   <Button
                     variant="link"
