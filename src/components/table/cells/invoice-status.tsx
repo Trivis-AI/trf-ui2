@@ -83,6 +83,8 @@ export function deriveInvoiceStatus(
  * returns overdue rows too (they are confirmed + unpaid).
  */
 export const INVOICE_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "not_paid", label: "Not paid" },
+  { value: "owing", label: "Unpaid or partial" },
   { value: "draft", label: "Draft" },
   { value: "unpaid", label: "Unpaid" },
   { value: "partial", label: "Partial" },
@@ -99,6 +101,16 @@ export function invoiceStatusFilterToParams(
   value: string,
 ): { status: string; payment_status: string } {
   switch (value) {
+    // Spans states on purpose: everything still owing something, drafts included. Both
+    // params are comma lists, which backinvoices and backpurchase read as IN (…). It is
+    // what the org landing page's "unpaid / waiting" counters link to, so the list a user
+    // lands on matches the number they clicked.
+    case "not_paid":
+      return { status: "draft,confirmed", payment_status: "unpaid,partial" };
+    // The same pile without drafts: money actually owed on a document that has been
+    // issued. What the landing page's unpaid-sales-invoices counter links to.
+    case "owing":
+      return { status: "confirmed", payment_status: "unpaid,partial" };
     case "draft":
       return { status: "draft", payment_status: "" };
     case "cancelled":
