@@ -1918,6 +1918,7 @@ const RP_LABELS = {
   recordDescription: "Marks this invoice paid and writes the journal entries now.",
   fromAccount: "Paying from",
   intoAccount: "Received into",
+  selectAccount: "Choose an account",
   change: "change",
   amount: "Amount",
   date: "Date",
