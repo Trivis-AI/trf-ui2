@@ -16,8 +16,17 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronLeft, ChevronRight, GripVertical, SlidersHorizontal, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  GripVertical,
+  ListFilter,
+  SlidersHorizontal,
+  Star,
+  X,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
+import type { TableDefaultView } from "./use-table-query";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { SearchInput } from "../ui/search-input";
@@ -325,6 +334,12 @@ export interface TableFilterBarProps {
   active?: boolean;
   /** Called when the Clear button is pressed. Shown only when `active`. */
   onClear?: () => void;
+  /**
+   * Pass `useTableQuery`'s `defaultView` to get the star button that makes the
+   * current filters this list's default. Pair it with a TableFilterNotice so an
+   * applied default is visible rather than silent.
+   */
+  defaultView?: TableDefaultView;
   className?: string;
 }
 
@@ -332,16 +347,129 @@ export interface TableFilterBarProps {
  * Wraps filter controls with uniform spacing and shows a primary "Clear" button
  * automatically whenever any filter is active.
  */
-export function TableFilterBar({ children, active, onClear, className }: TableFilterBarProps) {
+export function TableFilterBar({
+  children,
+  active,
+  onClear,
+  defaultView,
+  className,
+}: TableFilterBarProps) {
+  // The star appears once there is something to save, and stays while a view is
+  // saved so it can always be taken back — including from the cleared list,
+  // where saving the empty view is what "forget my default" means.
+  const showStar = !!defaultView?.enabled && (!!active || defaultView.saved);
+  const isDefault = !!defaultView?.isCurrent;
+
   return (
     <div className={cn("flex flex-wrap items-end gap-3", className)}>
       {children}
+      {showStar && (
+        <Button
+          variant="secondary"
+          size="md"
+          aria-pressed={isDefault}
+          onClick={() => (isDefault ? defaultView!.clear() : defaultView!.save())}
+          title={
+            isDefault
+              ? "This list opens with these filters. Click to stop."
+              : "Open this list with these filters from now on"
+          }
+          className={cn(isDefault && "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15")}
+        >
+          <Star className={cn(isDefault && "fill-current")} />
+          {isDefault ? "Default view" : "Make default"}
+        </Button>
+      )}
       {active && onClear && (
         // md matches the h-9 filter controls, so the items-end row stays flush.
         <Button variant="primary" size="md" onClick={onClear}>
           <X />
           Clear
         </Button>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------------------------- TableFilterNotice */
+
+export interface TableFilterNoticeProps {
+  /** Whether any filter or search is active right now. */
+  active?: boolean;
+  /** `useTableQuery`'s `defaultView`; names the strip when a default is applied. */
+  defaultView?: TableDefaultView;
+  /** Rows matching the current filters — the server's total, not the page length. */
+  matched?: number;
+  /** Rows with no filter applied. Supply it to get the "N hidden" count. */
+  total?: number;
+  /** Plural noun for the counts, e.g. "invoices". Default "rows". */
+  unit?: string;
+  className?: string;
+}
+
+/**
+ * The one line that says a filter is on, and what it is costing you: how many
+ * rows match and how many the filter is holding back. Sits between the filter
+ * row and the table (TablePage.notice).
+ *
+ * It exists because a filter that survives a page load — a saved default view,
+ * or one restored from a link — is otherwise indistinguishable from an empty
+ * list, and a missing row is a bookkeeping error, not a UI annoyance.
+ */
+export function TableFilterNotice({
+  active,
+  defaultView,
+  matched,
+  total,
+  unit = "rows",
+  className,
+}: TableFilterNoticeProps) {
+  if (!active) return null;
+
+  const onDefault = !!defaultView?.isCurrent;
+  const headline = defaultView?.restored
+    ? "Opened with your default view"
+    : onDefault
+      ? "Saved as your default view"
+      : "Filters are on";
+
+  const hidden = total != null && matched != null ? total - matched : null;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border px-3 py-2 text-sm",
+        // A filter is a state, not a fault: the tone stays neutral, and a saved
+        // default reads as something the user chose rather than a warning.
+        onDefault
+          ? "border-primary/30 bg-primary/5 text-foreground"
+          : "border-border bg-muted/50 text-foreground",
+        className
+      )}
+    >
+      {onDefault ? (
+        <Star className="size-4 shrink-0 fill-current text-primary" />
+      ) : (
+        <ListFilter className="size-4 shrink-0 text-muted-foreground" />
+      )}
+      <span className="font-medium">{headline}</span>
+      {matched != null && (
+        <span className="text-muted-foreground">
+          {total != null ? (
+            <>
+              · Showing {matched} of {total} {unit}
+            </>
+          ) : (
+            <>
+              · {matched} {unit} match
+            </>
+          )}
+        </span>
+      )}
+      {hidden != null && hidden > 0 && (
+        <span className="font-medium tabular-nums">
+          · {hidden} hidden by filters
+        </span>
       )}
     </div>
   );

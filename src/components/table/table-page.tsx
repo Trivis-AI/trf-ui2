@@ -31,6 +31,13 @@ export interface TablePageProps {
   /** Filter controls, shown on one row with the search (wrap in TableFilterBar). */
   filters?: React.ReactNode;
 
+  /**
+   * Full-width strip between the filter row and the table, for state the reader
+   * must not miss — a TableFilterNotice above all. Not for errors or empty
+   * states, which belong to the table itself.
+   */
+  notice?: React.ReactNode;
+
   /** Page max width. Default "full". */
   size?: PageSize;
 
@@ -49,7 +56,8 @@ export interface TablePageProps {
 
 /**
  * Full-width table page frame. Region order, top to bottom: header -> filter row
- * (search + filters, column options right-aligned) -> table -> pagination footer.
+ * (search + filters, column options right-aligned) -> notice -> table ->
+ * pagination footer.
  * Bulk actions live on the table itself (ServerDataTable.bulkActions replaces the
  * column-header row while rows are selected). The app owns *what* goes in each
  * region; the organism owns *where* it goes, so pages cannot drift apart.
@@ -62,6 +70,7 @@ export function TablePage({
   search,
   columnOptions,
   filters,
+  notice,
   size = "full",
   pagination,
   children,
@@ -110,6 +119,9 @@ export function TablePage({
           {columnOptions && <div className="ml-auto">{columnOptions}</div>}
         </div>
       )}
+
+      {/* Notice: filter state that must stay visible while the table is read */}
+      {notice}
 
       {/* Table (its header row becomes the bulk toolbar when rows are selected) */}
       {children}

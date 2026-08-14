@@ -38,6 +38,7 @@ export {
   TableColumnOptions,
   TablePagination,
   TableFilterBar,
+  TableFilterNotice,
 } from "./table-toolbar";
 export type {
   TableSearchProps,
@@ -45,6 +46,7 @@ export type {
   TableColumnOption,
   TablePaginationProps,
   TableFilterBarProps,
+  TableFilterNoticeProps,
 } from "./table-toolbar";
 
 // The header progress line.
@@ -53,7 +55,7 @@ export type { TableProgressProps } from "./table-progress";
 
 // State hook + URL-state adapter.
 export { useTableQuery } from "./use-table-query";
-export type { UseTableQueryOptions, TableQuery } from "./use-table-query";
+export type { UseTableQueryOptions, TableQuery, TableDefaultView } from "./use-table-query";
 export { createHistoryUrlState } from "./url-state";
 export type { UrlStateAdapter, UrlStateFactory } from "./url-state";
 

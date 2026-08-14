@@ -169,6 +169,9 @@ export async function queryTable(
   return { rows: page, rowCount, pageCount };
 }
 
+// The unfiltered row count, so the demo can show "N of M" in TableFilterNotice.
+export const TOTAL_ROWS = ALL_ROWS.length;
+
 // Exported so the demo can drive filter dropdowns from the same source of truth.
 export const STATUS_OPTIONS = STATUSES;
 export const METHOD_OPTIONS = METHODS;
