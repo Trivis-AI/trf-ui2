@@ -10,6 +10,15 @@ export interface UseTableQueryOptions {
   defaultSort?: SortingState;
   /** Page size. Default 50. */
   defaultPageSize?: number;
+  /**
+   * Enable the user-saved default view, stored in localStorage under this key
+   * (so it is per browser user, not per organisation). Give each list its own
+   * key, e.g. "purchase-invoices". Omit to disable the feature entirely.
+   *
+   * A saved view is applied only when the URL carries no table state, so a link
+   * someone sent you always wins over your own default.
+   */
+  defaultViewKey?: string;
   /** Debounce before `search` (and the query) updates. Default 300ms. */
   searchDebounceMs?: number;
   /** Sync state to the URL. Default true (History-API adapter). */
@@ -21,6 +30,25 @@ export interface UseTableQueryOptions {
    * History-API adapter. Only used when `syncToUrl` is true.
    */
   urlState?: UrlStateFactory;
+}
+
+/**
+ * The saved default view: one filter/search/sort combination the user chose to
+ * open this list with. Page number is deliberately not part of it.
+ */
+export interface TableDefaultView {
+  /** False when `defaultViewKey` was not given; controls render nothing then. */
+  enabled: boolean;
+  /** A view is stored for this list. */
+  saved: boolean;
+  /** The stored view matches what is on screen right now. */
+  isCurrent: boolean;
+  /** This page load started from the stored view (no table state in the URL). */
+  restored: boolean;
+  /** Store the current filters/search/sort. Storing an empty view forgets it. */
+  save(): void;
+  /** Forget the stored view; the list opens unfiltered again. */
+  clear(): void;
 }
 
 export interface TableQuery {
@@ -45,6 +73,9 @@ export interface TableQuery {
    */
   setFilters(next: Record<string, string>): void;
   clearFilters(): void;
+
+  /** The user-saved default view for this list. */
+  defaultView: TableDefaultView;
 
   /** Stable react-query key. */
   queryKey: unknown[];
@@ -84,6 +115,95 @@ function parseFromUrl(
   };
 }
 
+/* ------------------------------------------------- saved default view */
+
+const VIEW_STORAGE_PREFIX = "trf.table-view.";
+
+/**
+ * The part of the state a saved view covers: filters, search and sort. Page and
+ * page size are left out on purpose — reopening a list on page 4 is never what
+ * anyone meant by "make this my default".
+ */
+function viewParams(state: CoreState): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (state.sorting[0]) {
+    out.sort = state.sorting[0].id;
+    out.dir = state.sorting[0].desc ? "desc" : "asc";
+  }
+  if (state.search) out.q = state.search;
+  for (const [key, value] of Object.entries(state.filters)) {
+    if (value) out[key] = value;
+  }
+  return out;
+}
+
+/** A view with nothing but the default sort in it is the unfiltered list. */
+function isEmptyView(view: Record<string, string>, defaultSort: SortingState): boolean {
+  const keys = Object.keys(view);
+  if (keys.length === 0) return true;
+  if (!defaultSort[0]) return false;
+  const onlySort = keys.every((k) => k === "sort" || k === "dir");
+  return (
+    onlySort &&
+    view.sort === defaultSort[0].id &&
+    view.dir === (defaultSort[0].desc ? "desc" : "asc")
+  );
+}
+
+function sameView(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keys = Object.keys(a);
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((k) => a[k] === b[k]);
+}
+
+// localStorage can throw (private mode, disabled storage, quota); a default view
+// is a convenience, so every failure degrades to "no saved view" rather than
+// taking the list down with it.
+function readView(key: string): Record<string, string> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(VIEW_STORAGE_PREFIX + key);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
+      if (typeof v === "string" && v !== "") out[k] = v;
+    }
+    return Object.keys(out).length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeView(key: string, view: Record<string, string>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(VIEW_STORAGE_PREFIX + key, JSON.stringify(view));
+  } catch {
+    /* storage unavailable: the view simply does not persist */
+  }
+}
+
+function removeView(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(VIEW_STORAGE_PREFIX + key);
+  } catch {
+    /* as above */
+  }
+}
+
+/** Keys the hook itself owns in the URL; used to detect "the URL carries state". */
+const URL_STATE_KEYS = ["page", "limit", "sort", "dir", "q"];
+
+function urlHasTableState(snapshot: Record<string, string>, filterKeys: string[]): boolean {
+  for (const key of URL_STATE_KEYS.concat(filterKeys)) {
+    if (snapshot[key] != null && snapshot[key] !== "") return true;
+  }
+  return false;
+}
+
 function serialize(state: CoreState, defaultPageSize: number): Record<string, string> {
   const out: Record<string, string> = {};
   if (state.pageIndex > 0) out.page = String(state.pageIndex + 1);
@@ -111,6 +231,7 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     searchDebounceMs = 300,
     syncToUrl = true,
     filterKeys = [],
+    defaultViewKey,
     urlState,
   } = opts;
 
@@ -128,15 +249,38 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
   }
   const adapter = adapterRef.current;
 
-  const [core, setCore] = React.useState<CoreState>(() =>
-    adapter ? parseFromUrl(adapter.get(), resolved) : {
+  // Read once, before the state initializers below run.
+  const initialSaved = React.useMemo(
+    () => (defaultViewKey ? readView(defaultViewKey) : null),
+    [defaultViewKey]
+  );
+
+  // True when this load started from the saved view rather than from a link or
+  // a plain visit. Held in a ref: it describes how the page opened, and must not
+  // re-trigger renders.
+  const openedFromViewRef = React.useRef(false);
+
+  const [savedView, setSavedView] = React.useState<Record<string, string> | null>(
+    () => initialSaved
+  );
+
+  const [core, setCore] = React.useState<CoreState>(() => {
+    const snapshot = adapter ? adapter.get() : {};
+    // A link with table state in it always wins over the user's own default:
+    // someone sent you that URL to show you those exact rows.
+    if (initialSaved && !urlHasTableState(snapshot, filterKeys)) {
+      openedFromViewRef.current = true;
+      return parseFromUrl(initialSaved, resolved);
+    }
+    if (adapter) return parseFromUrl(snapshot, resolved);
+    return {
       pageIndex: 0,
       pageSize: defaultPageSize,
       sorting: defaultSort,
       search: "",
       filters: {},
-    }
-  );
+    };
+  });
 
   // searchInput is the immediate (undebounced) value bound to the input.
   const [searchInput, setSearchInput] = React.useState(core.search);
@@ -209,6 +353,40 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     setCore((s) => ({ ...s, filters: {}, search: "", pageIndex: 0 }));
   }, []);
 
+  const currentView = React.useMemo(() => viewParams(core), [core]);
+
+  const saveDefaultView = React.useCallback(() => {
+    if (!defaultViewKey) return;
+    // "Make the unfiltered list my default" is the same wish as "forget my
+    // default", so it is stored as no view at all.
+    if (isEmptyView(currentView, defaultSort)) {
+      removeView(defaultViewKey);
+      setSavedView(null);
+      return;
+    }
+    writeView(defaultViewKey, currentView);
+    setSavedView(currentView);
+  }, [defaultViewKey, currentView, defaultSort]);
+
+  const clearDefaultView = React.useCallback(() => {
+    if (!defaultViewKey) return;
+    removeView(defaultViewKey);
+    setSavedView(null);
+  }, [defaultViewKey]);
+
+  const defaultView = React.useMemo<TableDefaultView>(() => {
+    const isCurrent = !!savedView && sameView(savedView, currentView);
+    return {
+      enabled: !!defaultViewKey,
+      saved: !!savedView,
+      isCurrent,
+      // Stops describing the load as restored the moment the user edits a filter.
+      restored: openedFromViewRef.current && isCurrent,
+      save: saveDefaultView,
+      clear: clearDefaultView,
+    };
+  }, [defaultViewKey, savedView, currentView, saveDefaultView, clearDefaultView]);
+
   const params = React.useMemo(() => {
     const out: Record<string, string> = {
       page: String(core.pageIndex + 1),
@@ -244,6 +422,7 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     setFilter,
     setFilters,
     clearFilters,
+    defaultView,
     queryKey,
     params,
   };

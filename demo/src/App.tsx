@@ -40,13 +40,13 @@ import {
 } from "recharts";
 // Server-driven table infra + standard cell renderers, consumed from the barrel.
 import {
-  ServerDataTable, TablePage, TableFilterBar, TableColumnOptions, useTableQuery,
+  ServerDataTable, TablePage, TableFilterBar, TableFilterNotice, TableColumnOptions, useTableQuery,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
   AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
   RecordPaymentDialog,
 } from "@trf/ui2";
 import {
-  queryTable, STATUS_OPTIONS, METHOD_OPTIONS,
+  queryTable, STATUS_OPTIONS, METHOD_OPTIONS, TOTAL_ROWS,
   type InvoiceRow, type InvoiceStatus, type PaymentMethod,
 } from "./mock/server";
 import { useMockQuery } from "./mock/use-mock-query";
@@ -1582,6 +1582,8 @@ function ServerDataTableDemo() {
     defaultPageSize: 20,
     filterKeys: ["status", "method"],
     syncToUrl: false,
+    // Saved default view: star the current filters and this list opens with them.
+    defaultViewKey: "demo-server-data-table",
   });
 
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -1744,7 +1746,7 @@ function ServerDataTableDemo() {
           />
         }
         filters={
-          <TableFilterBar active={hasFilters} onClear={q.clearFilters}>
+          <TableFilterBar active={hasFilters} onClear={q.clearFilters} defaultView={q.defaultView}>
             <Field label="Status" htmlFor="sdt-status" className="w-44">
               <SimpleSelect
                 id="sdt-status"
@@ -1766,6 +1768,15 @@ function ServerDataTableDemo() {
               />
             </Field>
           </TableFilterBar>
+        }
+        notice={
+          <TableFilterNotice
+            active={hasFilters}
+            defaultView={q.defaultView}
+            matched={result.data?.rowCount}
+            total={TOTAL_ROWS}
+            unit="invoices"
+          />
         }
         pagination={{
           pageIndex: q.pageIndex,

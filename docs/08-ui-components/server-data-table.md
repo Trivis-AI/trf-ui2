@@ -24,7 +24,8 @@ router URL adapter.
 | `TableSearch` | component | Debounced quick-filter input. Toolbar-left. |
 | `TableColumnOptions<TData>` | component | Menu to hide/show and reorder columns. Toolbar-right. |
 | `TablePagination` | component | The footer: "Page X of Y", "N total", Prev/Next. |
-| `TableFilterBar` | component | Wraps filter controls with uniform spacing and an auto "Clear" button. |
+| `TableFilterBar` | component | Wraps filter controls with uniform spacing and an auto "Clear" button. Pass `defaultView` for the star that saves the current filters. |
+| `TableFilterNotice` | component | The strip that says a filter is on, how many rows match, and how many are hidden. Goes in `TablePage.notice`. |
 | `TableProgress` | component | The thin header progress line for background refetches. |
 | `TableView` | component | Shared presentational core (internal; `DataTable` and `ServerDataTable` both render through it). |
 | `EditableDataTable<TData>` | component | Client-side table with a live editor in every editable cell. See [Inline editing](#inline-editing). |
@@ -133,14 +134,56 @@ const q = useTableQuery({
   searchDebounceMs,     // default 300
   syncToUrl,            // default true (History API)
   filterKeys,           // filter params to track/serialize
+  defaultViewKey,       // opt in to the saved default view (localStorage key)
   urlState,             // optional custom adapter (e.g. react-router)
 });
 ```
 
-Returns `{ pageIndex, pageSize, sorting, search, searchInput, filters, ...setters, queryKey, params }`.
+Returns `{ pageIndex, pageSize, sorting, search, searchInput, filters, ...setters, defaultView, queryKey, params }`.
 All setters reset `pageIndex` to 0 except `setPageIndex`. `search` is debounced (feed it
 to the fetcher); `searchInput` is immediate (bind it to the input). `params` is the flat
 map for the fetcher (`page`, `limit`, `sort`, `dir`, `search`, `...filters`).
+
+### Saved default view
+
+A list is a habit: most people open it the same way every day, and a filter that has to
+be re-applied every visit gets skipped. `defaultViewKey` lets the user star one
+filter/search/sort combination as how this list opens.
+
+```tsx
+const q = useTableQuery({ filterKeys: ["status"], defaultViewKey: "purchase-invoices" });
+
+<TablePage
+  filters={<TableFilterBar active={hasFilters} onClear={q.clearFilters} defaultView={q.defaultView}>…</TableFilterBar>}
+  notice={
+    <TableFilterNotice
+      active={hasFilters}
+      defaultView={q.defaultView}
+      matched={result?.total}   // rows matching now (server total)
+      total={unfilteredTotal}   // rows with no filter — enables "N hidden"
+      unit="invoices"
+    />
+  }
+>
+```
+
+Rules the hook enforces:
+
+- **A link beats a default.** The saved view is applied only when the URL carries no
+  table state, so a URL someone sent you always shows the rows they meant.
+- **Page number is never saved** — only filters, search and sort.
+- **Storage is per browser user** (`localStorage`, key `trf.table-view.<defaultViewKey>`),
+  not per organisation, and every storage failure degrades to "no saved view".
+- **Saving the empty view forgets the default**, which is what a user pressing the star
+  on a cleared list means.
+
+`q.defaultView` is `{ enabled, saved, isCurrent, restored, save(), clear() }`. `restored`
+is true only when this load actually started from the saved view — that is what
+`TableFilterNotice` turns into "Opened with your default view".
+
+**Never let a filter be invisible.** A saved or restored filter that the reader cannot
+see is indistinguishable from missing data, so a list that opts into `defaultViewKey`
+must also render the notice.
 
 ### URL sync adapter
 
@@ -159,6 +202,8 @@ it is called. `TablePage` uses structured props, not one free-form slot:
 - **Primary action** (the CTA, e.g. "New invoice"): rightmost in the header
   (`primaryAction`); utilities sit left of it (`secondaryActions`).
 - **Filters**: the filter bar between toolbar and table, with an auto ghost `Clear`.
+- **Notice**: full-width strip between the filter row and the table (`notice`), for
+  filter state that must stay visible — never for errors or empty states.
 - **Bulk actions**: a bar above the table when rows are selected (`bulkActions`).
 - **Pagination**: always the footer, one consistent format.
 
