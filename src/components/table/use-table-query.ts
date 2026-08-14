@@ -72,6 +72,10 @@ export interface TableQuery {
    * clears that key, resets pageIndex to 0, and writes the URL a single time.
    */
   setFilters(next: Record<string, string>): void;
+  /**
+   * Clear filters and search, and forget this list's saved default view — after
+   * this the list opens unfiltered until the user saves a new default.
+   */
   clearFilters(): void;
 
   /** The user-saved default view for this list. */
@@ -351,7 +355,15 @@ export function useTableQuery(opts: UseTableQueryOptions = {}): TableQuery {
     setSearchInput("");
     clearTimeout(debounceTimer.current);
     setCore((s) => ({ ...s, filters: {}, search: "", pageIndex: 0 }));
-  }, []);
+    // Clear means clear for good: a saved default view that survives the click
+    // would bring the same filters back on the next visit, which reads as the
+    // list ignoring you. Forgetting it here is why Clear needs no follow-up.
+    if (defaultViewKey) {
+      removeView(defaultViewKey);
+      setSavedView(null);
+      openedFromViewRef.current = false;
+    }
+  }, [defaultViewKey]);
 
   const currentView = React.useMemo(() => viewParams(core), [core]);
 
