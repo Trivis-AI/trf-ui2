@@ -295,6 +295,10 @@ export type {
 export { useFileDrop } from "./hooks/useFileDrop";
 export type { UseFileDropOptions, UseFileDropResult } from "./hooks/useFileDrop";
 
+// --- Attention: audible alerts & tab badge ---
+export { useTabAlert } from "./hooks/useTabAlert";
+export type { TabAlertOptions } from "./hooks/useTabAlert";
+
 export { AttachmentDropzone } from "./components/attachment-dropzone";
 export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";
 
@@ -385,6 +389,18 @@ export { MarkdownEditor } from "./components/markdown-editor";
 export type { MarkdownEditorProps } from "./components/markdown-editor";
 
 export * from "./components/table";
+
+export {
+  SoundAlertProvider,
+  useSoundAlerts,
+  useSoundAlert,
+} from './context/SoundAlertContext';
+export type {
+  SoundAlertProviderProps,
+  SoundAlertsValue,
+  SoundAlertDefinition,
+  SoundAlertOptions,
+} from './context/SoundAlertContext';
 
 // --- Permissions ---
 export { PermsProvider, usePerms } from './context/PermsContext';
