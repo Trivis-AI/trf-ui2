@@ -130,6 +130,9 @@ export function SoundAlertProvider({
 
   const audioRef = useRef<Record<string, HTMLAudioElement>>({});
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Set once a play has actually resolved — i.e. the browser has let audible
+  // media through at least once. Until then the unlock listeners keep trying.
+  const unlockedRef = useRef(false);
   // Read inside the ticker, which is created once per alert rather than once
   // per render — without the refs a mute would only take effect on the next
   // repeat, and a volume change never.
@@ -194,14 +197,35 @@ export function SoundAlertProvider({
       const def = sounds[key];
       const trim = typeof def === 'string' ? 1 : (def?.volume ?? 1);
       el.volume = Math.min(1, Math.max(0, volumeRef.current * trim));
-      // Rewind: a repeat that arrives while the last one is still playing must
-      // restart it, not be dropped as "already playing".
-      el.currentTime = 0;
+      el.muted = false;
+      try {
+        // Rewind: a repeat that arrives while the last one is still playing must
+        // restart it, not be dropped as "already playing". Guarded because some
+        // engines throw setting currentTime before any data has loaded.
+        el.currentTime = 0;
+      } catch {
+        // Nothing to rewind yet.
+      }
       const p = el.play();
       if (p && typeof p.then === 'function') {
         p.then(
-          () => setBlocked(false),
-          () => setBlocked(true),
+          () => {
+            unlockedRef.current = true;
+            setBlocked(false);
+          },
+          (err: DOMException) => {
+            // Only NotAllowedError means "the browser will not let you". A
+            // failed decode, a 404 or a play() cut short by the next repeat all
+            // reject too, and treating those as an autoplay block puts an
+            // "enable sound" button in front of an operator that cannot fix
+            // anything. Say which it was — this is the one failure mode that is
+            // invisible from the server.
+            if (err?.name === 'NotAllowedError') setBlocked(true)
+            else
+              console.warn(
+                `[trf-ui2] sound alert "${key}" failed to play: ${err?.name}: ${err?.message}`,
+              );
+          },
         );
       }
     },
@@ -217,6 +241,11 @@ export function SoundAlertProvider({
       (a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.startedAt - b.startedAt,
     )[0];
   }, [active]);
+
+  // Read by the unlock handler, which must not re-register its listeners every
+  // time the active set changes.
+  const currentRef = useRef<ActiveAlert | null>(null);
+  currentRef.current = current ?? null;
 
   useEffect(() => {
     if (timerRef.current) {
@@ -236,41 +265,65 @@ export function SoundAlertProvider({
     // start() call would restart the chime from the top each poll.
   }, [current?.key, current?.repeatMs, play]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Unlock on the first gesture anywhere in the app, so an alert raised while
-  // the tab sits in the background can still sound. Muted priming rather than a
-  // real play: the gesture is the permission, and nobody wants a chime because
-  // they clicked a menu.
+  // Unlock: play each sound for real, at zero volume, inside a user gesture.
+  //
+  // Two things here were wrong in the first version and both are worth stating,
+  // because they are the difference between an alarm and a decoration.
+  //
+  // MUTED PRIMING GRANTS NOTHING. Muted playback is always permitted, so a
+  // muted play() resolves without the browser ever deciding whether audible
+  // playback is allowed — the element is no more unlocked afterwards than
+  // before. What unlocks an element is having genuinely played AUDIBLE media
+  // during a gesture, so this plays unmuted with volume 0: silent to the
+  // operator, a real audible-playback grant to the browser.
+  //
+  // ONE ATTEMPT IS NOT ENOUGH. The listeners used to be {once:true}, so the
+  // first click spent the only try whether or not it worked — a click landing
+  // before the audio had loaded burned it. They now stay until a play has
+  // actually resolved, and only then unregister.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const unlock = () => {
+      if (unlockedRef.current) return;
       Object.keys(sounds).forEach((key) => {
         const el = audioFor(key);
         if (!el) return;
-        const wasMuted = el.muted;
-        el.muted = true;
+        const restore = el.volume;
+        el.muted = false;
+        el.volume = 0;
         const p = el.play();
         if (p && typeof p.then === 'function') {
           p.then(
             () => {
               el.pause();
-              el.currentTime = 0;
-              el.muted = wasMuted;
+              try {
+                el.currentTime = 0;
+              } catch {
+                // Nothing loaded yet; the next play starts from the top anyway.
+              }
+              el.volume = restore;
+              unlockedRef.current = true;
               setBlocked(false);
+              // An alert raised before the operator touched the page has been
+              // failing silently until now. We are inside the gesture, so this
+              // is the one moment it can be started — and the operator gets the
+              // chime they were owed rather than waiting out another interval.
+              if (currentRef.current) play(currentRef.current.key);
             },
             () => {
-              el.muted = wasMuted;
+              el.volume = restore;
             },
           );
         }
       });
     };
-    window.addEventListener('pointerdown', unlock, { once: true });
-    window.addEventListener('keydown', unlock, { once: true });
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
     return () => {
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
     };
-  }, [audioFor, sounds]);
+  }, [audioFor, play, sounds]);
 
   const start = useCallback((key: string, options?: SoundAlertOptions) => {
     setActive((prev) => {
@@ -308,17 +361,36 @@ export function SoundAlertProvider({
   }, []);
 
   // enable() is called from a click, which is exactly the gesture the browser
-  // withholds permission for. Playing the live alert rather than priming
-  // silently is deliberate: the operator pressed a button labelled "enable
-  // sound" and is owed proof that it worked.
+  // withholds permission for. Playing audibly rather than priming silently is
+  // deliberate: the operator pressed a button labelled "enable sound" and is
+  // owed proof that it worked.
+  //
+  // Every registered sound is touched, not just the one alerting: the grant is
+  // per element, and the next alert must not need its own button.
   const enable = useCallback(() => {
-    if (current) {
-      play(current.key);
-      return;
-    }
-    const first = Object.keys(sounds)[0];
-    if (first) play(first);
-  }, [current, play, sounds]);
+    Object.keys(sounds).forEach((key) => {
+      const el = audioFor(key);
+      if (!el) return;
+      const restore = el.volume;
+      el.muted = false;
+      el.volume = 0;
+      const p = el.play();
+      if (p && typeof p.then === 'function') {
+        p.then(
+          () => {
+            el.pause();
+            el.volume = restore;
+            unlockedRef.current = true;
+            setBlocked(false);
+          },
+          () => {
+            el.volume = restore;
+          },
+        );
+      }
+    });
+    play(current ? current.key : Object.keys(sounds)[0]);
+  }, [audioFor, current, play, sounds]);
 
   const value = useMemo<SoundAlertsValue>(
     () => ({
