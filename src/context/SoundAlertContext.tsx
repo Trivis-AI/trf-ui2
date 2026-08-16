@@ -281,6 +281,47 @@ export function SoundAlertProvider({
   // first click spent the only try whether or not it worked — a click landing
   // before the audio had loaded burned it. They now stay until a play has
   // actually resolved, and only then unregister.
+  // Try to be audible from the moment the page loads, without waiting for a
+  // click. A reload resets the page's user activation, so a console that is
+  // refreshed — or opened fresh in the morning — starts out gated, and the only
+  // thing standing between an operator and a missed customer is a click nobody
+  // has any reason to make yet.
+  //
+  // This probes for permission at volume 0. Browsers grant audible playback
+  // without a gesture once an origin has played enough audio to earn it
+  // (Chrome's media engagement score, which the chime itself raises over time),
+  // so on a console in daily use this succeeds and sound is simply on.
+  //
+  // A refusal here is SILENT and deliberately does not set `blocked`: with
+  // nothing waiting there is nothing to enable, and an "enable sound" button on
+  // an idle console is a button that teaches people to ignore it. If an alert
+  // is raised later while still gated, that play attempt sets it properly.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const key = Object.keys(sounds)[0];
+    if (!key) return;
+    const el = audioFor(key);
+    if (!el) return;
+    const restore = el.volume;
+    el.muted = false;
+    el.volume = 0;
+    const p = el.play();
+    if (p && typeof p.then === 'function') {
+      p.then(
+        () => {
+          el.pause();
+          el.volume = restore;
+          unlockedRef.current = true;
+        },
+        () => {
+          el.volume = restore;
+        },
+      );
+    }
+    // Once per mount. The gesture handler below is the fallback for when this
+    // probe is refused.
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const unlock = () => {
