@@ -355,8 +355,8 @@ export function TableFilterBar({
   className,
 }: TableFilterBarProps) {
   // The star appears once there is something to save, and stays while a view is
-  // saved so it can always be taken back — including from the cleared list,
-  // where saving the empty view is what "forget my default" means.
+  // saved so it can always be taken back. Clear also forgets the saved view, so
+  // the star simply disappears with it.
   const showStar = !!defaultView?.enabled && (!!active || defaultView.saved);
   const isDefault = !!defaultView?.isCurrent;
 
