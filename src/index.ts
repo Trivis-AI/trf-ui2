@@ -295,9 +295,11 @@ export type {
 export { useFileDrop } from "./hooks/useFileDrop";
 export type { UseFileDropOptions, UseFileDropResult } from "./hooks/useFileDrop";
 
-// --- Attention: audible alerts & tab badge ---
+// --- Attention: audible alerts, tab badge, desktop notifications ---
 export { useTabAlert } from "./hooks/useTabAlert";
 export type { TabAlertOptions } from "./hooks/useTabAlert";
+export { useDesktopAlert } from "./hooks/useDesktopAlert";
+export type { DesktopAlertOptions, DesktopAlertState } from "./hooks/useDesktopAlert";
 
 export { AttachmentDropzone } from "./components/attachment-dropzone";
 export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";
