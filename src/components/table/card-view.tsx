@@ -32,6 +32,14 @@ export interface CardViewProps<TData> {
   emptyMessage?: React.ReactNode;
   /** Minimum card width before the grid reflows to fewer columns. Default 16rem. */
   minCardWidth?: string;
+  /**
+   * Where the media slot crops from when the image is taller or wider than the slot.
+   * Default "top", because the identifying part of a document — letterhead, supplier
+   * name, invoice number — is at the top, and a centred crop of a portrait page shows
+   * the line items instead. Pass "center" for photos, where the subject is usually
+   * middled.
+   */
+  mediaPosition?: "top" | "center";
   className?: string;
 }
 
@@ -62,10 +70,12 @@ function RowCard<TData>({
   row,
   enableRowSelection,
   onRowClick,
+  mediaPosition,
 }: {
   row: Row<TData>;
   enableRowSelection?: boolean;
   onRowClick?: (row: TData) => void;
+  mediaPosition?: "top" | "center";
 }) {
   const cells = row.getVisibleCells();
 
@@ -103,7 +113,15 @@ function RowCard<TData>({
     >
       {enableRowSelection && (
         <div
-          className="absolute left-2 top-2 z-10 rounded bg-background/90 p-0.5"
+          // A round, quiet target rather than a near-opaque square. The backdrop exists only
+          // to keep the box legible over arbitrary media, so it is a wash plus a blur instead
+          // of a solid panel, and it grows to full opacity once the card is actually selected.
+          className={cn(
+            "absolute left-2 top-2 z-10 grid size-7 place-items-center rounded-full",
+            "bg-background/40 backdrop-blur-sm transition-colors",
+            "hover:bg-background/70",
+            selected && "bg-background/80"
+          )}
           onClick={(e) => {
             e.stopPropagation();
             if (row.getCanSelect()) row.toggleSelected();
@@ -134,6 +152,10 @@ function RowCard<TData>({
             // direct-child stretch is enough for it. Note the `!` goes at the END: Tailwind
             // v4's important marker is a suffix, and the v3 prefix form generates nothing.
             "[&>*]:size-full! [&_img]:size-full! [&_img]:object-cover",
+            // Crop from the top by default: a portrait page centred in a landscape slot
+            // shows its line items, while the letterhead and supplier name that identify
+            // it sit at the very top.
+            mediaPosition === "center" ? "[&_img]:object-center" : "[&_img]:object-top",
             // Full-bleed media: nothing inside keeps a corner radius or its own border.
             "[&_*]:rounded-none! [&_*]:border-0!"
           )}
@@ -202,6 +224,7 @@ export function CardView<TData>({
   skeletonCards = 8,
   emptyMessage,
   minCardWidth = "16rem",
+  mediaPosition = "top",
   className,
 }: CardViewProps<TData>) {
   const grid = {
@@ -234,6 +257,7 @@ export function CardView<TData>({
           row={row}
           enableRowSelection={enableRowSelection}
           onRowClick={onRowClick}
+          mediaPosition={mediaPosition}
         />
       ))}
     </div>
