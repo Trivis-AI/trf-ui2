@@ -106,7 +106,7 @@ function RowCard<TData>({
       data-state={selected ? "selected" : undefined}
       onClick={clickable ? () => onRowClick?.(row.original) : undefined}
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground transition-colors",
+        "group/card relative flex flex-col overflow-hidden rounded-lg border border-border bg-card text-card-foreground transition-colors",
         clickable && "cursor-pointer hover:bg-muted/50",
         selected && "ring-2 ring-ring"
       )}
@@ -118,9 +118,18 @@ function RowCard<TData>({
           // of a solid panel, and it grows to full opacity once the card is actually selected.
           className={cn(
             "absolute left-2 top-2 z-10 grid size-7 place-items-center rounded-full",
-            "bg-background/40 backdrop-blur-sm transition-colors",
+            "bg-background/40 backdrop-blur-sm transition-all",
             "hover:bg-background/70",
-            selected && "bg-background/80"
+            selected && "bg-background/80",
+            // Quiet until wanted: the checkbox is chrome over someone's document, so it
+            // fades in on hover rather than sitting on every card. Three exceptions, or
+            // hiding it makes selection unusable rather than tidy:
+            //   selected      — you must be able to see what is selected
+            //   focus-within  — a keyboard user never hovers
+            //   hover: none   — a touch device never hovers either, so it stays visible
+            "opacity-0 group-hover/card:opacity-100 focus-within:opacity-100",
+            "[@media(hover:none)]:opacity-100",
+            selected && "opacity-100"
           )}
           onClick={(e) => {
             e.stopPropagation();
