@@ -28,6 +28,8 @@ router URL adapter.
 | `TableFilterNotice` | component | The strip that says a filter is on, how many rows match, and how many are hidden. Goes in `TablePage.notice`. |
 | `TableProgress` | component | The thin header progress line for background refetches. |
 | `TableView` | component | Shared presentational core (internal; `DataTable` and `ServerDataTable` both render through it). |
+| `CardView` | component | The gallery half of the core: the same rows and `ColumnDef`s drawn as a card grid. Reached through `view="cards"`, not directly. |
+| `TableViewToggle` | component | List / gallery switch for `TablePage.viewToggle`. |
 | `EditableDataTable<TData>` | component | Client-side table with a live editor in every editable cell. See [Inline editing](#inline-editing). |
 | `InlineEditCell` | component | The quiet inline-edit cell `ServerDataTable` swaps in for editable columns. |
 | `CellEditor` | type | Per-column editor descriptor, read from `ColumnMeta.editor`. |
@@ -236,6 +238,48 @@ helper used inside `ColumnDef.cell`, composing existing ui2 primitives.
 
 Guardrail: reach for a standard cell before hand-rolling markup. Custom cells are
 allowed (`ColumnDef.cell` takes arbitrary React) but reviewed against these.
+
+## Gallery (card) view
+
+Set `view="cards"` on `DataTable` or `ServerDataTable` and the same rows render as a card
+grid instead of a table. Nothing else changes: paging, sorting, filtering, search and
+selection stay exactly where they were, so switching views never changes *what* is on
+screen, only how it is drawn.
+
+Cards are a projection of the columns you already defined. Each column says which slot it
+feeds via `meta.card`:
+
+| Slot | Card position | Typical column |
+|---|---|---|
+| `media` | Full-bleed top of the card | thumbnail / preview |
+| `title` | First line, medium weight | the identifying name |
+| `meta` | Label/value lines under the title | supplier, total, date |
+| `status` | Row of pills below the meta | status pills |
+| `actions` | Footer, right-aligned, above a divider | row actions |
+| `none` | Not on the card at all | detail that only earns its space in a dense row |
+
+```tsx
+const [view, setView] = useState<TableViewMode>("list");
+
+<TablePage
+  viewToggle={<TableViewToggle value={view} onChange={setView} />}
+  /* search / filters / pagination unchanged */
+>
+  <ServerDataTable columns={columns} data={rows} view={view} /* … */ />
+</TablePage>
+```
+
+Notes:
+
+- **Annotation is optional.** With no `meta.card` anywhere, the first column becomes the
+  title and the rest become meta lines, so a gallery is usable before anyone annotates.
+- **A `meta` line's label is the column `header`**, and only when that header is a plain
+  string. A header rendered as a node has no text to borrow, so the value renders full-width.
+- **Selection works in both views.** The bulk toolbar normally replaces the column-header
+  row; a grid has no header row, so in card mode it becomes a strip above the cards.
+- **`minCardWidth`** (default `16rem`) is the reflow threshold; the grid is
+  `auto-fill, minmax(minCardWidth, 1fr)`, so column count follows the container.
+- **Media wants a `width: "min"` column** so the same cell stays a thumbnail in list view.
 
 ## Inline editing
 

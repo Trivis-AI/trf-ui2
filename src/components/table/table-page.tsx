@@ -27,6 +27,8 @@ export interface TablePageProps {
   };
   /** A TableColumnOptions menu (pass iconOnly), right-aligned on the filter row. */
   columnOptions?: React.ReactNode;
+  /** List/gallery switch, e.g. `<TableViewToggle>`. Sits beside the column options. */
+  viewToggle?: React.ReactNode;
 
   /** Filter controls, shown on one row with the search (wrap in TableFilterBar). */
   filters?: React.ReactNode;
@@ -69,6 +71,7 @@ export function TablePage({
   secondaryActions,
   search,
   columnOptions,
+  viewToggle,
   filters,
   notice,
   size = "full",
@@ -98,7 +101,7 @@ export function TablePage({
       )}
 
       {/* Filter row: search, filters, and column options share one row */}
-      {(search || filters || columnOptions) && (
+      {(search || filters || columnOptions || viewToggle) && (
         <div className="flex flex-wrap items-end gap-3">
           {search && (search.label != null ? (
             <Field label={search.label}>
@@ -116,7 +119,12 @@ export function TablePage({
             />
           ))}
           {filters}
-          {columnOptions && <div className="ml-auto">{columnOptions}</div>}
+          {(viewToggle || columnOptions) && (
+            <div className="ml-auto flex items-center gap-2">
+              {viewToggle}
+              {columnOptions}
+            </div>
+          )}
         </div>
       )}
 
