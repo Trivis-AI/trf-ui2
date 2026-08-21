@@ -25,6 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronsUpDown, ChevronUp, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { CardView, type CardSlot, type TableViewMode } from "./card-view";
 import { Checkbox } from "../ui/checkbox";
 import { Skeleton } from "../ui/skeleton";
 import {
@@ -97,6 +98,13 @@ declare module "@tanstack/react-table" {
      * ellipsizes. Pair it with a cell that truncates.
      */
     width?: "min" | "fill";
+    /**
+     * Which part of a card this column feeds when the table is rendered as a
+     * gallery (`view="cards"`). Omitted on every column means the card falls back
+     * to "first column is the title, the rest are meta lines", so a page gets a
+     * usable gallery before anyone annotates anything. See `CardSlot`.
+     */
+    card?: CardSlot;
     /** Inline editor descriptor read by EditableDataTable. */
     editor?: CellEditor;
   }
@@ -138,6 +146,15 @@ export interface TableViewProps<TData> {
   bulkBar?: React.ReactNode;
   /** Drag headers to reorder columns (drives the table's columnOrder state). */
   enableColumnReorder?: boolean;
+  /**
+   * "list" (default) renders the table. "cards" renders the same rows and the same
+   * columns as a card grid, reading each column's `meta.card` slot. Everything else
+   * — paging, sorting, filtering, selection — is unchanged and stays with the caller,
+   * so switching views never changes what is on screen, only how it is drawn.
+   */
+  view?: TableViewMode;
+  /** Minimum card width in `view="cards"` before the grid reflows. Default 16rem. */
+  minCardWidth?: string;
   className?: string;
 }
 
@@ -258,6 +275,8 @@ export function TableView<TData>({
   enableSelectAll = true,
   bulkBar,
   enableColumnReorder = false,
+  view = "list",
+  minCardWidth,
   className,
 }: TableViewProps<TData>) {
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -465,6 +484,29 @@ export function TableView<TData>({
       </TableBody>
     </Table>
   );
+
+  if (view === "cards") {
+    return (
+      <div className={cn("relative rounded-lg border border-border", className)}>
+        {/* A grid has no column-header row to take over, so the bulk toolbar gets its
+            own strip above the cards rather than disappearing in this view. */}
+        {bulkBar && (
+          <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
+            {bulkBar}
+          </div>
+        )}
+        <CardView<TData>
+          rows={rows}
+          enableRowSelection={enableRowSelection}
+          onRowClick={onRowClick}
+          loading={loading}
+          emptyMessage={emptyMessage}
+          minCardWidth={minCardWidth}
+        />
+        {fetching && !loading && <TableProgress className="absolute inset-x-0 top-0 z-20" />}
+      </div>
+    );
+  }
 
   return (
     <div

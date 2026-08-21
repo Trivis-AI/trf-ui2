@@ -59,5 +59,12 @@ export type { UseTableQueryOptions, TableQuery, TableDefaultView } from "./use-t
 export { createHistoryUrlState } from "./url-state";
 export type { UrlStateAdapter, UrlStateFactory } from "./url-state";
 
+// The gallery half of the same infrastructure: the card grid TableView switches to
+// when `view="cards"`, and the list/gallery toggle for the page toolbar.
+export { CardView } from "./card-view";
+export type { CardViewProps, CardSlot, TableViewMode } from "./card-view";
+export { TableViewToggle } from "./table-view-toggle";
+export type { TableViewToggleProps } from "./table-view-toggle";
+
 // Standard cell renderers (StatusCell, MoneyCell, DateCell, ...). See ./cells.
 export * from "./cells";

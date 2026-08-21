@@ -11,6 +11,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { TableView } from "./table-view";
+import type { TableViewMode } from "./card-view";
 import { InlineEditCell } from "./inline-edit-cell";
 
 // Resolve a TanStack updater (value or (prev) => next) against the current value.
@@ -80,6 +81,10 @@ export interface ServerDataTableProps<TData> {
   rowClassName?: (row: TData) => string | undefined;
   /** Default true. */
   stickyHeader?: boolean;
+  /** "list" (default) or "cards". See TableView's `view`. */
+  view?: TableViewMode;
+  /** Minimum card width in `view="cards"`. Default 16rem. */
+  minCardWidth?: string;
   /** Default false (auto-on above a threshold once virtualization lands). */
   virtualize?: boolean;
   emptyMessage?: React.ReactNode;
@@ -125,6 +130,8 @@ export function ServerDataTable<TData>({
   expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
+  view,
+  minCardWidth,
   virtualize = false,
   emptyMessage,
   skeletonRows,
@@ -249,6 +256,8 @@ export function ServerDataTable<TData>({
       enableSelectAll={enableSelectAll}
       bulkBar={selectedCount > 0 ? bulkActions : undefined}
       enableColumnReorder={false}
+      view={view}
+      minCardWidth={minCardWidth}
       className={className}
     />
   );

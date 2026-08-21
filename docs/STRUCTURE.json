@@ -152,7 +152,11 @@
     "MultiSelect": "08-ui-components/multi-select.md",
     "ChartContainer": "08-ui-components/chart.md",
     "ChartTooltip": "08-ui-components/chart.md",
-    "ChartLegend": "08-ui-components/chart.md"
+    "ChartLegend": "08-ui-components/chart.md",
+    "CardView": "08-ui-components/server-data-table.md",
+    "TableViewToggle": "08-ui-components/server-data-table.md",
+    "CardSlot": "08-ui-components/server-data-table.md",
+    "TableViewMode": "08-ui-components/server-data-table.md"
   },
   "status": {
     "legend": {

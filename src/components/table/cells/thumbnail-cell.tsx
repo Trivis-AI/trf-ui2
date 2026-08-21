@@ -43,7 +43,10 @@ export function ThumbnailCell({
   return (
     <CellHoverCard hoverCard={hoverCard}>
       <span
-        style={{ width: size, height: size }}
+        // Sized from a variable so a container can ask for a different size without
+        // fighting an inline style. `CardView`'s media slot sets it to 100%; everywhere
+        // else the fallback keeps the dense-row px box. See CardView.
+        style={{ width: `var(--trf-media-size, ${size}px)`, height: `var(--trf-media-size, ${size}px)` }}
         title={alt}
         role={showImage ? undefined : "img"}
         aria-label={showImage ? undefined : alt}

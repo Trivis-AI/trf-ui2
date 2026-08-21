@@ -3,7 +3,7 @@ import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
-  FileText, ImageIcon, X, Download,
+  FileText, ImageIcon, X, Download, Eye,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {
 // Server-driven table infra + standard cell renderers, consumed from the barrel.
 import {
   ServerDataTable, TablePage, TableFilterBar, TableFilterNotice, TableColumnOptions, useTableQuery,
+  TableViewToggle, type TableViewMode,
   StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
   AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
   RecordPaymentDialog,
@@ -1537,6 +1538,141 @@ function InvoiceTable() {
   );
 }
 
+/* ------------------------------------------------- section: Gallery view */
+
+type DocRow = {
+  id: string;
+  file: string;
+  supplier: string;
+  total: number;
+  status: "Done" | "Processing" | "Failed";
+  invoice: "Draft" | "Confirmed" | null;
+  hue: number | null;
+};
+
+const DOC_ROWS: DocRow[] = [
+  { id: "d1", file: "Arve-saateleht-2997.pdf", supplier: "Barrica OÜ", total: 71.54, status: "Done", invoice: "Confirmed", hue: 210 },
+  { id: "d2", file: "IMG_5901.jpg", supplier: "Scandagra Eesti AS", total: 1240.0, status: "Done", invoice: "Draft", hue: 32 },
+  { id: "d3", file: "ARVE26094242.pdf", supplier: "Tallinna Jäätmete AS", total: 24.03, status: "Done", invoice: "Draft", hue: 150 },
+  { id: "d4", file: "receiptstreamer.pdf", supplier: "", total: 0, status: "Failed", invoice: null, hue: null },
+  { id: "d5", file: "002.png", supplier: "Super Bürootarbed OÜ", total: 31.56, status: "Processing", invoice: null, hue: 280 },
+  { id: "d6", file: "Dokument nr 20260053136.pdf", supplier: "Telia Eesti AS", total: 58.02, status: "Done", invoice: "Confirmed", hue: 190 },
+];
+
+const DOC_TONE: Record<DocRow["status"], StatusTone> = {
+  Done: "success",
+  Processing: "info",
+  Failed: "error",
+};
+
+function GalleryViewDemo() {
+  const [view, setView] = useState<TableViewMode>("cards");
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const selectedCount = Object.values(selected).filter(Boolean).length;
+
+  const columns: ColumnDef<DocRow>[] = useMemo(
+    () => [
+      {
+        // Media has no table column of its own — `card: "media"` places it on the
+        // card, and `width: "min"` keeps it a thumbnail in the list.
+        id: "thumb", header: "", enableSorting: false,
+        meta: { card: "media", width: "min" },
+        cell: ({ row }) =>
+          row.original.hue == null ? (
+            <div className="flex size-10 items-center justify-center rounded bg-muted text-muted-foreground">
+              <FileText className="size-4" />
+            </div>
+          ) : (
+            <div
+              className="size-10 rounded bg-[hsl(var(--demo-hue)_60%_55%)] group-data-[slot=card]:size-full"
+              style={{ "--demo-hue": String(row.original.hue) } as React.CSSProperties}
+            />
+          ),
+      },
+      {
+        id: "file", accessorKey: "file", header: "File", meta: { card: "title", width: "fill" },
+        cell: ({ row }) => <TextCell value={row.original.file} />,
+      },
+      {
+        id: "supplier", accessorKey: "supplier", header: "Supplier", meta: { card: "meta", width: "min" },
+        cell: ({ row }) => <TextCell value={row.original.supplier} />,
+      },
+      {
+        id: "total", accessorKey: "total", header: "Total",
+        meta: { card: "meta", align: "right", width: "min" },
+        cell: ({ row }) => <MoneyCell value={row.original.total.toFixed(2)} currency="EUR" />,
+      },
+      {
+        id: "status", accessorKey: "status", header: "Import", meta: { card: "status", width: "min" },
+        cell: ({ row }) => <StatusCell tone={DOC_TONE[row.original.status]} label={row.original.status} />,
+      },
+      {
+        id: "invoice", accessorKey: "invoice", header: "Invoice", meta: { card: "status", width: "min" },
+        cell: ({ row }) =>
+          row.original.invoice ? (
+            <StatusCell tone={row.original.invoice === "Confirmed" ? "success" : "neutral"} label={row.original.invoice} />
+          ) : (
+            <StatusCell label={null} />
+          ),
+      },
+      {
+        id: "actions", header: "", enableSorting: false, meta: { card: "actions", align: "right", width: "min" },
+        cell: () => (
+          <ActionsCell
+            // Icons cast through ActionsCell's own prop type: the demo resolves its own
+            // copy of lucide-react, so LucideIcon is nominally a different type here.
+            actions={[
+              { label: "View file", icon: Eye, iconOnly: true, onClick: () => {} },
+              { label: "Open", icon: ExternalLink, iconOnly: true, onClick: () => {} },
+            ] as React.ComponentProps<typeof ActionsCell>["actions"]}
+          />
+        ),
+      },
+    ],
+    []
+  );
+
+  return (
+    <div className="w-full">
+      <Text size="xs" tone="muted" className="mb-2">
+        One set of <code>ColumnDef</code>s, two views. Each column declares which card slot it
+        feeds via <code>meta.card</code> (<code>media</code>, <code>title</code>,{" "}
+        <code>meta</code>, <code>status</code>, <code>actions</code>); paging, sorting and
+        selection are unchanged by the switch. Select a card to see the bulk strip, which in
+        gallery mode sits above the grid because there is no header row to take over.
+      </Text>
+      <div className="mb-3 flex items-center justify-end">
+        <TableViewToggle value={view} onChange={setView} />
+      </div>
+      <ServerDataTable<DocRow>
+        columns={columns}
+        data={DOC_ROWS}
+        view={view}
+        pageIndex={0}
+        pageSize={DOC_ROWS.length}
+        pageCount={1}
+        rowCount={DOC_ROWS.length}
+        onPaginationChange={() => {}}
+        stickyHeader={false}
+        enableRowSelection
+        enableSelectAll
+        getRowId={(r) => r.id}
+        selectedRowIds={selected}
+        onSelectedRowIdsChange={setSelected}
+        bulkActions={
+          <>
+            <Text size="sm" weight="medium">{selectedCount} selected</Text>
+            <div className="ml-auto flex items-center gap-2">
+              <Button size="sm" variant="destructive">Delete</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelected({})}>Cancel</Button>
+            </div>
+          </>
+        }
+      />
+    </div>
+  );
+}
+
 /* ---------------------------------------------- section: ServerDataTable */
 
 // Domain status -> pill tone, mapped once so every status cell matches.
@@ -2601,6 +2737,7 @@ const GROUPS: GroupDef[] = [
       },
       { id: "datatable", label: "DataTable", render: () => <InvoiceTable /> },
       { id: "server-datatable", label: "ServerDataTable", render: () => <ServerDataTableDemo /> },
+      { id: "gallery-view", label: "Gallery / card view", render: () => <GalleryViewDemo /> },
       { id: "editable-datatable", label: "Editable data table", render: () => <EditableDataTableDemo /> },
       { id: "row-edit-modal", label: "Row edit modal", render: () => <RowEditModalDemo /> },
       { id: "record-payment-dialog", label: "Record payment dialog", render: () => <RecordPaymentDialogDemo /> },
