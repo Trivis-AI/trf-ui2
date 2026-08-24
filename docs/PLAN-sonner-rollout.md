@@ -31,10 +31,10 @@ Every remaining app is the same shape, so the swap is mechanical everywhere:
 | frontlogin | v7.6.0 | 0 | migrated in another session, **uncommitted** — that session ships it |
 | frontinvoices | v7.6.0 | 0 | migrated in another session, **uncommitted** (+1 unrelated dirty file) — that session ships it |
 | frontaudit | v7.6.0 | 2 | **done**, staging v7.0.15 |
-| fronttables | v7.2.11 | 3 | wave 1 |
-| frontcontracts | v7.2.11 | 6 | wave 1 |
-| frontproducts | v7.2.11 | 6 | wave 1 |
-| frontsupport | v7.2.11 | 7 | wave 1 |
+| fronttables | v7.6.0 | 3 | **done**, staging v7.0.15 |
+| frontcontracts | v7.6.0 | 6 | **done**, staging v7.0.15 |
+| frontproducts | v7.6.0 | 6 | **done**, staging v7.0.22 |
+| frontsupport | v7.6.0 | 7 | **done**, staging v1.5.12 |
 | frontai | v7.2.11 | 8 | wave 2 |
 | frontitems | v7.2.11 | 9 | wave 2 |
 | frontpurchase | v7.5.2 | 11 | wave 2 (shortest bump distance) |
@@ -67,3 +67,8 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
   frontinvoices migrated in a parallel session (uncommitted there).
 - 2026-08-24: **frontaudit done** (tag v7.0.15, verified on audit.trf.is: sonner in the served
   bundle, zero rht traces). Note: only one toast call site there (error on failed log fetch).
+- 2026-08-24: **Wave 1 complete** — fronttables v7.0.15, frontcontracts v7.0.15,
+  frontproducts v7.0.22, frontsupport v1.5.12. All four builds green; tables/contracts/products
+  verified serving the sonner bundle with zero rht traces on *.trf.is. support.trf.is is
+  401-gated so the anonymous bundle check is impossible; CI + deploy webhook succeeded —
+  verify signed-in. All typechecks were clean across the v7.2.11 -> v7.6.0 bump.
