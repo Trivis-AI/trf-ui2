@@ -39,10 +39,10 @@ Every remaining app is the same shape, so the swap is mechanical everywhere:
 | frontitems | v7.6.0 | 9 | **done**, staging v7.0.23 |
 | frontpurchase | v7.6.0 | 11 | **done**, staging v7.4.4 |
 | frontreports | v7.6.0 | 12 | **done**, staging v7.0.25 |
-| frontcrm | v7.2.11 | 15 | wave 3 |
-| frontpayments | v7.2.11 | 17 | wave 3 (frontend OK to touch; backpayments still off-limits) |
-| frontsettings | v7.2.11 | 27 | wave 3 |
-| frontledger | v7.2.11 | 33 | wave 3, last (heaviest usage + core accounting app) |
+| frontcrm | v7.6.0 | 15 | **done**, staging v7.0.61 |
+| frontpayments | v7.6.0 | 17 | **done**, staging v7.12.4 |
+| frontsettings | v7.6.0 | 27 | **done**, staging v7.1.22 |
+| frontledger | v7.6.0 | 33 | **done**, staging v7.0.37 |
 
 Not in scope: trf-app-shell (no rht; bump to v7.6.0 separately when it next releases),
 services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
@@ -76,3 +76,10 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
   v7.4.4, frontreports v7.0.25. Builds green; all four verified serving the sonner bundle with
   zero rht traces on *.trf.is. Gotcha found: frontreports had a toast import in a `.ts` hook
   (useReportPdf.ts) — the swap sweep now covers `.ts` as well as `.tsx`.
+- 2026-08-24: **Wave 3 complete** — frontcrm v7.0.61, frontpayments v7.12.4, frontsettings
+  v7.1.22, frontledger v7.0.37. Builds green; all four verified serving the sonner bundle with
+  zero rht traces. frontledger's apiClient.ts service-layer toast swapped too, and its light
+  theme now gets light toasts (the old rht mount hardcoded dark hexes).
+  **Staging migration is complete: react-hot-toast is gone from all 13 repos this plan owns**
+  (frontlogin + frontinvoices ship from the parallel session). Prod (trivis) promotion still
+  deliberately out of scope.
