@@ -156,7 +156,9 @@
     "CardView": "08-ui-components/server-data-table.md",
     "TableViewToggle": "08-ui-components/server-data-table.md",
     "CardSlot": "08-ui-components/server-data-table.md",
-    "TableViewMode": "08-ui-components/server-data-table.md"
+    "TableViewMode": "08-ui-components/server-data-table.md",
+    "Toaster": "08-ui-components/toaster.md",
+    "toast": "08-ui-components/toaster.md"
   },
   "status": {
     "legend": {

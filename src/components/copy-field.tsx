@@ -16,7 +16,7 @@ export interface CopyFieldProps
   copyLabel?: string;
   /** Label shown briefly after a successful copy. Default "Copied". */
   copiedLabel?: string;
-  /** Fired after the value is copied — wire your app's toast here (the DS stays toast-free). */
+  /** Fired after the value is copied — e.g. fire a toast (`toast.success` from the barrel). */
   onCopy?: (value: string) => void;
   /** Fired if the clipboard write fails. */
   onCopyError?: (error: unknown) => void;
@@ -25,8 +25,8 @@ export interface CopyFieldProps
 /**
  * A read-only value paired with a copy-to-clipboard button — for secrets, invite links, IDs.
  * Owns its transient "copied" state (icon + label swap, auto-resets after 2s) and selects the
- * text on focus so manual copy works too. The DS stays toast-free: fire your own toast from
- * `onCopy` / `onCopyError`.
+ * text on focus so manual copy works too. The component shows no toast itself: fire one from
+ * `onCopy` / `onCopyError` if the context needs it.
  */
 export function CopyField({
   value,

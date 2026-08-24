@@ -32,6 +32,7 @@ import {
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
   ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig,
+  Toaster, toast,
   setDateTimePrefs, getDateTimePrefs, useDateTimePrefs, formatDate, formatDateTime, formatMonth,
   DATE_FORMAT_PRESETS, TIME_FORMAT_PRESETS,
 } from "@trf/ui2";
@@ -2554,6 +2555,24 @@ const GROUPS: GroupDef[] = [
         ),
       },
       {
+        id: "toasts", label: "Toasts", render: () => (
+          <>
+            <Button variant="secondary" onClick={() => toast("Plain message")}>Default</Button>
+            <Button variant="secondary" onClick={() => toast.success("Invoice sent")}>Success</Button>
+            <Button variant="secondary" onClick={() => toast.error("Could not save", { description: "The customer field is required." })}>Error</Button>
+            <Button variant="secondary" onClick={() => toast.warning("Period is closing soon")}>Warning</Button>
+            <Button variant="secondary" onClick={() => toast.info("3 rows imported")}>Info</Button>
+            <Button variant="secondary" onClick={() => toast.promise(new Promise((resolve) => setTimeout(resolve, 1500)), { loading: "Saving…", success: "Saved", error: "Save failed" })}>Promise</Button>
+            <Button variant="secondary" onClick={() => toast("Invoice deleted", { action: { label: "Undo", onClick: () => toast.success("Restored") } })}>With action</Button>
+            <Text size="xs" tone="muted" className="w-full">
+              One `Toaster` at the app root; fire via `toast.*` from anywhere. Token-bridged
+              (colors, Geist, Lucide status icons); theme follows dark mode automatically.
+              Replaces react-hot-toast in the apps, repo by repo.
+            </Text>
+          </>
+        ),
+      },
+      {
         id: "secretreveal", label: "Secret reveal", render: () => (
           <div className="w-full max-w-xl">
             <SecretReveal
@@ -2986,6 +3005,7 @@ export function App() {
           </div>
         )}
       </AppShell>
+      <Toaster />
     </TooltipProvider>
   );
 }
