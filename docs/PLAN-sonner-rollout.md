@@ -30,7 +30,7 @@ Every remaining app is the same shape, so the swap is mechanical everywhere:
 |---|---|---|---|
 | frontlogin | v7.6.0 | 0 | migrated in another session, **uncommitted** — that session ships it |
 | frontinvoices | v7.6.0 | 0 | migrated in another session, **uncommitted** (+1 unrelated dirty file) — that session ships it |
-| frontaudit | v7.2.11 | 2 | wave 1 |
+| frontaudit | v7.6.0 | 2 | **done**, staging v7.0.15 |
 | fronttables | v7.2.11 | 3 | wave 1 |
 | frontcontracts | v7.2.11 | 6 | wave 1 |
 | frontproducts | v7.2.11 | 6 | wave 1 |
@@ -65,3 +65,5 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
 
 - 2026-08-24: ui2 v7.6.0 released to staging (Toaster/toast + token bridge). frontlogin,
   frontinvoices migrated in a parallel session (uncommitted there).
+- 2026-08-24: **frontaudit done** (tag v7.0.15, verified on audit.trf.is: sonner in the served
+  bundle, zero rht traces). Note: only one toast call site there (error on failed log fetch).
