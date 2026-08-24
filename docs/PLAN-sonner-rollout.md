@@ -29,7 +29,7 @@ Every remaining app is the same shape, so the swap is mechanical everywhere:
 | repo | ui2 pin | rht call-site files | state |
 |---|---|---|---|
 | frontlogin | v7.6.0 | 0 | migrated in another session, **uncommitted** — that session ships it |
-| frontinvoices | v7.6.0 | 0 | migrated in another session, **uncommitted** (+1 unrelated dirty file) — that session ships it |
+| frontinvoices | v7.6.1 | 0 | **done**, staging v7.4.3 |
 | frontaudit | v7.6.0 | 2 | **done**, staging v7.0.15 |
 | fronttables | v7.6.0 | 3 | **done**, staging v7.0.15 |
 | frontcontracts | v7.6.0 | 6 | **done**, staging v7.0.15 |
@@ -91,3 +91,9 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
   transient Docker Hub 500; rerun succeeded. Filled-toast CSS verified live on all 12
   public staging hosts; support is 401-gated (CI green). frontlogin/frontinvoices still
   sit on v7.6.0 in the parallel session — bump them to v7.6.1 when that session ships.
+- 2026-08-24: **frontinvoices done** (ui2 v7.6.1, staging v7.4.3). The migration shipped in
+  its own session alongside an invoice-delivery rework, hence the later tag. Verified on
+  invoices.trf.is: sonner in the served bundle, zero rht traces, and the filled-toast rules
+  (success/error/warning `--normal-bg`) present in the served CSS. All 11 call sites were
+  drop-in (`toast`, `.success`, `.error` only). Its rht mount was top-right, so this repo
+  now sits on the suite default like the rest. frontlogin is the last repo outstanding.
