@@ -35,10 +35,10 @@ Every remaining app is the same shape, so the swap is mechanical everywhere:
 | frontcontracts | v7.6.0 | 6 | **done**, staging v7.0.15 |
 | frontproducts | v7.6.0 | 6 | **done**, staging v7.0.22 |
 | frontsupport | v7.6.0 | 7 | **done**, staging v1.5.12 |
-| frontai | v7.2.11 | 8 | wave 2 |
-| frontitems | v7.2.11 | 9 | wave 2 |
-| frontpurchase | v7.5.2 | 11 | wave 2 (shortest bump distance) |
-| frontreports | v7.2.11 | 12 | wave 2 |
+| frontai | v7.6.0 | 8 | **done**, staging v7.8.47 |
+| frontitems | v7.6.0 | 9 | **done**, staging v7.0.23 |
+| frontpurchase | v7.6.0 | 11 | **done**, staging v7.4.4 |
+| frontreports | v7.6.0 | 12 | **done**, staging v7.0.25 |
 | frontcrm | v7.2.11 | 15 | wave 3 |
 | frontpayments | v7.2.11 | 17 | wave 3 (frontend OK to touch; backpayments still off-limits) |
 | frontsettings | v7.2.11 | 27 | wave 3 |
@@ -72,3 +72,7 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
   verified serving the sonner bundle with zero rht traces on *.trf.is. support.trf.is is
   401-gated so the anonymous bundle check is impossible; CI + deploy webhook succeeded —
   verify signed-in. All typechecks were clean across the v7.2.11 -> v7.6.0 bump.
+- 2026-08-24: **Wave 2 complete** — frontai v7.8.47, frontitems v7.0.23, frontpurchase
+  v7.4.4, frontreports v7.0.25. Builds green; all four verified serving the sonner bundle with
+  zero rht traces on *.trf.is. Gotcha found: frontreports had a toast import in a `.ts` hook
+  (useReportPdf.ts) — the swap sweep now covers `.ts` as well as `.tsx`.
