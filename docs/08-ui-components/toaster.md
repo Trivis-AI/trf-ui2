@@ -5,6 +5,8 @@
 Toast notifications, built on [sonner](https://sonner.emilkowal.ski/), bridged onto the token
 contract (colors, Geist, type scale, Lucide status icons — see the "Toasts (sonner)" section in
 `styles/tokens.css`). Theme follows the `dark` class on `<html>` automatically.
+Success / error / warning render as **filled** toasts: the status token is the background with
+its paired `-foreground` for text. Default, info and loading stay popover-toned.
 
 ## Usage
 
@@ -36,7 +38,7 @@ toast.dismiss(); // or toast.dismiss(id)
 
 - **One `<Toaster />` per app**, at the root. Never mount per page/component.
 - **Don't pass `richColors`** — its backgrounds are hardcoded in sonner and ignore our tokens.
-  Type color comes from the status-token icon; the body stays popover-toned.
+  The filled status look comes from the token bridge in `tokens.css` instead.
 - Toast for **transient outcomes** (saved, sent, failed). Inline `Field error` / `Alert` for
   validation the user must act on; `ConfirmDialog` for decisions.
 - This replaces `react-hot-toast` in the apps (migration is gradual, repo by repo). Don't add
