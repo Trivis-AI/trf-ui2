@@ -28,7 +28,8 @@
     "open-questions.md": "Living parking lot: unresolved decisions and future plans (i18n, analytics, typography scale, theming). File questions here instead of guessing.",
     "17-app-layout-conventions.md": "Suite-wide app layout/nav rules: page width (TablePage full / Page xl via router helper), shell breadcrumbs instead of inline back links (ShellCrumb), useBlocker dirty guard, list-page recipe, QueryClient defaults, icons-not-glyphs.",
     "18-drift-backlog.md": "Drift findings across the consuming apps, and the sequence for draining them. CI is now gated in all 16 repos (how, and the two ways the generic recipe falls short); most remaining findings carry a visual decision and are not a sweep.",
-    "19-app-scaffold.md": "Proposed template repo for a new TRF frontend. What it emits and why, after frontsupport shipped with three silent stylesheet defects and no AGENTS.md."
+    "19-app-scaffold.md": "Proposed template repo for a new TRF frontend. What it emits and why, after frontsupport shipped with three silent stylesheet defects and no AGENTS.md.",
+    "PLAN-sonner-rollout.md": "Staging rollout plan for replacing react-hot-toast with the ui2 sonner Toaster: per-repo survey, waves, per-repo procedure, progress log."
   },
   "components": {
     "AppShell": "08-ui-components/sidebar.md",
