@@ -58,6 +58,10 @@ const [period, setPeriod] = useState<DateRange>();
 | `clearable?` | `boolean` | **Opt-in.** Show a clear (✕) button in the trigger when a value is set; clicking it resets the field to empty (emits `undefined`). For optional/filter dates where unsetting is valid. |
 | `id` / `disabled` / `className` | | Trigger mirrors the Combobox / Select trigger styling. |
 
+The calendar opens on the month of the current value (the range's `from` in range mode), and on
+today's month only when nothing is selected — editing a date on a document from March does not
+start in the current month.
+
 ### Fast navigation (month + year dropdowns)
 
 For dates far from today (birth dates, historical periods), enable dropdown navigation so users

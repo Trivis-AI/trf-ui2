@@ -97,6 +97,12 @@ export function DatePicker(props: DatePickerProps) {
   const resolvedEnd = endMonth ?? (usesDropdown ? new Date(now.getFullYear() + 10, 11) : undefined);
   const navProps = { captionLayout, startMonth: resolvedStart, endMonth: resolvedEnd } as const;
 
+  // The calendar opens on the month of what is already selected, not on today:
+  // react-day-picker starts at `today` unless it is told otherwise, so editing a
+  // date on an invoice from March meant paging back from the current month every
+  // time. Re-read on each open — the popover unmounts its content when closed.
+  const selectedMonth = props.mode === "range" ? props.value?.from : props.value;
+
   let label: string | undefined;
   if (props.mode === "range") {
     const r = props.value;
@@ -183,6 +189,7 @@ export function DatePicker(props: DatePickerProps) {
             numberOfMonths={2}
             autoFocus
             selected={props.value}
+            defaultMonth={selectedMonth}
             onSelect={props.onChange}
             disabled={disabledDates}
             {...navProps}
@@ -192,6 +199,7 @@ export function DatePicker(props: DatePickerProps) {
             mode="single"
             autoFocus
             selected={props.value}
+            defaultMonth={selectedMonth}
             onSelect={(date) => {
               props.onChange?.(date);
               setOpen(false);

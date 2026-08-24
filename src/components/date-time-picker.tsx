@@ -113,6 +113,9 @@ export function DateTimePicker({
           mode="single"
           autoFocus
           selected={value}
+          // Open on the selected date's month rather than the current one — see
+          // the same note in date-picker.tsx.
+          defaultMonth={value}
           onSelect={handleDaySelect}
           disabled={disabledDates}
           captionLayout={captionLayout}
