@@ -120,6 +120,9 @@ export type { RadioCardProps } from "./components/ui/radio-card";
 export { Spinner } from "./components/ui/spinner";
 export type { SpinnerProps, SpinnerSize } from "./components/ui/spinner";
 
+export { Toaster, toast } from "./components/ui/sonner";
+export type { ToasterProps } from "./components/ui/sonner";
+
 export { Separator } from "./components/ui/separator";
 
 export {

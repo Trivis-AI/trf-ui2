@@ -1,7 +1,7 @@
 {
   "name": "@trf/ui2",
   "private": true,
-  "version": "7.5.2",
+  "version": "7.6.0",
   "type": "module",
   "description": "TRF design system & component library (shadcn-style, Radix + Tailwind v4, owned source).",
   "scripts": {
@@ -51,6 +51,7 @@
     "recharts": "^3.9.1",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.0",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.0.1"
   },
   "peerDependencies": {
