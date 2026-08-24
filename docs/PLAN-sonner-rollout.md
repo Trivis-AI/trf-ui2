@@ -83,3 +83,11 @@ services / trivisapp / trivislanding (no rht, no ui2 toasts needed).
   **Staging migration is complete: react-hot-toast is gone from all 13 repos this plan owns**
   (frontlogin + frontinvoices ship from the parallel session). Prod (trivis) promotion still
   deliberately out of scope.
+- 2026-08-24: **v7.6.1 filled toasts fleet-bumped** — success/error/warning now render as
+  token-filled (green/red/amber) toasts. All 13 repos bumped to ui2 v7.6.1 and tagged
+  (audit v7.0.16, tables v7.0.16, contracts v7.0.16, products v7.0.23, support v1.5.13,
+  ai v7.8.48, items v7.0.24, purchase v7.4.5, reports v7.0.26, crm v7.0.62,
+  payments v7.12.5, settings v7.1.23, ledger v7.0.38). frontledger's first build hit a
+  transient Docker Hub 500; rerun succeeded. Filled-toast CSS verified live on all 12
+  public staging hosts; support is 401-gated (CI green). frontlogin/frontinvoices still
+  sit on v7.6.0 in the parallel session — bump them to v7.6.1 when that session ships.
