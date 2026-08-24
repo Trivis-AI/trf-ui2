@@ -2791,6 +2791,74 @@ function ThemeToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void }
   );
 }
 
+/* ------------------------------------------------------------- nav search */
+
+const normalize = (s: string) =>
+  s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+type SearchHit = { section: SectionDef; group: GroupDef };
+
+/** Match a query against "<section label> <group label>", diacritic-stripped. */
+function searchSections(query: string): SearchHit[] {
+  const q = normalize(query.trim());
+  if (!q) return [];
+  const hits: SearchHit[] = [];
+  for (const group of GROUPS)
+    for (const section of group.sections)
+      if (normalize(`${section.label} ${group.label}`).includes(q)) hits.push({ section, group });
+  return hits;
+}
+
+/** Filter box at the top of the nav. On the collapsed rail it becomes an icon
+ * button that expands the rail and focuses the input (mirrors the app shell). */
+function SidebarSearchBox({ query, setQuery, onPick }: {
+  query: string;
+  setQuery: (v: string) => void;
+  onPick: (id: string) => void;
+}) {
+  const { collapsed, setCollapsed } = useSidebar();
+  const inputRef = useRef<HTMLInputElement>(null);
+  if (collapsed) {
+    return (
+      <div className="flex justify-center px-2 pb-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Search sections"
+          title="Search sections"
+          className="size-8 text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            setCollapsed(false);
+            window.setTimeout(() => inputRef.current?.focus(), 320); // after the width transition
+          }}
+        >
+          <Search />
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="px-2 pb-1">
+      <SearchInput
+        ref={inputRef}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onClear={() => setQuery("")}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setQuery("");
+          if (e.key === "Enter") {
+            const first = searchSections(query)[0];
+            if (first) onPick(first.section.id);
+          }
+        }}
+        placeholder="Search…"
+        aria-label="Search sections"
+        className="h-9"
+      />
+    </div>
+  );
+}
+
 export function App() {
   const [dark, setDark] = useState(false);
   // "trivis" = the default brand theme (base :root/.dark, no class). Other values add a theme-* class.
@@ -2798,6 +2866,7 @@ export function App() {
   const [radius, setRadius] = useState(8);
   const [textSize, setTextSize] = useState<SizeBracket>("M");
   const [active, setActive] = useState("buttons");
+  const [query, setQuery] = useState("");
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
   useEffect(() => {
@@ -2813,6 +2882,9 @@ export function App() {
     return GROUPS[0].sections[0];
   }, [active]);
 
+  const hits = useMemo(() => searchSections(query), [query]);
+  const pickSection = (id: string) => { setActive(id); setQuery(""); };
+
   return (
     <TooltipProvider delayDuration={200}>
       <AppShell
@@ -2821,20 +2893,40 @@ export function App() {
           <Sidebar>
             <SidebarHeader><SidebarBrand label="trf-ui2" version={__UI2_VERSION__} /></SidebarHeader>
             <SidebarContent>
-              <SidebarMenu>
-                {GROUPS.map((g) => (
-                  <SidebarMenuItem key={g.id}>
-                    <SidebarMenuButton groupId={g.id} icon={g.icon} tooltip={g.label}>{g.label}</SidebarMenuButton>
-                    <SidebarMenuSub groupId={g.id}>
-                      {g.sections.map((s) => (
-                        <SidebarMenuItem key={s.id}>
-                          <SidebarMenuButton isActive={active === s.id} onClick={() => setActive(s.id)}>{s.label}</SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
+              <SidebarSearchBox query={query} setQuery={setQuery} onPick={pickSection} />
+              {query.trim() ? (
+                <SidebarMenu>
+                  {hits.length === 0 ? (
+                    <Text size="sm" tone="muted" className="px-3 py-2">No matches</Text>
+                  ) : (
+                    hits.map(({ section, group }) => (
+                      <SidebarMenuItem key={section.id}>
+                        <SidebarMenuButton isActive={active === section.id} onClick={() => pickSection(section.id)}>
+                          <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+                            <span className="truncate">{section.label}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">{group.label}</span>
+                          </span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))
+                  )}
+                </SidebarMenu>
+              ) : (
+                <SidebarMenu>
+                  {GROUPS.map((g) => (
+                    <SidebarMenuItem key={g.id}>
+                      <SidebarMenuButton groupId={g.id} icon={g.icon} tooltip={g.label}>{g.label}</SidebarMenuButton>
+                      <SidebarMenuSub groupId={g.id}>
+                        {g.sections.map((s) => (
+                          <SidebarMenuItem key={s.id}>
+                            <SidebarMenuButton isActive={active === s.id} onClick={() => setActive(s.id)}>{s.label}</SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              )}
             </SidebarContent>
             <SidebarFooter>
               <ThemeToggle dark={dark} onToggle={() => setDark((d) => !d)} />
