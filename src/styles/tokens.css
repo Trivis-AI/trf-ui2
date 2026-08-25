@@ -849,9 +849,36 @@ body [data-sonner-toaster] {
   color: var(--muted-foreground);
 }
 
-/* Type icons take the status tokens (the toast body stays popover-toned). */
-[data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-icon] { color: var(--success); }
-[data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-icon] { color: var(--destructive); }
-[data-sonner-toaster] [data-sonner-toast][data-type="warning"] [data-icon] { color: var(--warning); }
+/* Filled status toasts: success / error / warning take their status token as the
+   BACKGROUND, with the paired -foreground for text (sonner derives its action and
+   close buttons from the same --normal-* vars, so they re-skin along). Default,
+   info and loading stay popover-toned. */
+[data-sonner-toaster] [data-sonner-toast][data-type="success"][data-styled] {
+  --normal-bg: var(--success);
+  --normal-text: var(--success-foreground);
+  --normal-border: var(--success);
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="error"][data-styled] {
+  --normal-bg: var(--destructive);
+  --normal-text: var(--destructive-foreground);
+  --normal-border: var(--destructive);
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"][data-styled] {
+  --normal-bg: var(--warning);
+  --normal-text: var(--warning-foreground);
+  --normal-border: var(--warning);
+}
+
+/* On a fill, the description drops muted-foreground for the fill's own text
+   color, slightly dimmed so the title still leads. */
+[data-sonner-toaster] [data-sonner-toast][data-type="success"][data-styled] [data-description],
+[data-sonner-toaster] [data-sonner-toast][data-type="error"][data-styled] [data-description],
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"][data-styled] [data-description] {
+  color: var(--normal-text);
+  opacity: 0.85;
+}
+
+/* Icons on filled toasts inherit the fill's text color; the two neutral types
+   keep a tinted icon so they still read as their kind. */
 [data-sonner-toaster] [data-sonner-toast][data-type="info"] [data-icon] { color: var(--primary); }
 [data-sonner-toaster] [data-sonner-toast][data-type="loading"] [data-icon] { color: var(--muted-foreground); }
