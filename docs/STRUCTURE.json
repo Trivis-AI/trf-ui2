@@ -102,6 +102,7 @@
     "Field": "08-ui-components/inputs.md",
     "CopyField": "08-ui-components/inputs.md",
     "SearchInput": "08-ui-components/inputs.md",
+    "QuantityInput": "08-ui-components/quantity-input.md",
     "Label": "08-ui-components/inputs.md",
     "Collapsible": "08-ui-components/collapsible.md",
     "SecretReveal": "08-ui-components/feedback.md",

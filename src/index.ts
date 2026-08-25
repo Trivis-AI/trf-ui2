@@ -307,6 +307,9 @@ export type { DesktopAlertOptions, DesktopAlertState } from "./hooks/useDesktopA
 export { AttachmentDropzone } from "./components/attachment-dropzone";
 export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";
 
+export { QuantityInput } from "./components/quantity-input";
+export type { QuantityInputProps, QuantityInputUnit } from "./components/quantity-input";
+
 // --- Copy & secrets ---
 export { CopyField } from "./components/copy-field";
 export type { CopyFieldProps } from "./components/copy-field";

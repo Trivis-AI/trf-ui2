@@ -26,7 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
-  Logo, PageHeader, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
+  Logo, PageHeader, QuantityInput, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
@@ -87,6 +87,34 @@ const CUSTOMERS = [
   "100 Meedia Brändi OÜ", "Triiberg AS", "Foam Labs", "Northwind OÜ",
   "Põhjala Logistika AS", "Sinilill Kohvik OÜ", "Estkapital Invest AS", "Kalev & Pojad OÜ",
 ].map((name) => ({ value: name, label: name }));
+
+function QuantityInputDemo() {
+  const UNITS = [
+    { id: "tk", label: "tk" },
+    { id: "h", label: "h" },
+    { id: "kg", label: "kg" },
+    { id: "km", label: "km" },
+  ];
+  const [qty, setQty] = useState("1");
+  const [unit, setUnit] = useState("tk");
+  return (
+    <Field
+      label="Quantity"
+      description="Unit code rides inside the field; hover reveals the picker's chevron, clicking the code swaps the unit."
+      className="sm:col-span-2 max-w-48"
+    >
+      <QuantityInput
+        value={qty}
+        onValueChange={setQty}
+        units={UNITS}
+        unitId={unit}
+        onUnitChange={setUnit}
+        variant="default"
+        aria-label="Quantity"
+      />
+    </Field>
+  );
+}
 
 function SearchInputDemo() {
   const [q, setQ] = useState("invoice");
@@ -2454,6 +2482,7 @@ const GROUPS: GroupDef[] = [
               <Textarea id="comment" placeholder="Free-text notes…" />
             </Field>
             <SearchInputDemo />
+            <QuantityInputDemo />
           </div>
         ),
       },
