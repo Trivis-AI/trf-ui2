@@ -4,6 +4,9 @@ import { cn } from "../../lib/utils";
 
 const Tabs = TabsPrimitive.Root;
 
+// Classic underlined text tabs: a hairline under the whole list, the active
+// trigger carrying a 2px primary underline on top of it. Chosen over the boxed
+// pill style after users read the pills as buttons rather than as tabs.
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -11,7 +14,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-muted p-1 text-muted-foreground",
+      "inline-flex h-9 items-stretch justify-start gap-4 border-b border-border text-muted-foreground",
       className
     )}
     {...props}
@@ -26,10 +29,12 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-colors",
+      // -mb-px lays the trigger's underline over the list's hairline instead of above it.
+      "-mb-px inline-flex items-center justify-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-1 text-sm font-medium transition-colors",
+      "hover:text-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       "disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm",
+      "data-[state=active]:border-primary data-[state=active]:text-foreground",
       "[&_svg]:size-4 [&_svg]:shrink-0",
       className
     )}
