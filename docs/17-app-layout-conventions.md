@@ -12,7 +12,10 @@ Reference implementations: **frontpurchase** (width helper, breadcrumb migration
 
 - List/table pages: `TablePage` (default `size="full"`, edge to edge). Never wrap a
   `TablePage` in a `Page`.
-- Every other page: `<Page size="xl">`.
+- Every other page: `<Page size="xl">`. Exception: apps whose detail pages carry a
+  dense rows table (frontinvoices, frontpurchase) use `<Page size="2xl">` in their
+  router helper, because the row table needs the room for description + 6-digit
+  amounts.
 - Apply the size at the **router level** with a single helper, never per page, so pages
   cannot drift:
 
