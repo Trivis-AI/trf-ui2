@@ -1,9 +1,10 @@
 # PLAN: company colour + tag on the org avatar
 
-> Task 178. Status: **on trf.is end to end, unmarked**. backlogin v7.5.0, ui2 v7.8.2,
-> app-shell v0.38.0 and frontinvoices v7.8.1 are all on staging. Nothing is on trivis.ee, and no
-> organization has been marked yet, so staging looks exactly as it did. Remaining: mark an org on
-> staging to see it, frontlogin's picker (step 4), the 13-front sweep (step 5), then prod.
+> Task 178. Status: **steps 1 to 4 done on trf.is**. backlogin v7.5.0, ui2 v7.8.2, app-shell
+> v0.38.0, frontinvoices v7.8.1 and frontlogin v7.0.41. Marking works from the company list, and
+> the duplicate Telia Eesti AS pair on staging is marked and readable. Remaining: the 13-front
+> sweep (step 5), then prod, and the new `<trn-...>` keys still fall back to English until they
+> are added to the translation service.
 
 ## The problem
 
@@ -125,7 +126,12 @@ consumer until it bumps.
 
 Still invisible in production at this point: every value is `""`.
 
-### 4. frontlogin, the marking surface
+### 4. frontlogin, the marking surface. DONE (v7.0.41)
+
+Built as a dialog behind a palette button per card rather than a swatch row on every card:
+seventeen rows of eleven swatches is noise on the one screen that has to stay scannable. Clear
+is one click, since a colour set by mistake is otherwise unfixable from there. The cards and the
+current-company heading render the mark, so the result shows where it was set.
 
 `src/pages/organization/ListOrganization.tsx:365` already renders a 40px `Avatar` per org on the
 post-login landing page: all 17 companies on one screen. Add `AvatarColorPicker` + an 8-character
