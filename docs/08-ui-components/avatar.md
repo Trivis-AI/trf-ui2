@@ -81,6 +81,9 @@ what you pick is what you get.
   ever stands alone, put the name in adjacent text or an `aria-label` on the wrapper.
 - No image support by design. This is an initial badge, not a photo avatar.
 
+`avatarHue({ color, colorKey, name })` returns the hue an `Avatar` would paint, so a sibling
+element can match the circle. [`OrgTag`](org-switcher.md#orgtag) uses it.
+
 ## Related
 
 - [OrgSwitcher](org-switcher.md) · [`AvatarCell`](server-data-table.md#cell-renderers) ·

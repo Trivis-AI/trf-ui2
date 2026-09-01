@@ -52,9 +52,14 @@ degradation (no marks), never a break.
 - `AvatarColorPicker`: eleven swatches plus a leading *automatic* swatch (a `Shuffle` glyph, so
   it is not mistaken for the hue it happens to be showing) that clears the choice. Each swatch is
   the real `Avatar` in that colour.
-- `OrgSwitcherOrg` gains `color` + `tag`; the row renders the tag as an uppercase outline badge
-  and the search value becomes `${name} ${slug} ${tag}`, so typing `arhiiv` filters to the
-  migrated set.
+- `OrgSwitcherOrg` gains `color` + `tag`; the search value becomes `${name} ${slug} ${tag}`, so
+  typing `arhiiv` filters to the migrated set.
+- `OrgTag` is the pill, filled in the org's own hue rather than stroked (an outline pill is too
+  quiet to catch the eye on a scan of 17 rows, and matching the circle makes the pair read as one
+  mark). Exported so the shell brand block and the post-login list render the same pill.
+- `OrgSwitcher` gains `orgHref`: supply it and every row gets an open-in-a-new-tab link, so the
+  archive can be opened beside the live company instead of switching away from it. It is a real
+  anchor, and it stops its click reaching the row so the link never also switches the current tab.
 - `Badge` gains `size="sm"` (default unchanged), because the tag has to ride a 20px row without pushing
   the company name out.
 - Demo section **Org colour + tag** in the kitchen sink: the duplicate-name problem with a
@@ -102,8 +107,11 @@ consumer until it bumps.
 - Bump the ui2 pin to v7.7.0.
 - `OrgOption` (`src/AppShellLayout.tsx:71`) gains `color`/`tag`.
 - The mapper at `:830` currently drops everything but `id/name/slug`. Stop dropping them.
-- Pass them to `Avatar` at `:321` (sidebar brand) and `:437` (mobile bar), and through both `OrgSwitcher` call
-  sites (`:357` desktop, `:443` mobile).
+- Pass them to `Avatar` at `:321` (sidebar brand) and `:437` (mobile bar), and through both
+  `OrgSwitcher` call sites (`:357` desktop, `:443` mobile). Render `OrgTag` next to the org name in
+  the brand block and the mobile bar.
+- Pass `orgHref={(org) => `/app/${org.slug}/`}` (the shell already knows the route shape) so the
+  dropdown rows get their open-in-a-new-tab link.
 
 Still invisible in production at this point: every value is `""`.
 
@@ -130,8 +138,9 @@ all, so it has no switcher and nothing to gain. Leave it on its pin.
 1. **The picker is a ui2 component, not frontlogin code.** Design doctrine: net-new visual
    components get built in ui2 and added to the kitchen sink, never hand-rolled per app. It also
    makes reuse from settings free later.
-2. **`Badge size="sm"`** instead of ad-hoc classes at each call site, since an extended CVA variant is
-   the documented way to do this, and the default is untouched.
+2. **`OrgTag` is its own component**, not a `Badge` with classes at three call sites. It resolves
+   the hue, which is logic, not styling, and the shell, the switcher and the login list must not
+   drift apart.
 3. **Pointer fields on the appearance DTO**, so "back to automatic" is expressible (see step 1).
 4. **Runtime narrowing of `color`** (`asAvatarColor`), so a bad or future value can never break a
    render. Worth having when the value comes from a database column that humans can edit.

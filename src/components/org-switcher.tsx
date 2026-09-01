@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
@@ -11,7 +11,7 @@ import {
   CommandList,
 } from "./ui/command";
 import { Avatar, type AvatarColorInput } from "./avatar";
-import { Badge } from "./ui/badge";
+import { OrgTag } from "./org-tag";
 
 export interface OrgSwitcherOrg {
   id: string;
@@ -40,6 +40,12 @@ export interface OrgSwitcherProps {
   searchPlaceholder?: string;
   emptyText?: string;
   loadingText?: string;
+  /** Build a URL for an org. Supply it and every row gets a trailing "open in a new
+   *  tab" link, so a second company can be opened beside the current one instead of
+   *  switching away from it. Omit it and no link is rendered. */
+  orgHref?: (org: OrgSwitcherOrg) => string;
+  /** Accessible label for that link. */
+  openLabel?: string;
   /** Popover alignment relative to the trigger. */
   align?: "start" | "center" | "end";
   side?: "top" | "right" | "bottom" | "left";
@@ -77,6 +83,8 @@ export function OrgSwitcher({
   searchPlaceholder = "Search organisations…",
   emptyText = "No organisation found.",
   loadingText = "Loading…",
+  orgHref,
+  openLabel = "Open in a new tab",
   align = "start",
   side = "bottom",
   className,
@@ -129,11 +137,31 @@ export function OrgSwitcher({
                   <Avatar name={org.name} colorKey={org.slug} color={org.color} size={20} />
                   <span className="min-w-0 flex-1 truncate">{org.name}</span>
                   {org.tag && (
-                    <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                    <OrgTag color={org.color} colorKey={org.slug} name={org.name}>
                       {org.tag}
-                    </Badge>
+                    </OrgTag>
                   )}
                   {org.slug === currentSlug && <Check className="text-muted-foreground" />}
+                  {orgHref && (
+                    /* A real anchor, so middle-click and cmd-click behave. The row's
+                       own click must not fire underneath it: that would switch the
+                       current tab to the org you asked to open beside it. */
+                    <a
+                      href={orgHref(org)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${openLabel}: ${org.name}`}
+                      title={openLabel}
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className={cn(
+                        "-my-1 shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      )}
+                    >
+                      <ExternalLink />
+                    </a>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

@@ -35,6 +35,8 @@ import { OrgSwitcher } from "@trf/ui2";
 | `onOpen` | `() => void` | Fires when the popover opens. Hook for lazily fetching the org list. |
 | `loading` | `boolean` | Shows a loading row instead of "no results" while the list is being fetched. |
 | `searchThreshold` | `number` | Show the search input only at or above this many orgs. Default `8`. |
+| `orgHref` | `(org) => string` | Supply it and every row gets a trailing open-in-a-new-tab link. Omit it and no link is rendered. |
+| `openLabel` | `string` | Accessible label for that link. Default `"Open in a new tab"`. |
 | `searchPlaceholder` / `emptyText` / `loadingText` | `string` | Copy overrides. |
 | `align` / `side` | | Popover placement relative to the trigger. Default `"start"` / `"bottom"`. |
 | `className` | `string` | Extra classes for the popover panel, e.g. a custom width. |
@@ -56,7 +58,7 @@ answers *which one is this*. Colour alone would mean memorising a hue per compan
 | Field | Type | Notes |
 |---|---|---|
 | `color` | `AvatarColor \| string \| null` | Passed to the row's `Avatar`. Unset keeps the colour hashed from the slug. |
-| `tag` | `string \| null` | Short mark after the name, rendered as an uppercase outline `Badge`. Keep it to ~8 characters: it shares a 20px row with the company name. |
+| `tag` | `string \| null` | Short mark after the name, rendered as an [`OrgTag`](#orgtag) pill filled in the org's own hue. Keep it to ~8 characters: it shares a 20px row with the company name. |
 
 Both are optional and both default to unset, which renders exactly as it did before they existed,
 so a deployment where nothing is tagged is visually a no-op. The tag also joins the search value,
@@ -66,6 +68,32 @@ Search is a plain case-insensitive substring match rather than cmdk's fuzzy defa
 predictable for company names. The panel width follows the longest org name up to a cap, and its
 height follows the org count up to the space available below the trigger, so a 20+ org list uses
 the viewport instead of `CommandList`'s 18rem cap.
+
+## OrgTag
+
+The pill itself, exported separately so the app shell's brand block and the post-login company
+list render the same mark as the dropdown row rather than three copies of a recipe.
+
+```tsx
+<OrgTag color={org.color} colorKey={org.slug} name={org.name}>{org.tag}</OrgTag>
+```
+
+It is **filled**, not stroked, in the same hue the org's `Avatar` uses (via `avatarHue`). An
+outline pill is too quiet to catch the eye on a scan of 17 rows, and matching the circle makes the
+two read as one mark instead of two unrelated ones.
+
+## Opening an org without leaving this one
+
+Two organisations that share a name usually need comparing, not switching between. Pass `orgHref`
+and each row gets a trailing link, so the archive opens beside the live one:
+
+```tsx
+<OrgSwitcher orgs={orgs} orgHref={(org) => `/app/${org.slug}/`} onSelect={...}>
+```
+
+It renders a real `<a target="_blank">`, so middle-click and cmd-click behave as the user expects,
+and it stops its own click from reaching the row: clicking the link must never also switch the
+current tab to that org.
 
 ## Rules
 
@@ -77,3 +105,5 @@ the viewport instead of `CommandList`'s 18rem cap.
 ## Related
 
 - [Avatar](avatar.md) · [AppShell & Sidebar](sidebar.md) · [Combobox (Popover + Command)](combobox.md)
+
+`OrgTag` and `avatarHue` are exported from the barrel alongside `Avatar`.

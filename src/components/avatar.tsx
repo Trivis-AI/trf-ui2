@@ -63,10 +63,16 @@ export interface AvatarProps {
   className?: string;
 }
 
+/** The hue an `Avatar` would paint for these inputs, so a sibling element (the
+ *  org tag pill) can match the circle instead of guessing. */
+export function avatarHue({ color, colorKey, name }: Pick<AvatarProps, "color" | "colorKey" | "name">): number {
+  const chosen = asAvatarColor(color);
+  return chosen ? HUE[chosen] : hueFor((colorKey ?? name ?? "").toLowerCase());
+}
+
 export function Avatar({ name, colorKey, color, size = 28, className }: AvatarProps) {
   const initial = (name?.trim()?.[0] ?? "?").toUpperCase();
-  const chosen = asAvatarColor(color);
-  const hue = chosen ? HUE[chosen] : hueFor((colorKey ?? name ?? "").toLowerCase());
+  const hue = avatarHue({ color, colorKey, name });
   // Border contrasts with the page: darker than the fill in light mode, lighter in
   // dark mode (so the circle stays defined on a dark background).
   const style = {

@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
-  ActionPill, Alert, AlertDescription, AlertTitle, Avatar, AvatarColorPicker, type AvatarColor,
+  ActionPill, Alert, AlertDescription, AlertTitle, Avatar, AvatarColorPicker, type AvatarColor, OrgTag,
   Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
@@ -396,8 +396,16 @@ function OrgSwitcherDemo() {
   useEffect(() => () => clearTimeout(lazyTimer.current), []);
   return (
     <div className="flex flex-wrap gap-8">
-      <Field label="Many orgs" description="≥ 8 orgs shows type-to-filter search; current org is checked.">
-        <OrgSwitcher orgs={MANY_ORGS} currentSlug={manyCurrent.slug} onSelect={setManyCurrent}>
+      <Field
+        label="Many orgs"
+        description="≥ 8 orgs shows type-to-filter search; current org is checked. Pass orgHref and every row also gets an open-in-a-new-tab link."
+      >
+        <OrgSwitcher
+          orgs={MANY_ORGS}
+          currentSlug={manyCurrent.slug}
+          onSelect={setManyCurrent}
+          orgHref={(o) => `#${o.slug}`}
+        >
           {orgTrigger(manyCurrent)}
         </OrgSwitcher>
       </Field>
@@ -485,15 +493,24 @@ function OrgIdentityDemo() {
       </Row>
 
       <Row gap={8} wrap align="start">
-        <Field label="Switcher" description="Open it: the tag is searchable, so typing “arhiiv” filters to the migrated set.">
-          <OrgSwitcher orgs={orgs} currentSlug={current.slug} onSelect={(o) => setCurrent(o)} searchThreshold={4}>
+        <Field
+          label="Switcher"
+          description="Open it: the tag is searchable, so typing “arhiiv” filters to the migrated set, and each row opens in a new tab without switching this one."
+        >
+          <OrgSwitcher
+            orgs={orgs}
+            currentSlug={current.slug}
+            onSelect={(o) => setCurrent(o)}
+            searchThreshold={4}
+            orgHref={(o) => `#${o.slug}`}
+          >
             <Button variant="ghost" className="w-64 justify-start px-2">
               <Avatar name={current.name} colorKey={current.slug} color={shown(current.slug).color} size={24} />
               <span className="min-w-0 flex-1 truncate text-left">{current.name}</span>
               {shown(current.slug).tag && (
-                <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                <OrgTag color={shown(current.slug).color} colorKey={current.slug} name={current.name}>
                   {shown(current.slug).tag}
-                </Badge>
+                </OrgTag>
               )}
               <ChevronsUpDown className="text-muted-foreground" />
             </Button>
@@ -508,9 +525,9 @@ function OrgIdentityDemo() {
                 <div className="flex min-w-0 items-center gap-1.5">
                   <Text as="span" size="sm" weight="semibold" className="min-w-0 truncate leading-tight">{current.name}</Text>
                   {shown(current.slug).tag && (
-                    <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                    <OrgTag color={shown(current.slug).color} colorKey={current.slug} name={current.name}>
                       {shown(current.slug).tag}
-                    </Badge>
+                    </OrgTag>
                   )}
                 </div>
                 <Text as="span" size="xs" tone="muted" className="block truncate">12 400 tokens</Text>
@@ -532,22 +549,34 @@ function OrgIdentityDemo() {
           {orgs.map((org) => (
             <Card
               key={org.id}
-              role="button"
-              tabIndex={0}
               className={cn("transition-colors", org.slug === editing.slug && "border-primary")}
-              onClick={() => setEditing(org)}
             >
               <CardContent className="p-3">
                 <Row gap={3} align="center">
-                  <Avatar name={org.name} colorKey={org.slug} color={org.color} size={40} />
-                  <Stack gap={1}>
-                    <Text weight="semibold">{org.name}</Text>
-                    {org.tag ? (
-                      <Badge variant="outline" size="sm" className="w-fit uppercase tracking-wide">{org.tag}</Badge>
-                    ) : (
-                      <Text size="xs" tone="muted">no mark</Text>
-                    )}
-                  </Stack>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    className="h-auto justify-start gap-3 px-2 py-1"
+                    onClick={() => setEditing(org)}
+                  >
+                    <Avatar name={org.name} colorKey={org.slug} color={org.color} size={40} />
+                    <Stack gap={1} className="items-start">
+                      <Text weight="semibold">{org.name}</Text>
+                      {org.tag ? (
+                        <OrgTag color={org.color} colorKey={org.slug} name={org.name}>{org.tag}</OrgTag>
+                      ) : (
+                        <Text size="xs" tone="muted">no mark</Text>
+                      )}
+                    </Stack>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Open in a new tab"
+                    onClick={() => toast(`Would open /app/${org.slug}/manage-organization/list`)}
+                  >
+                    <ExternalLink />
+                  </Button>
                 </Row>
               </CardContent>
             </Card>
@@ -582,6 +611,27 @@ function OrgIdentityDemo() {
       <Separator />
 
       <Stack gap={2}>
+        <Text weight="semibold">Why the pill is filled, not stroked</Text>
+        <Text size="sm" tone="muted">
+          The same row both ways. An outline pill reads as an afterthought when you are scanning 17
+          rows for one company; filling it in the org's own hue makes the circle and the mark read
+          as a single thing rather than two.
+        </Text>
+        <div className="w-64 rounded-md border border-border p-1">
+          <div className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm">
+            <Avatar name="Initium Novum OÜ" colorKey="initium-novum-ou" color="amber" size={20} />
+            <span className="min-w-0 flex-1 truncate">Initium Novum OÜ</span>
+            <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">ARHIIV</Badge>
+          </div>
+          <div className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm">
+            <Avatar name="Initium Novum OÜ" colorKey="initium-novum-ou" color="amber" size={20} />
+            <span className="min-w-0 flex-1 truncate">Initium Novum OÜ</span>
+            <OrgTag color="amber" colorKey="initium-novum-ou" name="Initium Novum OÜ">ARHIIV</OrgTag>
+          </div>
+        </div>
+      </Stack>
+
+      <Stack gap={2}>
         <Text weight="semibold">How long can a tag be?</Text>
         <Text size="sm" tone="muted">
           A 20px switcher row at the narrowest panel width. 8 characters is the last one that
@@ -592,7 +642,7 @@ function OrgIdentityDemo() {
             <div key={tag} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm">
               <Avatar name="Initium Novum OÜ" colorKey="initium-novum-ou" color="amber" size={20} />
               <span className="min-w-0 flex-1 truncate">Initium Novum OÜ</span>
-              <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">{tag}</Badge>
+              <OrgTag color="amber" colorKey="initium-novum-ou" name="Initium Novum OÜ">{tag}</OrgTag>
             </div>
           ))}
         </div>
