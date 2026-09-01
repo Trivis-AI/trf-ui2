@@ -1,10 +1,9 @@
 # PLAN: company colour + tag on the org avatar
 
-> Task 178. Status: **steps 1 to 4 done on trf.is**. backlogin v7.5.0, ui2 v7.8.2, app-shell
-> v0.38.0, frontinvoices v7.8.1 and frontlogin v7.0.41. Marking works from the company list, and
-> the duplicate Telia Eesti AS pair on staging is marked and readable. Remaining: the 13-front
-> sweep (step 5), then prod, and the new `<trn-...>` keys still fall back to English until they
-> are added to the translation service.
+> Task 178. Status: **the whole rollout is on trf.is**. backlogin v7.5.0, ui2 v7.8.2, app-shell
+> v0.38.0, and 13 of 14 fronts bumped and deployed. Remaining: **frontcrm**, skipped by the
+> rollout guardrail (see step 5); prod, which is untouched; and the new `<trn-...>` keys, which
+> fall back to English until they are added to the translation service.
 
 ## The problem
 
@@ -140,7 +139,16 @@ first place anything becomes visible.
 
 Do this one company first, confirm it in the switcher of an already-bumped app, then the rest.
 
-### 5. The sweep
+### 5. The sweep. DONE except frontcrm
+
+13 fronts bumped, each verified by lockfile SHA against the tag rather than by a green build,
+and each confirmed serving the new code on its trf.is host. **frontcrm was skipped**: it has
+local drift in its committed `dist/` artifacts and an incoming commit from Tom, which is exactly
+the case the guardrail exists for. It needs a human to reconcile `dist/` before it can be
+bumped. frontsupport stays on its old pin deliberately: it has no `@trf/app-shell` dependency,
+so it has no switcher and nothing to gain.
+
+The original sweep list
 
 frontai, frontaudit, frontcontracts, frontcrm, frontinvoices, frontitems, frontledger,
 frontpayments, frontproducts, frontpurchase, frontreports, frontsettings, fronttables. Bump both
