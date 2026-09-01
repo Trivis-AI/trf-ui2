@@ -1,9 +1,14 @@
 # PLAN: company colour + tag on the org avatar
 
-> Task 178. Status: **the whole rollout is on trf.is**. backlogin v7.5.0, ui2 v7.8.2, app-shell
-> v0.38.0, and 13 of 14 fronts bumped and deployed. Remaining: **frontcrm**, skipped by the
-> rollout guardrail (see step 5); prod, which is untouched; and the new `<trn-...>` keys, which
-> fall back to English until they are added to the translation service.
+> Task 178. Status: **on trivis.ee**, for backlogin and 9 fronts, plus everything on trf.is.
+> Marking a company works in production, and no production organization is marked, so nothing
+> looks different there yet.
+>
+> Not promoted, deliberately: **frontinvoices, frontpayments, frontpurchase, frontsettings**,
+> whose `main` also carries unpromoted work by someone else (the invoice template editor, Stripe
+> card payments, and more), which is not this task's to ship. **frontcrm** is not bumped at all,
+> skipped by the rollout guardrail. The new `<trn-...>` keys fall back to English until they are
+> added to the translation service.
 
 ## The problem
 
