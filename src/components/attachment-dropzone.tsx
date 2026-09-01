@@ -35,6 +35,8 @@ export interface AttachmentDropzoneProps {
   disabled?: boolean;
   /** Shown in the empty state and as the "add more" affordance's label. */
   placeholder?: string;
+  /** Label of the file-picker button (also lets consumers translate it). */
+  browseLabel?: string;
   className?: string;
 }
 
@@ -74,6 +76,7 @@ export function AttachmentDropzone({
   multiple = true,
   disabled = false,
   placeholder = "Drag files here, paste, or click to browse",
+  browseLabel = "Select files...",
   className,
 }: AttachmentDropzoneProps) {
   const { isDragging, dropzoneProps, inputProps, open } = useFileDrop({
@@ -96,7 +99,7 @@ export function AttachmentDropzone({
       className="self-center shrink-0"
     >
       <FilePlus className="size-4" />
-      Select files...
+      {browseLabel}
     </Button>
   );
 
