@@ -4,11 +4,14 @@
 > Marking a company works in production, and no production organization is marked, so nothing
 > looks different there yet.
 >
-> Not promoted, deliberately: **frontinvoices, frontpayments, frontpurchase, frontsettings**,
-> whose `main` also carries unpromoted work by someone else (the invoice template editor, Stripe
-> card payments, and more), which is not this task's to ship. **frontcrm** is not bumped at all,
-> skipped by the rollout guardrail. The new `<trn-...>` keys fall back to English until they are
-> added to the translation service.
+> All 14 fronts are now bumped and on trf.is, frontcrm included: it stopped tracking its build
+> output first, which is what had been dirtying its tree and blocking the bump.
+>
+> **Five fronts are still on staging only**: frontinvoices, frontpayments, frontpurchase,
+> frontsettings and frontcrm. Their `main` also carries work belonging to other tasks (the invoice
+> template editor, Stripe card payments, a contact country picker), so promoting the branch ships
+> that too. The user has approved it; the merges are pending a permission the agent was denied.
+> The new `<trn-...>` keys fall back to English until they are added to the translation service.
 
 ## The problem
 
