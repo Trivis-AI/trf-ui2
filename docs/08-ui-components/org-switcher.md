@@ -95,6 +95,10 @@ It renders a real `<a target="_blank">`, so middle-click and cmd-click behave as
 and it stops its own click from reaching the row: clicking the link must never also switch the
 current tab to that org.
 
+The current organisation gets the check mark instead of a link, in the **same trailing slot**:
+opening the org you are already looking at in a second tab is not worth an icon, and swapping the
+two rather than stacking them keeps the check where the eye expects it.
+
 The link shows on the **active row only**, so a list of 20 companies is not a column of icons.
 `cmdk` sets `data-selected` from both the pointer and the arrow keys, so one rule covers mouse and
 keyboard; it also stays visible while the link itself has focus, and permanently on a coarse

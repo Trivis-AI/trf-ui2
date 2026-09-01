@@ -142,8 +142,16 @@ export function OrgSwitcher({
                       {org.tag}
                     </OrgTag>
                   )}
-                  {org.slug === currentSlug && <Check className="text-muted-foreground" />}
-                  {orgHref && (
+                  {/* One trailing slot, same width on every row: the check on the
+                      organisation you are already in, the open-in-a-new-tab link on
+                      the ones you are not. Opening the org you are already looking at
+                      in a second tab is not worth an icon, and swapping rather than
+                      stacking keeps the check where the eye expects it. */}
+                  {org.slug === currentSlug ? (
+                    <span className="-my-1 shrink-0 p-1 text-muted-foreground">
+                      <Check />
+                    </span>
+                  ) : orgHref ? (
                     /* A real anchor, so middle-click and cmd-click behave. The row's
                        own click must not fire underneath it: that would switch the
                        current tab to the org you asked to open beside it.
@@ -170,7 +178,7 @@ export function OrgSwitcher({
                     >
                       <ExternalLink />
                     </a>
-                  )}
+                  ) : null}
                 </CommandItem>
               ))}
             </CommandGroup>
