@@ -4,14 +4,16 @@
 > Marking a company works in production, and no production organization is marked, so nothing
 > looks different there yet.
 >
-> All 14 fronts are now bumped and on trf.is, frontcrm included: it stopped tracking its build
-> output first, which is what had been dirtying its tree and blocking the bump.
+> **Shipped everywhere.** backlogin, ui2, app-shell and all 14 fronts are on both trf.is and
+> trivis.ee, each host verified serving the new code. frontcrm needed one extra commit first: it
+> stopped tracking its build output, which had been dirtying its tree on every local build.
 >
-> **Five fronts are still on staging only**: frontinvoices, frontpayments, frontpurchase,
-> frontsettings and frontcrm. Their `main` also carries work belonging to other tasks (the invoice
-> template editor, Stripe card payments, a contact country picker), so promoting the branch ships
-> that too. The user has approved it; the merges are pending a permission the agent was denied.
-> The new `<trn-...>` keys fall back to English until they are added to the translation service.
+> Nothing looks different in production yet, because no production organization is marked. That
+> was the design goal. Marking is a UI action on the post-login company list.
+>
+> Still open: the 17 real companies have to be marked by someone who knows which copy is which,
+> and the new `<trn-...>` keys fall back to English until they are added to the translation
+> service.
 
 ## The problem
 
