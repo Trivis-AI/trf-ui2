@@ -1,6 +1,9 @@
 # PLAN: company colour + tag on the org avatar
 
-> Task 178. Status: **ui2 layer built (unreleased, local)**. Nothing has shipped.
+> Task 178. Status: **on trf.is end to end, unmarked**. backlogin v7.5.0, ui2 v7.8.2,
+> app-shell v0.38.0 and frontinvoices v7.8.1 are all on staging. Nothing is on trivis.ee, and no
+> organization has been marked yet, so staging looks exactly as it did. Remaining: mark an org on
+> staging to see it, frontlogin's picker (step 4), the 13-front sweep (step 5), then prod.
 
 ## The problem
 
@@ -69,7 +72,14 @@ degradation (no marks), never a break.
 
 ## Rollout
 
-### 1. backlogin, alone, all the way to trivis.ee
+### 1. backlogin, alone, all the way to trivis.ee. DONE on staging (v7.5.0)
+
+Shipped as described below, gated on `hasMembership`, which already existed with exactly the
+right semantics. Validation lives in `normalizeAvatarColor` and `normalizeOrgTag`, unit tested
+without a database, and one of those tests asserts the Go palette matches `AVATAR_COLORS` name
+for name and in order, since a drift there would silently repaint every unmarked organization.
+Swagger was left alone: the committed spec is already several endpoints stale and `swag` is not
+installed here.
 
 The API must return the fields before any frontend asks for them.
 
@@ -97,12 +107,12 @@ The API must return the fields before any frontend asks for them.
 **Verify on staging before moving on:** `GET /v1/organization?tokens=false` returns `"color":""`
 and `"tag":""` on every org, and every existing screen is unchanged.
 
-### 2. trf-ui2 v7.7.0
+### 2. trf-ui2. DONE, at v7.8.2 after three rounds of visual feedback
 
 Cut the tag via `/ui2-release` (it checks package.json and the tag agree). Nothing changes for any
 consumer until it bumps.
 
-### 3. trf-app-shell v0.38.0
+### 3. trf-app-shell. DONE (v0.38.0), and frontinvoices v7.8.1 is on trf.is with it
 
 - Bump the ui2 pin to v7.7.0.
 - `OrgOption` (`src/AppShellLayout.tsx:71`) gains `color`/`tag`.
