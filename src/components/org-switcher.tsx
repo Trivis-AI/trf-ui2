@@ -10,12 +10,18 @@ import {
   CommandItem,
   CommandList,
 } from "./ui/command";
-import { Avatar } from "./avatar";
+import { Avatar, type AvatarColorInput } from "./avatar";
+import { Badge } from "./ui/badge";
 
 export interface OrgSwitcherOrg {
   id: string;
   name: string;
   slug: string;
+  /** Chosen avatar colour. Unset (or unknown) keeps the colour hashed from the slug. */
+  color?: AvatarColorInput | null;
+  /** Short mark shown after the name, e.g. "ARHIIV": the thing that actually says
+   *  which of two identically named organisations this is. Also searchable. */
+  tag?: string | null;
 }
 
 export interface OrgSwitcherProps {
@@ -54,6 +60,8 @@ function substringFilter(itemValue: string, search: string): number {
  * Organisation switcher for users who belong to many orgs: a popover listing all
  * organisations with the active one checked, plus type-to-filter search once the list
  * grows past `searchThreshold`. Keyboard navigation (arrows + Enter) comes from cmdk.
+ * Rows carry the org's `color` and `tag` when set, which is how two organisations
+ * with the same name are told apart; searching matches the tag too.
  *
  * The trigger is consumer-supplied (`children`), so the app shell can keep using its
  * brand block / breadcrumb as the click target. Presentational — the consumer owns
@@ -115,11 +123,16 @@ export function OrgSwitcher({
               {orgs.map((org) => (
                 <CommandItem
                   key={org.id}
-                  value={`${org.name} ${org.slug}`}
+                  value={`${org.name} ${org.slug} ${org.tag ?? ""}`}
                   onSelect={() => pick(org)}
                 >
-                  <Avatar name={org.name} colorKey={org.slug} size={20} />
+                  <Avatar name={org.name} colorKey={org.slug} color={org.color} size={20} />
                   <span className="min-w-0 flex-1 truncate">{org.name}</span>
+                  {org.tag && (
+                    <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                      {org.tag}
+                    </Badge>
+                  )}
                   {org.slug === currentSlug && <Check className="text-muted-foreground" />}
                 </CommandItem>
               ))}

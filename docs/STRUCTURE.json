@@ -149,6 +149,7 @@
     "Markdown": "08-ui-components/markdown.md",
     "MarkdownEditor": "08-ui-components/markdown.md",
     "Avatar": "08-ui-components/avatar.md",
+    "AvatarColorPicker": "08-ui-components/avatar.md",
     "OrgSwitcher": "08-ui-components/org-switcher.md",
     "Board": "08-ui-components/board.md",
     "MultiSelect": "08-ui-components/multi-select.md",

@@ -267,8 +267,11 @@ export type { ChatComposerProps } from "./components/chat-composer";
 export { Markdown } from "./components/markdown";
 export type { MarkdownProps } from "./components/markdown";
 
-export { Avatar } from "./components/avatar";
-export type { AvatarProps } from "./components/avatar";
+export { Avatar, AVATAR_COLORS, asAvatarColor } from "./components/avatar";
+export type { AvatarProps, AvatarColor, AvatarColorInput } from "./components/avatar";
+
+export { AvatarColorPicker } from "./components/avatar-color-picker";
+export type { AvatarColorPickerProps } from "./components/avatar-color-picker";
 
 export { Skeleton } from "./components/ui/skeleton";
 

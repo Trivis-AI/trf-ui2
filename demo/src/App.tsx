@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
-  ActionPill, Alert, AlertDescription, AlertTitle, Avatar,
+  ActionPill, Alert, AlertDescription, AlertTitle, Avatar, AvatarColorPicker, type AvatarColor,
   Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
@@ -422,6 +422,183 @@ function OrgSwitcherDemo() {
         </OrgSwitcher>
       </Field>
     </div>
+  );
+}
+
+/* ------------------------------------- section: Org identity (colour + tag) */
+
+/* The problem this solves: 17 companies were migrated from Merit and one of them
+ * was copied again, so the switcher shows PAIRS of rows with the same company
+ * name: one live, one archive, nothing in the row saying which. Colour alone
+ * only says "these two differ"; the short tag is what answers the question, so
+ * the two ship together. Both live on the organisation (shared, not per user)
+ * and both default to empty, which is what makes this safe to roll out: an
+ * organisation nobody marks renders exactly as it does today, from the hash. */
+
+interface OrgMark { color: AvatarColor | null; tag: string }
+
+const IDENTITY_ORGS: OrgSwitcherOrg[] = [
+  { id: "1", name: "BlueHat OÜ", slug: "bluehat-ou" },
+  { id: "2", name: "BlueHat OÜ", slug: "bluehat-ou-2" },
+  { id: "3", name: "Initium Novum OÜ", slug: "initium-novum-ou" },
+  { id: "4", name: "Initium Novum OÜ", slug: "initium-novum-ou-2" },
+  { id: "5", name: "Põhjala Logistika AS", slug: "pohjala-logistika-as" },
+  { id: "6", name: "Sinilill Kohvik OÜ", slug: "sinilill-kohvik-ou" },
+];
+
+/* Only the migrated pairs are marked. The last two rows stay untouched on
+ * purpose, since they are every other tenant on the platform. */
+const INITIAL_MARKS: Record<string, OrgMark> = {
+  "bluehat-ou": { color: "amber", tag: "MERIT" },
+  "bluehat-ou-2": { color: "green", tag: "LIVE" },
+  "initium-novum-ou": { color: "amber", tag: "ARHIIV" },
+  "initium-novum-ou-2": { color: "green", tag: "2026" },
+};
+
+const TAG_RULER = ["LIVE", "ARHIIV", "MERIT 24", "AJALUGU 2024"];
+
+const NO_MARK: OrgMark = { color: null, tag: "" };
+
+function OrgIdentityDemo() {
+  const [marks, setMarks] = useState<Record<string, OrgMark>>(INITIAL_MARKS);
+  const [editing, setEditing] = useState(IDENTITY_ORGS[0]);
+  const [current, setCurrent] = useState(IDENTITY_ORGS[0]);
+  const [marked, setMarked] = useState(true);
+
+  const orgs = IDENTITY_ORGS.map((o) => {
+    const m = marked ? marks[o.slug] : undefined;
+    return { ...o, color: m?.color ?? null, tag: m?.tag ?? "" };
+  });
+  const shown = (slug: string) => orgs.find((o) => o.slug === slug)!;
+  const mark = marks[editing.slug] ?? NO_MARK;
+  const setMark = (next: Partial<OrgMark>) =>
+    setMarks((prev) => ({ ...prev, [editing.slug]: { ...(prev[editing.slug] ?? NO_MARK), ...next } }));
+
+  return (
+    <Stack gap={6} className="w-full">
+      <Row gap={3} align="center">
+        <Switch id="org-marks-on" checked={marked} onCheckedChange={setMarked} />
+        <Label htmlFor="org-marks-on">Show the marks</Label>
+        <Text size="sm" tone="muted">
+          Off is today: every circle hashed from the slug, the two BlueHat rows indistinguishable.
+        </Text>
+      </Row>
+
+      <Row gap={8} wrap align="start">
+        <Field label="Switcher" description="Open it: the tag is searchable, so typing “arhiiv” filters to the migrated set.">
+          <OrgSwitcher orgs={orgs} currentSlug={current.slug} onSelect={(o) => setCurrent(o)} searchThreshold={4}>
+            <Button variant="ghost" className="w-64 justify-start px-2">
+              <Avatar name={current.name} colorKey={current.slug} color={shown(current.slug).color} size={24} />
+              <span className="min-w-0 flex-1 truncate text-left">{current.name}</span>
+              {shown(current.slug).tag && (
+                <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                  {shown(current.slug).tag}
+                </Badge>
+              )}
+              <ChevronsUpDown className="text-muted-foreground" />
+            </Button>
+          </OrgSwitcher>
+        </Field>
+
+        <Field label="Sidebar brand" description="What the app shell shows once the org is marked.">
+          <div className="w-64 rounded-md border border-border bg-card">
+            <div className="flex w-full items-center gap-2 overflow-hidden px-4 py-3.5">
+              <Avatar name={current.name} colorKey={current.slug} color={shown(current.slug).color} size={28} className="shrink-0" />
+              <div className="min-w-0 flex-1 text-left">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <Text as="span" size="sm" weight="semibold" className="min-w-0 truncate leading-tight">{current.name}</Text>
+                  {shown(current.slug).tag && (
+                    <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">
+                      {shown(current.slug).tag}
+                    </Badge>
+                  )}
+                </div>
+                <Text as="span" size="xs" tone="muted" className="block truncate">12 400 tokens</Text>
+              </div>
+            </div>
+          </div>
+        </Field>
+      </Row>
+
+      <Separator />
+
+      <Stack gap={3}>
+        <Text weight="semibold">Post-login company list, where the marking actually happens</Text>
+        <Text size="sm" tone="muted">
+          Click a card to edit it. This is the one screen that shows all companies at once, so the
+          pass over the migrated set is done here.
+        </Text>
+        <Row gap={3} wrap>
+          {orgs.map((org) => (
+            <Card
+              key={org.id}
+              role="button"
+              tabIndex={0}
+              className={cn("transition-colors", org.slug === editing.slug && "border-primary")}
+              onClick={() => setEditing(org)}
+            >
+              <CardContent className="p-3">
+                <Row gap={3} align="center">
+                  <Avatar name={org.name} colorKey={org.slug} color={org.color} size={40} />
+                  <Stack gap={1}>
+                    <Text weight="semibold">{org.name}</Text>
+                    {org.tag ? (
+                      <Badge variant="outline" size="sm" className="w-fit uppercase tracking-wide">{org.tag}</Badge>
+                    ) : (
+                      <Text size="xs" tone="muted">no mark</Text>
+                    )}
+                  </Stack>
+                </Row>
+              </CardContent>
+            </Card>
+          ))}
+        </Row>
+      </Stack>
+
+      <Row gap={6} wrap align="start">
+        <Field
+          label={`Colour: ${editing.name}`}
+          description="Eleven palette names, never a free hex. “Automatic” clears the choice and goes back to the hash."
+        >
+          <AvatarColorPicker
+            value={mark.color}
+            onChange={(color) => setMark({ color })}
+            name={editing.name}
+            colorKey={editing.slug}
+          />
+        </Field>
+        <Field label="Tag" htmlFor="org-tag" description="Max 8 characters, see the ruler below.">
+          <Input
+            id="org-tag"
+            className="w-40"
+            maxLength={8}
+            value={mark.tag}
+            placeholder="ARHIIV"
+            onChange={(e) => setMark({ tag: e.target.value })}
+          />
+        </Field>
+      </Row>
+
+      <Separator />
+
+      <Stack gap={2}>
+        <Text weight="semibold">How long can a tag be?</Text>
+        <Text size="sm" tone="muted">
+          A 20px switcher row at the narrowest panel width. 8 characters is the last one that
+          leaves the company name readable.
+        </Text>
+        <div className="w-64 rounded-md border border-border p-1">
+          {TAG_RULER.map((tag) => (
+            <div key={tag} className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm">
+              <Avatar name="Initium Novum OÜ" colorKey="initium-novum-ou" color="amber" size={20} />
+              <span className="min-w-0 flex-1 truncate">Initium Novum OÜ</span>
+              <Badge variant="outline" size="sm" className="shrink-0 uppercase tracking-wide">{tag}</Badge>
+            </div>
+          ))}
+        </div>
+        <Text size="xs" tone="muted">{TAG_RULER.map((t) => `${t} (${t.length})`).join(" · ")}</Text>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -2539,6 +2716,7 @@ const GROUPS: GroupDef[] = [
       { id: "async-combobox", label: "Async combobox", render: () => <AsyncComboboxDemo /> },
       { id: "entity-combobox", label: "Entity combobox", render: () => <EntityComboboxDemo /> },
       { id: "org-switcher", label: "Org switcher", render: () => <OrgSwitcherDemo /> },
+      { id: "org-identity", label: "Org colour + tag", render: () => <OrgIdentityDemo /> },
       { id: "datepicker", label: "Date & time pickers", render: () => <DatePickerDemo /> },
       {
         id: "spinner", label: "Spinner", render: () => (
