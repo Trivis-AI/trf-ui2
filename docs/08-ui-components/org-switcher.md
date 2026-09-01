@@ -95,6 +95,12 @@ It renders a real `<a target="_blank">`, so middle-click and cmd-click behave as
 and it stops its own click from reaching the row: clicking the link must never also switch the
 current tab to that org.
 
+The link shows on the **active row only**, so a list of 20 companies is not a column of icons.
+`cmdk` sets `data-selected` from both the pointer and the arrow keys, so one rule covers mouse and
+keyboard; it also stays visible while the link itself has focus, and permanently on a coarse
+pointer, where nothing can hover. It is hidden with opacity rather than `display`, so the row does
+not reflow under the cursor.
+
 ## Rules
 
 - The trigger must be a single focusable element (`asChild` clones onto it).

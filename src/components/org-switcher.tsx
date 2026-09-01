@@ -131,6 +131,7 @@ export function OrgSwitcher({
               {orgs.map((org) => (
                 <CommandItem
                   key={org.id}
+                  className="group"
                   value={`${org.name} ${org.slug} ${org.tag ?? ""}`}
                   onSelect={() => pick(org)}
                 >
@@ -145,7 +146,14 @@ export function OrgSwitcher({
                   {orgHref && (
                     /* A real anchor, so middle-click and cmd-click behave. The row's
                        own click must not fire underneath it: that would switch the
-                       current tab to the org you asked to open beside it. */
+                       current tab to the org you asked to open beside it.
+
+                       Revealed on the active row only, so a long list stays calm.
+                       cmdk sets data-selected from both the pointer and the arrow
+                       keys, so one rule covers mouse and keyboard; it also stays up
+                       while the link itself has focus, and permanently on a coarse
+                       pointer, where nothing can hover. Hidden with opacity, not
+                       display, so the row does not reflow under the cursor. */
                     <a
                       href={orgHref(org)}
                       target="_blank"
@@ -155,8 +163,9 @@ export function OrgSwitcher({
                       onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => e.stopPropagation()}
                       className={cn(
-                        "-my-1 shrink-0 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        "-my-1 shrink-0 rounded-sm p-1 text-muted-foreground opacity-0 transition-opacity",
+                        "group-data-[selected=true]:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100",
+                        "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       )}
                     >
                       <ExternalLink />
