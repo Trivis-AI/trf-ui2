@@ -155,6 +155,19 @@ export function EntityCombobox({
       return;
     }
     if (e.key === "Tab") {
+      // Tab accepts the obvious candidate on the way out: the highlighted row, or
+      // the first suggestion when the user has only typed. Only primary rows are
+      // accepted this way — a fallback row imports and creates a record elsewhere,
+      // which is not something leaving a field should do behind the user's back.
+      // Focus still moves on (no preventDefault); the field is left holding the
+      // contact it showed, instead of free text the rest of the form cannot use.
+      const candidate =
+        activeIndex >= 0 && activeIndex < options.length
+          ? options[activeIndex]
+          : items.length > 0
+            ? { item: items[0], kind: "primary" as const }
+            : null;
+      if (showDropdown && candidate?.kind === "primary") pick(candidate.item);
       setOpen(false);
       setActiveIndex(-1);
       return;

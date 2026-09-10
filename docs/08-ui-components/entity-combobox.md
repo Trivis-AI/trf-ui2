@@ -100,6 +100,13 @@ muted inline, description as a muted sub-line.
 ## Behavior
 
 - Dropdown opens on typing, closes on pick / `Escape` / click outside.
+- Keyboard: `↓`/`↑`/`Home`/`End` move the highlight, `Enter` takes the highlighted row
+  (primary or fallback), `Escape` closes.
+- `Tab` **accepts** — the highlighted row, or the first primary suggestion when nothing is
+  highlighted — and then lets focus move on. Fallback rows are never taken this way: they
+  create a record somewhere else, which leaving a field must not do silently. Without this
+  a user who typed a name and tabbed on left the field holding free text that looked picked
+  but carried no id.
 - Translation: pass translated strings via `pickLabel`, `fallbackPickLabel`, `fallbackLabel`,
   `fallbackLoadingText`, `placeholder` — the component ships no copy of its own.
 
