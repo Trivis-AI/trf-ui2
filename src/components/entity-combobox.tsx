@@ -99,18 +99,6 @@ export function EntityCombobox({
   const listId = React.useId();
   React.useEffect(() => () => clearTimeout(timer.current), []);
 
-  // Close on click/tap outside. The list is portalled, so it is not inside
-  // rootRef — check it separately or picking an option would close first.
-  React.useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node;
-      if (!rootRef.current?.contains(target) && !listRef.current?.contains(target)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [open]);
-
   // Primary items then fallback rows — one flat list so the arrow keys walk the
   // whole dropdown, matching what the user sees.
   const options = React.useMemo(
@@ -145,6 +133,49 @@ export function EntityCombobox({
   const hasContent = items.length > 0 || fallbackItems.length > 0 || fallbackLoading;
   const showDropdown = open && hasContent && !disabled;
 
+  /**
+   * The row that leaving the field accepts: the highlighted one, or the first
+   * suggestion when the user has only typed. Fallback rows are never taken this
+   * way — they create a record somewhere else, which leaving a field must not do
+   * silently. Null when there is nothing obvious to take.
+   */
+  const acceptCandidate = (): EntityComboboxItem | null => {
+    if (!showDropdown) return null;
+    const option =
+      activeIndex >= 0 && activeIndex < options.length
+        ? options[activeIndex]
+        : items.length > 0
+          ? { item: items[0], kind: "primary" as const }
+          : null;
+    return option?.kind === "primary" ? option.item : null;
+  };
+
+  // Close on click/tap outside. The list is portalled, so it is not inside
+  // rootRef — check it separately or picking an option would close first.
+  //
+  // Leaving by mouse accepts the same candidate Tab does. Without it the two ways
+  // out of the field disagreed: tabbing on left the contact picked, while clicking
+  // into the next input left the field holding free text with no id behind it —
+  // which is how invoices ended up saved with a customer name and no customer.
+  React.useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target) || listRef.current?.contains(target)) return;
+      const candidate = acceptCandidate();
+      // pick() already closes and clears the highlight.
+      if (candidate) pick(candidate);
+      else {
+        setOpen(false);
+        setActiveIndex(-1);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+    // acceptCandidate/pick are rebuilt every render; the values they read are listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, showDropdown, options, items, activeIndex]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       // Consumers may bind Escape too (e.g. reverting a table row); when the
@@ -155,6 +186,11 @@ export function EntityCombobox({
       return;
     }
     if (e.key === "Tab") {
+      // Tab accepts the obvious candidate on the way out (see acceptCandidate).
+      // Focus still moves on (no preventDefault); the field is left holding the
+      // contact it showed, instead of free text the rest of the form cannot use.
+      const candidate = acceptCandidate();
+      if (candidate) pick(candidate);
       setOpen(false);
       setActiveIndex(-1);
       return;

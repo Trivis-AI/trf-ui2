@@ -1,9 +1,19 @@
 # PLAN: company colour + tag on the org avatar
 
-> Task 178. Status: **the whole rollout is on trf.is**. backlogin v7.5.0, ui2 v7.8.2, app-shell
-> v0.38.0, and 13 of 14 fronts bumped and deployed. Remaining: **frontcrm**, skipped by the
-> rollout guardrail (see step 5); prod, which is untouched; and the new `<trn-...>` keys, which
-> fall back to English until they are added to the translation service.
+> Task 178. Status: **on trivis.ee**, for backlogin and 9 fronts, plus everything on trf.is.
+> Marking a company works in production, and no production organization is marked, so nothing
+> looks different there yet.
+>
+> **Shipped everywhere.** backlogin, ui2, app-shell and all 14 fronts are on both trf.is and
+> trivis.ee, each host verified serving the new code. frontcrm needed one extra commit first: it
+> stopped tracking its build output, which had been dirtying its tree on every local build.
+>
+> Nothing looks different in production yet, because no production organization is marked. That
+> was the design goal. Marking is a UI action on the post-login company list.
+>
+> Still open: the 17 real companies have to be marked by someone who knows which copy is which,
+> and the new `<trn-...>` keys fall back to English until they are added to the translation
+> service.
 
 ## The problem
 
