@@ -27,7 +27,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
   Logo, PageHeader, QuantityInput, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
-  SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone, Switch, Tabs, TabsContent, TabsList,
+  SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone,
+  ColorBadge, ColorSwatchPicker, SWATCH_COLORS, type SwatchColor, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
   TableFooter, TableHead, TableHeader, TableRow, Textarea, Tooltip, TooltipContent,
   TooltipProvider, TooltipTrigger,
@@ -1724,6 +1725,26 @@ const COLOR_TOKENS = [
   "destructive", "success", "warning", "border", "input", "ring",
 ];
 
+function ColorBadgeDemo() {
+  const [color, setColor] = useState<SwatchColor>("yellow");
+  return (
+    <Stack gap={4}>
+      <Row gap={2} wrap>
+        {SWATCH_COLORS.map((c) => (
+          <ColorBadge key={c} color={c}>{c[0].toUpperCase() + c.slice(1)}</ColorBadge>
+        ))}
+      </Row>
+      <Field label="Category colour" description="Eleven palette names, stored by name. Unknown or empty renders gray.">
+        <ColorSwatchPicker value={color} onChange={setColor} />
+      </Field>
+      <Row gap={2}>
+        <ColorBadge color={color}>Review</ColorBadge>
+        <ColorBadge color="">No colour set</ColorBadge>
+      </Row>
+    </Stack>
+  );
+}
+
 function ColorsSection() {
   return (
     <div className="w-full">
@@ -2762,6 +2783,7 @@ const GROUPS: GroupDef[] = [
           </>
         ),
       },
+      { id: "colorbadge", label: "Color badge", render: () => <ColorBadgeDemo /> },
       { id: "combobox", label: "Combobox", render: () => <ComboboxDemo /> },
       { id: "async-combobox", label: "Async combobox", render: () => <AsyncComboboxDemo /> },
       { id: "entity-combobox", label: "Entity combobox", render: () => <EntityComboboxDemo /> },

@@ -20,6 +20,7 @@ Softer than `Badge` (tinted background, not solid).
 - **Map your domain statuses → tone in ONE place per app** (e.g. `Draft→neutral`, `Confirmed→info`,
   `Paid→success`, `Overdue→warning`, `Cancelled→error`), then use `StatusBadge` everywhere.
 - `StatusBadge` = document/record *status*; `Badge` = generic solid label/count.
+- A colour the user picks (a task category, say) is a [`ColorBadge`](color-badge.md), not a tone.
 
 ## Related
 

@@ -74,6 +74,10 @@ export type { BadgeProps, BadgeVariant } from "./components/ui/badge";
 
 export { StatusBadge, statusVariants } from "./components/ui/status-badge";
 export type { StatusBadgeProps, StatusTone } from "./components/ui/status-badge";
+export { ColorBadge, colorBadgeVariants, SWATCH_COLORS, asSwatchColor, swatchFill } from "./components/ui/color-badge";
+export type { ColorBadgeProps, SwatchColor, SwatchColorInput } from "./components/ui/color-badge";
+export { ColorSwatchPicker } from "./components/color-swatch-picker";
+export type { ColorSwatchPickerProps } from "./components/color-swatch-picker";
 
 export { ActionPill, actionPillVariants } from "./components/ui/action-pill";
 export type { ActionPillProps, ActionPillVariant } from "./components/ui/action-pill";
