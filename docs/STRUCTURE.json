@@ -164,7 +164,11 @@
     "CardSlot": "08-ui-components/server-data-table.md",
     "TableViewMode": "08-ui-components/server-data-table.md",
     "Toaster": "08-ui-components/toaster.md",
-    "toast": "08-ui-components/toaster.md"
+    "toast": "08-ui-components/toaster.md",
+    "CountRow": "08-ui-components/dashboard-primitives.md",
+    "DeadlineItem": "08-ui-components/dashboard-primitives.md",
+    "Meter": "08-ui-components/dashboard-primitives.md",
+    "StatTile": "08-ui-components/dashboard-primitives.md"
   },
   "status": {
     "legend": {

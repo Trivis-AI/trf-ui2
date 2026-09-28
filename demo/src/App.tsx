@@ -26,7 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
-  Logo, PageHeader, QuantityInput, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
+  Logo, PageHeader, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone,
   ColorBadge, ColorSwatchPicker, SWATCH_COLORS, type SwatchColor, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -676,6 +676,46 @@ function SimpleSelectDemo() {
         noneLabel="— None —"
       />
     </Field>
+  );
+}
+
+/* ------------------------------------- section: Dashboard primitives */
+
+function DashboardPrimitivesDemo() {
+  return (
+    <Stack gap={5} className="w-full max-w-2xl">
+      <div className="flex w-full gap-4">
+        <StatTile label="Käive 2026" value="21 600 €" sub="kalendriaasta algusest (jaan–sept)" />
+        <StatTile label="Kasum 2026" value="12 400 €" sub="majandusaasta algusest" />
+        <StatTile label="Raha kontodel täna" value="1 705,77 €" sub="LHV …2815 · hinnang" />
+      </div>
+      <Stack gap={2} className="max-w-md">
+        <CountRow title="Kinnitamata ostuarved" subtitle="2 ootab üle 3 päeva" count={3} tone="warning" onClick={() => toast("CountRow click")} />
+        <CountRow title="Sidumata pangaread" subtitle="2 ettepanekuga, 0 ilma" count={2} onClick={() => toast("CountRow click")} />
+        <CountRow title="Maksmata ostuarved" subtitle="kõik makstud" count={0} onClick={() => toast("CountRow click")} />
+      </Stack>
+      <Stack gap={3} className="max-w-md">
+        <DeadlineItem
+          month="OKT" day="10" title="TSD september"
+          description="Maksid 20.09 dividende 2 250 €: lisa 7 ja tulumaks 634,62 €. Oto on deklaratsiooni ette valmistanud."
+          action={<Button variant="link" size="sm" className="h-auto p-0">Vaata ja esita</Button>}
+        />
+        <DeadlineItem
+          month="OKT" day="20" title="KMD september"
+          description="Tasumisele umbes 540 €. Lõplik summa selgub pärast 3 ostuarve kinnitamist."
+        />
+      </Stack>
+      <Stack gap={2} className="max-w-md">
+        <Meter value={1} label="Dividendid ja tulumaks" valueLabel="2 884 €" />
+        <Meter value={0.38} label="Käibemaks" valueLabel="1 094 €" />
+        <Meter value={0.12} label="Tegevuskulud" valueLabel="341 €" />
+        <Meter value={0.62} />
+      </Stack>
+      <Text size="xs" tone="muted" className="w-full">
+        Dashboard primitives (doc: 08-ui-components/dashboard-primitives.md). Figures render in
+        Geist Mono; CountRow is a button; Meter without labels renders just the track.
+      </Text>
+    </Stack>
   );
 }
 
@@ -2910,6 +2950,7 @@ const GROUPS: GroupDef[] = [
       { id: "multi-select", label: "Multi select", render: () => <MultiSelectDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
+      { id: "dashboard-primitives", label: "Dashboard primitives", render: () => <DashboardPrimitivesDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
       { id: "attachment-dropzone", label: "Attachment dropzone", render: () => <AttachmentDropzoneDemo /> },
       {
@@ -3163,7 +3204,8 @@ export function App() {
   const [theme, setTheme] = useState("trivis");
   const [radius, setRadius] = useState(8);
   const [textSize, setTextSize] = useState<SizeBracket>("M");
-  const [active, setActive] = useState("buttons");
+  // Deep-linkable sections: /#<section-id> opens that section (falls back to Buttons).
+  const [active, setActive] = useState(() => window.location.hash.slice(1) || "buttons");
   const [query, setQuery] = useState("");
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
