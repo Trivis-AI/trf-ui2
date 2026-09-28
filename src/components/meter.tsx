@@ -6,7 +6,7 @@ export interface MeterProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number;
   /** Optional left label. With `label` or `valueLabel` the meter renders as a full row. */
   label?: React.ReactNode;
-  /** Optional right-hand value text, rendered mono. */
+  /** Optional right-hand value text. */
   valueLabel?: React.ReactNode;
 }
 
@@ -37,7 +37,7 @@ export function Meter({ value, label, valueLabel, className, ...props }: MeterPr
       )}
       <div className="min-w-0 flex-1">{bar}</div>
       {valueLabel != null && (
-        <span className="w-20 shrink-0 text-right font-mono text-xs tabular-nums">{valueLabel}</span>
+        <span className="w-20 shrink-0 text-right text-xs tabular-nums">{valueLabel}</span>
       )}
     </div>
   );

@@ -712,8 +712,8 @@ function DashboardPrimitivesDemo() {
         <Meter value={0.62} />
       </Stack>
       <Text size="xs" tone="muted" className="w-full">
-        Dashboard primitives (doc: 08-ui-components/dashboard-primitives.md). Figures render in
-        Geist Mono; CountRow is a button; Meter without labels renders just the track.
+        Dashboard primitives (doc: 08-ui-components/dashboard-primitives.md). Figures render
+        light-weight (not mono); CountRow is a button; Meter without labels renders just the track.
       </Text>
     </Stack>
   );

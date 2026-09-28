@@ -13,7 +13,7 @@ export interface StatTileProps
 }
 
 /**
- * Dashboard KPI tile: label + mono figure + muted subtext.
+ * Dashboard KPI tile: label + light-weight figure + muted subtext.
  * Graduated from the hand-rolled Card+Text tiles in frontlogin's AccountOverview.
  */
 export function StatTile({ label, value, sub, className, ...props }: StatTileProps) {
@@ -21,7 +21,7 @@ export function StatTile({ label, value, sub, className, ...props }: StatTilePro
     <Card className={cn("flex-1", className)} {...props}>
       <CardContent className="flex flex-col gap-1 p-5">
         <span className="text-sm text-muted-foreground">{label}</span>
-        <span className="font-mono text-2xl font-semibold tabular-nums">{value}</span>
+        <span className="text-2xl font-light tabular-nums">{value}</span>
         {sub != null && <span className="text-xs text-muted-foreground">{sub}</span>}
       </CardContent>
     </Card>

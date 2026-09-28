@@ -22,7 +22,7 @@ export interface CountRowProps
   title: React.ReactNode;
   /** Muted context line under the title, e.g. "2 waiting over 3 days". */
   subtitle?: React.ReactNode;
-  /** The count itself. Rendered large, mono, semibold. */
+  /** The count itself. Rendered large and light-weight. */
   count: React.ReactNode;
 }
 
@@ -38,7 +38,7 @@ export function CountRow({ title, subtitle, count, tone, className, ...props }: 
         <span className="text-sm font-medium">{title}</span>
         {subtitle != null && <span className="text-xs text-muted-foreground">{subtitle}</span>}
       </span>
-      <span className="font-mono text-xl font-semibold tabular-nums">{count}</span>
+      <span className="text-xl font-light tabular-nums">{count}</span>
     </button>
   );
 }

@@ -54,8 +54,9 @@ row: label, bar, mono value.
 
 ## Rules
 
-- Figures are mono (`font-mono tabular-nums`), per the token doctrine that
-  numbers use Geist Mono.
+- Figures are light-weight proportional (`font-light tabular-nums`), NOT mono:
+  Jaak's call on the dashboard v3 review (2026-09-28). Geist Mono stays the rule
+  for tabular data; large display numerals read better light.
 - All colors are tokens; `tone="warning"` uses `--warning` at reduced opacity.
 - These are composition pieces: page layout (rows, cards, grids) stays in the app.
 
