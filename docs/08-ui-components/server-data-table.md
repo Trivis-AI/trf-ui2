@@ -221,7 +221,7 @@ helper used inside `ColumnDef.cell`, composing existing ui2 primitives.
 | Cell | Use |
 |---|---|
 | `StatusCell` | `StatusBadge` pill, optional inline sub-text. Status column always uses this. |
-| `InvoiceStatusCell` | Canonical sell-invoice lifecycle pill. Maps `{ status, paymentStatus, dueDate }` to Draft / Awaiting payment / Partially paid / Paid / Overdue / Credited / Cancelled via `deriveInvoiceStatus`. Use for every invoice status, never re-derive the tone per page. |
+| `InvoiceStatusCell` | Canonical invoice lifecycle pill (sales and purchase). Maps `{ status, paymentStatus, dueDate, creditStatus, creditedAmount, isCreditNote }` to Draft / Cancelled / Credit note / Credited / Paid / Partial / Unpaid / Overdue via `deriveInvoiceStatus`. Document, payment and credit are three independent backend fields; the pill shows the one that matters and puts the rare extra fact on a second line ("Refund due" on a credit note still owed back, "Credited 40.00" on a partly credited invoice). Pass `isCreditNote` from `correction_type === "reversal"`, never from a negative amount. Use for every invoice status, never re-derive the tone per page. |
 | `MoneyCell` | Right-aligned, `tabular-nums`, mono; passes raw backend strings through. `signed` variant colors +/-. |
 | `MonoCell` | Codes / SKU / IBAN / numbers, with empty fallback. |
 | `DateCell` | Date / datetime / date-range, one canonical format. Never format dates per page. |

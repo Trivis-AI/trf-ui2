@@ -44,7 +44,7 @@ import {
 import {
   ServerDataTable, TablePage, TableFilterBar, TableFilterNotice, TableColumnOptions, useTableQuery,
   TableViewToggle, type TableViewMode,
-  StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
+  StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell, InvoiceStatusCell,
   AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
   RecordPaymentDialog,
 } from "@trf/ui2";
@@ -2821,6 +2821,24 @@ const GROUPS: GroupDef[] = [
             <StatusBadge tone="warning">Overdue</StatusBadge>
             <StatusBadge tone="error">Cancelled</StatusBadge>
           </>
+        ),
+      },
+      {
+        // Document, payment and credit are three backend fields; the pill shows
+        // the one that matters and a rare second line (task #262).
+        id: "invoicestatus", label: "Invoice status", render: () => (
+          <div className="flex flex-wrap items-start gap-6">
+            <InvoiceStatusCell status="draft" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2099-01-01" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2020-01-01" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="partial" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="paid" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="paid" creditStatus="credited" creditedAmount="100" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2099-01-01" creditStatus="partial" creditedAmount="40" />
+            <InvoiceStatusCell status="confirmed" isCreditNote paymentStatus="paid" />
+            <InvoiceStatusCell status="confirmed" isCreditNote paymentStatus="unpaid" />
+            <InvoiceStatusCell status="cancelled" />
+          </div>
         ),
       },
       { id: "colorbadge", label: "Color badge", render: () => <ColorBadgeDemo /> },
