@@ -130,3 +130,6 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
   staging. Translation fixes committed in services. Prod waits for sign-off.
 - 2026-09-29: ui2 v7.12.0 (RecordHeader) released; the 8 record pages in 7 apps show their
   title again and are on staging. `<trn-dates>` added to services (f3fc5ca), needs seeding.
+- 2026-09-29: ui2 v7.13.0 adds `--table-head` (black 2.5% light, 25% dark), the band behind
+  every table's column headers. All 15 apps bumped and on staging, frontsupport included
+  (its first bump since v7.6.4; staging sits behind auth, so verified by build and deploy).
