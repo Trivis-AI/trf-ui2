@@ -39,7 +39,7 @@ Started 2026-09-29. Status is kept here, not in chat. Update the checkboxes as w
 - [x] **3. Pins + ready lists, all apps** (13 apps pushed and tagged 2026-09-29; frontinvoices verified live on invoices.trf.is): bump both pins, add `stickyHeader="page"` to
       the lists that are ready (table below), ship each to staging. frontinvoices first.
 - [x] **4. Page structure**, all 13 shell apps restructured and on staging (2026-09-29).
-- [ ] **4b. Record headers** (decided 2026-09-29 after staging review): record pages get
+- [x] **4b. Record headers** (decided 2026-09-29 after staging review): record pages get
       their title back as a scrolling `RecordHeader` (ui2 v7.12.0) on frontcrm
       ContactDetail, frontitems ItemDetail, frontproducts ProductEdit, frontcontracts
       ContractDetail, frontsettings PersonnelDetail, fronttables TableDetailPage,
@@ -128,3 +128,5 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
   frontpurchase, frontpayments (on staging); the other 11 repos in progress.
 - 2026-09-29: phase 4 done in all 13 shell apps, each built, committed and deployed to
   staging. Translation fixes committed in services. Prod waits for sign-off.
+- 2026-09-29: ui2 v7.12.0 (RecordHeader) released; the 8 record pages in 7 apps show their
+  title again and are on staging. `<trn-dates>` added to services (f3fc5ca), needs seeding.
