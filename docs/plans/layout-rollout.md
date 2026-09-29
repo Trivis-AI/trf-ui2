@@ -38,7 +38,7 @@ Started 2026-09-29. Status is kept here, not in chat. Update the checkboxes as w
       pill on `bg-sunken`.
 - [x] **3. Pins + ready lists, all apps** (13 apps pushed and tagged 2026-09-29; frontinvoices verified live on invoices.trf.is): bump both pins, add `stickyHeader="page"` to
       the lists that are ready (table below), ship each to staging. frontinvoices first.
-- [ ] **4. Page structure**, repo by repo, smallest first (order below).
+- [x] **4. Page structure**, all 13 shell apps restructured and on staging (2026-09-29).
 - [ ] **5. Prod**: promote each app after Jaak signs off staging.
 
 ## Inventory (audit 2026-09-29, read at origin/main)
@@ -75,6 +75,35 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 
 ## Follow-ups found on the way
 
+- **Seed translations**: services 7e312af fixes 11 stored values that still carried
+  glyphs or em dashes and adds 7 new keys. Needs the POST to `/v1/translations` (admin
+  token) on staging, and again on prod when promoting.
+- **ui2 DataTable**: has no `onRowClick` or `loading`. Client-side lists that need row
+  click use `ServerDataTable` holding the whole list as one page (frontai History,
+  frontcontracts ContractList, frontreports Annual/VAT lists, frontsettings lists,
+  frontledger DimensionType/Period lists). Add both props, then switch them back.
+- **ui2 TablePage**: the "Clear" button and pagination text ("Page x of y", "total",
+  Previous/Next) are hard-coded English. Accept labels or a translate function.
+- **ui2 EditableGrid / EditableDataTable**: no page-sticky support (fronttables).
+- **Lists still on TableCard** (inline-edit CRUD, kept on purpose): frontsettings bank,
+  location and project types, API keys, MCP keys; frontcrm admin pages; the Series lists
+  in frontinvoices, frontpurchase, frontpayments, frontcontracts; frontledger's fiscal
+  year and quarter editors.
+- **Unsaved-changes guards** (doc 17 §3) need a data router; only frontinvoices,
+  frontpurchase and frontsupport have one.
+- **frontsupport** was left out (no app-shell). Its 5 DataTable lists can take
+  `stickyHeader="page"` after it bumps ui2 from v7.6.4.
+- **Discovery menu**: frontlogin's Overview row points at `/app/manage-organization/list`,
+  so the portal landing page shows no section in the bar.
+- **Design calls to confirm on staging**: frontcrm ContactNew grows from sm to xl
+  (no inner caps allowed); page actions moved to the bar are `size="sm"`.
+- **Stale AGENTS.md branch notes** (`feat/trf-ui2-adoption`) in frontproducts, frontitems,
+  frontcontracts, frontai, frontaudit.
+- **Em dashes left on purpose**: the `—` empty-cell placeholder (ui2's convention) and
+  `code — name` select labels in frontledger.
+- **About 100 keys from other features** have no entry in services/translations.json
+  (for example `<trn-fx-revaluation-*>`, `<trn-hr-*>`); not part of this rollout.
+
 - app-shell: the active section is the first menu leaf whose path equals or prefixes the
   URL, not the most specific one. On `/app/settings/approvals` the bar names "Purchase
   settings" and the sidebar highlights both it and "Approval flow". Longest-match would
@@ -91,3 +120,5 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 - 2026-09-29: audit done. ui2 v7.11.0 and app-shell v0.39.0 released. All 13 shell apps
   bumped, ready lists opted in, pushed to staging. Phase 4 done for frontinvoices,
   frontpurchase, frontpayments (on staging); the other 11 repos in progress.
+- 2026-09-29: phase 4 done in all 13 shell apps, each built, committed and deployed to
+  staging. Translation fixes committed in services. Prod waits for sign-off.
