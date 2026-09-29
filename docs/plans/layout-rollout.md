@@ -31,12 +31,12 @@ Started 2026-09-29. Status is kept here, not in chat. Update the checkboxes as w
 
 ## Phases
 
-- [ ] **1. ui2 v7.11.0**: `--sunken` token; `stickyHeader="page"` in TableView,
+- [x] **1. ui2 v7.11.0** (7d0ba67, staging demo deployed): `--sunken` token; `stickyHeader="page"` in TableView,
       ServerDataTable and DataTable; sticky header cells above pinned cells (z-20) with
       an inset divider; demo publishes `--trf-topbar-h`; docs 03 and 17.
-- [ ] **2. app-shell v0.39.0**: org header `h-14`; crumb row border on a wrapper; meta
+- [x] **2. app-shell v0.39.0** (43e47d8): org header `h-14`; crumb row border on a wrapper; meta
       pill on `bg-sunken`.
-- [ ] **3. Pins + ready lists, all apps**: bump both pins, add `stickyHeader="page"` to
+- [x] **3. Pins + ready lists, all apps** (13 apps pushed and tagged 2026-09-29; frontinvoices verified live on invoices.trf.is): bump both pins, add `stickyHeader="page"` to
       the lists that are ready (table below), ship each to staging. frontinvoices first.
 - [ ] **4. Page structure**, repo by repo, smallest first (order below).
 - [ ] **5. Prod**: promote each app after Jaak signs off staging.
@@ -73,6 +73,21 @@ frontlogin, frontcrm, frontledger, frontsettings.
 Known ui2 follow-ups: `EditableGrid` (fronttables) and `EditableDataTable` have no
 page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 
+## Follow-ups found on the way
+
+- app-shell: the active section is the first menu leaf whose path equals or prefixes the
+  URL, not the most specific one. On `/app/settings/approvals` the bar names "Purchase
+  settings" and the sidebar highlights both it and "Approval flow". Longest-match would
+  fix it, but pages relying on today's behaviour (ApprovalFlowPage adds its own crumb)
+  would then double their crumb. Tom's call.
+- frontinvoices/frontpurchase: `<trn-add-row>` defaults no longer carry "+", but
+  translations already stored for that key may still contain it.
+- frontpayments: StatementList keeps a "Review" link column instead of row click; the
+  statement progress bar stays in the page (a visual the meta pill would lose).
+- frontpurchase: ApprovalFlowPage has no unsaved-changes guard (doc 17 §3).
+
 ## Log
 
-- 2026-09-29: audit done; phase 1 in progress.
+- 2026-09-29: audit done. ui2 v7.11.0 and app-shell v0.39.0 released. All 13 shell apps
+  bumped, ready lists opted in, pushed to staging. Phase 4 done for frontinvoices,
+  frontpurchase, frontpayments (on staging); the other 11 repos in progress.
