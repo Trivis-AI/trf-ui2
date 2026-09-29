@@ -54,6 +54,10 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
 );
 TableRow.displayName = "TableRow";
 
+// The header tint is a background *image* (a flat gradient) rather than a colour:
+// it is translucent, and sticky header cells set an opaque bg-background
+// underneath it, so rows scrolling under a stuck header never show through.
+// --table-head is half the meta pill's --sunken strength.
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -61,7 +65,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-3 text-left align-middle text-xs font-semibold text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+      "h-10 px-3 text-left align-middle text-xs font-semibold text-muted-foreground whitespace-nowrap [background-image:linear-gradient(var(--table-head),var(--table-head))] [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}

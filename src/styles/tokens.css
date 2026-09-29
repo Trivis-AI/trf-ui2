@@ -64,6 +64,9 @@
      reads as recessed on every theme's background without per-theme values.
      Used for the shell's page-meta pill. */
   --sunken: oklch(0 0 0 / 5%);
+  /* Table header band: half the sunken wash, so column headers read as a strip
+     without competing with the meta pill. */
+  --table-head: oklch(0 0 0 / 2.5%);
 
   --accent: oklch(0.93 0.012 240);
   --accent-foreground: oklch(0.3 0.02 240);
@@ -151,6 +154,7 @@
   --muted: oklch(0.3 0.02 240);
   --muted-foreground: oklch(0.68 0.02 240);
   --sunken: oklch(0 0 0 / 50%);
+  --table-head: oklch(0 0 0 / 25%);
 
   --accent: oklch(0.34 0.025 240);
   --accent-foreground: oklch(0.95 0.01 240);
@@ -631,6 +635,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-sunken: var(--sunken);
+  --color-table-head: var(--table-head);
   --color-muted-foreground: var(--muted-foreground);
   --color-code: var(--code);
   --color-syntax-keyword: var(--syntax-keyword);

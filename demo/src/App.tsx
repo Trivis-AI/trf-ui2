@@ -1761,7 +1761,7 @@ function BrandMarksDemo() {
 /* ------------------------------------------------------- section: Colors */
 
 const COLOR_TOKENS = [
-  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "sunken", "accent",
+  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "sunken", "table-head", "accent",
   "destructive", "success", "warning", "border", "input", "ring",
 ];
 

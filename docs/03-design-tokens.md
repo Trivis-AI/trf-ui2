@@ -35,7 +35,7 @@ See [08-ui-components/typography.md](08-ui-components/typography.md).
 
 | Group | Tokens |
 |---|---|
-| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent`, `sunken` |
+| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent`, `sunken`, `table-head` |
 | Text-on-surface | `foreground`, `card-foreground`, `popover-foreground`, `muted-foreground`, `secondary-foreground`, `accent-foreground`, `primary-foreground` |
 | Interactive | `primary`, `border`, `input`, `ring` |
 | Status | `destructive`, `success`, `warning` (+ each `*-foreground`) |
@@ -47,6 +47,10 @@ Use them as Tailwind utilities: `bg-primary`, `text-muted-foreground`, `border-i
 darkens whatever sits under it and reads as recessed on every theme without per-theme
 values. It backs the shell's page-meta pill (`ShellBarMeta`). Use `bg-sunken` for a
 recessed strip or pill on the page background; for a flat grey block, use `bg-muted`.
+
+`table-head` is the same wash at half strength (2.5% light, 25% dark): the band behind
+every table's column headers. `TableHead` applies it as a background image over its
+own background, so a sticky header stays opaque.
 
 ### `--primary` is theme-dependent (brand + action)
 
