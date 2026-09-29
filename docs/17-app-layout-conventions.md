@@ -54,7 +54,10 @@ drop their `PageHeader`/`TablePage` heading (the crumb already names the page):
 - `<ShellBarActions>` portals the page's action buttons into the right side of the
   crumb row. Workflow actions keep text labels; utility actions (attach, copy, new,
   delete) are icon buttons (`size="sm" className="px-2"`, `title` + `aria-label`).
-- `<ShellBarMeta>` portals status badge + meta text into a second bar row.
+- `<ShellBarMeta>` portals status badge + meta text into a pill (`bg-sunken`) under the
+  bar, outside its border, so the bar itself stays 56px and level with the sidebar
+  header (app-shell >= v0.39.0). Lead with the status badge; it sits concentric in
+  the pill.
 - The bar is desktop-only: pages render the same nodes again in a `md:hidden`
   fallback row so mobile keeps them (share one JSX variable; keep hidden file
   inputs and similar ref-holders outside the shared node so refs stay unique).
@@ -77,6 +80,13 @@ Reference: frontpurchase `src/pages/invoices/InvoiceEdit.tsx`.
 
 `useTableQuery` (state + queryKey) > `TablePage` (`search`, `TableFilterBar` filters,
 `TableColumnOptions`, `pagination`) > `ServerDataTable`.
+
+- The list's table takes `stickyHeader="page"` (ui2 >= v7.11.0): the page scrolls as a
+  whole, the title and filters scroll away, and the column header sticks under the
+  shell bar. A table wider than its container falls back to its own scroll box by
+  itself. Client-side lists use `DataTable` with the same prop. Never put a list in
+  `TableCard` or a raw `Table`: both clip or scroll, so the header cannot stick to the
+  page. Tables inside dialogs or detail pages keep the default.
 
 - No `title` on `TablePage` (optional since ui2 v7.0.24): the shell bar names the page.
   The primary action ("New X") goes in `<ShellBarActions>`, with a `md:hidden`

@@ -35,13 +35,18 @@ See [08-ui-components/typography.md](08-ui-components/typography.md).
 
 | Group | Tokens |
 |---|---|
-| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent` |
+| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent`, `sunken` |
 | Text-on-surface | `foreground`, `card-foreground`, `popover-foreground`, `muted-foreground`, `secondary-foreground`, `accent-foreground`, `primary-foreground` |
 | Interactive | `primary`, `border`, `input`, `ring` |
 | Status | `destructive`, `success`, `warning` (+ each `*-foreground`) |
 
 Use them as Tailwind utilities: `bg-primary`, `text-muted-foreground`, `border-input`,
 `bg-destructive`, `text-success-foreground`. Opacity is allowed (`bg-primary/90`).
+
+`sunken` is the one translucent surface: black at 5% in light and 50% in dark, so it
+darkens whatever sits under it and reads as recessed on every theme without per-theme
+values. It backs the shell's page-meta pill (`ShellBarMeta`). Use `bg-sunken` for a
+recessed strip or pill on the page background; for a flat grey block, use `bg-muted`.
 
 ### `--primary` is theme-dependent (brand + action)
 

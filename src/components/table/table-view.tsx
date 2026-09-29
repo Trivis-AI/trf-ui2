@@ -125,8 +125,20 @@ export interface TableViewProps<TData> {
    */
   expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
-  /** Pin the header to the top of the scroll container. Default true. */
-  stickyHeader?: boolean;
+  /**
+   * Keep the column header in view while scrolling. Default true.
+   *
+   * - `true`: the table owns its scroll box, capped to the viewport, and the
+   *   header sticks to the top of that box.
+   * - `"page"`: the page scrolls, and the header sticks to the page right under
+   *   the shell's top bar (`--trf-topbar-h`), so filters above the table scroll
+   *   away. Pure CSS sticky, so it stays smooth on every platform. While the
+   *   table is wider than its container, the table falls back to its own scroll
+   *   box, because a horizontally scrolling wrapper would trap a page-sticky
+   *   header.
+   * - `false`: the header scrolls away with the rows.
+   */
+  stickyHeader?: boolean | "page";
   /**
    * Row virtualization. Reserved seam: the prop is accepted so callers can opt in,
    * but windowing is not active yet (needs @tanstack/react-virtual). Rows render in
@@ -169,7 +181,9 @@ function alignClass(align?: "left" | "right" | "center") {
 
 // Canonical pinned-column treatment, shared by the header and body cells so the
 // two never drift apart.
-const STICKY_HEAD = "sticky right-0 z-10 bg-background";
+// z-20: above the pinned body cells (z-10), which otherwise paint over the
+// header as they scroll under it, being later in the DOM.
+const STICKY_HEAD = "sticky right-0 z-20 bg-background";
 const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
 
 // In an auto-layout table a w-px cell collapses to its content width, so the
@@ -181,6 +195,9 @@ const WIDTH_MIN = "w-px whitespace-nowrap px-2";
 // width:100% takes the slack; max-width:0 stops the content from setting the
 // column's preferred width, which is what keeps the table inside its container.
 const WIDTH_FILL = "w-full max-w-0";
+
+// Spare width a page-mode table needs before it leaves its fallback scroll box.
+const FIT_SLACK = 24;
 
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ChevronUp className="size-3.5" />;
@@ -227,8 +244,8 @@ function DraggableHeader<TData>({
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.8 : 1,
-    // While dragging, rise above the (sticky, z-10) sibling headers.
-    zIndex: isDragging ? 20 : undefined,
+    // While dragging, rise above the (sticky, z-20) sibling headers.
+    zIndex: isDragging ? 30 : undefined,
   };
   const align = header.column.columnDef.meta?.align;
   return (
@@ -294,6 +311,42 @@ export function TableView<TData>({
     return () => ro.disconnect();
   }, []);
 
+  // Page mode needs a table that fits its container: a horizontally scrolling
+  // wrapper becomes the header's scroll container and stops it sticking to the
+  // page. So while the table overflows, fall back to the table's own scroll box.
+  // Switching back needs FIT_SLACK spare pixels, more than any classic scrollbar
+  // (Windows and Linux reserve ~17px), so a scrollbar appearing or disappearing
+  // as the mode changes can never flip it straight back.
+  const [overflowing, setOverflowing] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (stickyHeader !== "page") return;
+    const wrapper = wrapperRef.current;
+    const tableEl = wrapper?.querySelector("table");
+    if (!wrapper || !tableEl) return;
+    const check = () => {
+      // Measured the same way in both modes: the wrapper's inner width without
+      // any scrollbar of its own, against the narrowest the table can get. The
+      // table is w-full, so its laid-out width would just echo the container.
+      // The inline width is restored before the next frame, so nothing paints.
+      const cs = getComputedStyle(wrapper);
+      const available =
+        wrapper.getBoundingClientRect().width -
+        parseFloat(cs.borderLeftWidth) -
+        parseFloat(cs.borderRightWidth);
+      const prev = tableEl.style.width;
+      tableEl.style.width = "min-content";
+      const needed = tableEl.getBoundingClientRect().width;
+      tableEl.style.width = prev;
+      setOverflowing((was) => (was ? needed > available - FIT_SLACK : needed > available + 0.5));
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(wrapper);
+    ro.observe(tableEl);
+    return () => ro.disconnect();
+  }, [stickyHeader, view]);
+  const stickToPage = stickyHeader === "page" && !overflowing;
+
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
   const leafColumns = table.getVisibleLeafColumns();
@@ -321,8 +374,14 @@ export function TableView<TData>({
   // to the viewport minus shell/page chrome), so the header sticks to the
   // wrapper's top edge at every viewport width — no breakpoint gating and no
   // dependence on the page scroller or the shell's --trf-topbar-h offset.
+  // z-20 keeps the header above pinned body cells (z-10). The divider is an
+  // inset shadow on the cells because the row's own border stays behind when
+  // the cells stick, so the header row drops that border (see TableHeader).
   const headStickyClass = stickyHeader
-    ? "sticky top-0 z-10 bg-background"
+    ? cn(
+        stickToPage ? "top-[var(--trf-topbar-h,0px)]" : "top-0",
+        "sticky z-20 bg-background shadow-[inset_0_-1px_0_var(--border)]",
+      )
     : undefined;
 
   const selectionHead = enableRowSelection ? (
@@ -351,7 +410,7 @@ export function TableView<TData>({
     // With the outer wrapper as the scrollport, the inner overflow wrapper must
     // not trap the sticky header — it backs off entirely when sticky is on.
     <Table className={className} containerClassName={stickyHeader ? "overflow-x-visible" : undefined}>
-      <TableHeader>
+      <TableHeader className={stickyHeader ? "[&_tr]:border-b-0" : undefined}>
         {bulkBar ? (
           // Selection active: the column-header row becomes the bulk toolbar.
           <TableRow className="hover:bg-transparent">
@@ -513,10 +572,12 @@ export function TableView<TData>({
       ref={wrapperRef}
       className={cn(
         "relative rounded-lg border border-border",
+        // Page mode: clip rather than scroll, since overflow-clip creates no
+        // scroll container and so leaves the header free to stick to the page.
         // Scrollport mode: both axes scroll inside the table, capped so header
         // and pagination stay reachable. --trf-table-chrome is the estimated
         // page chrome around the table; apps may override it.
-        stickyHeader
+        stickyHeader && !stickToPage
           ? "overflow-auto max-h-[calc(100dvh-var(--trf-topbar-h,0px)-var(--trf-table-chrome,13rem))]"
           : "overflow-clip",
       )}

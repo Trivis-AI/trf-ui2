@@ -80,7 +80,7 @@ export interface ServerDataTableProps<TData> {
   expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
   /** Default true. */
-  stickyHeader?: boolean;
+  stickyHeader?: boolean | "page";
   /** "list" (default) or "cards". See TableView's `view`. */
   view?: TableViewMode;
   /** Minimum card width in `view="cards"`. Default 16rem. */

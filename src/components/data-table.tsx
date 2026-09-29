@@ -36,6 +36,12 @@ export interface DataTableProps<TData> {
    */
   onCellEdit?: (rowIndex: number, columnId: string, value: unknown) => void;
   emptyMessage?: React.ReactNode;
+  /**
+   * Header stickiness, as on TableView. Default false: DataTable mostly renders
+   * small tables inside other content. Pass "page" when it is a list page's main
+   * table, so the page scrolls and the header sticks under the shell bar.
+   */
+  stickyHeader?: boolean | "page";
   className?: string;
 }
 
@@ -76,6 +82,7 @@ export function DataTable<TData>({
   pageSize,
   onCellEdit,
   emptyMessage = "No results.",
+  stickyHeader = false,
   className,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -130,7 +137,7 @@ export function DataTable<TData>({
         table={table}
         className={className}
         emptyMessage={emptyMessage}
-        stickyHeader={false}
+        stickyHeader={stickyHeader}
         enableColumnReorder={enableColumnReorder}
       />
 

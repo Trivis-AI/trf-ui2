@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
@@ -1761,7 +1761,7 @@ function BrandMarksDemo() {
 /* ------------------------------------------------------- section: Colors */
 
 const COLOR_TOKENS = [
-  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "accent",
+  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "sunken", "accent",
   "destructive", "success", "warning", "border", "input", "ring",
 ];
 
@@ -2239,6 +2239,7 @@ function ServerDataTableDemo() {
         }}
       >
         <ServerDataTable<InvoiceRow>
+          stickyHeader="page"
           columns={columns}
           data={rows}
           pageIndex={q.pageIndex}
@@ -3243,6 +3244,19 @@ export function App() {
   const hits = useMemo(() => searchSections(query), [query]);
   const pickSection = (id: string) => { setActive(id); setQuery(""); };
 
+  // Publish the top bar's height as --trf-topbar-h, as @trf/app-shell does, so
+  // page-mode table headers (stickyHeader="page") stick right under it.
+  const topBarRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const publish = () => document.documentElement.style.setProperty("--trf-topbar-h", `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <TooltipProvider delayDuration={200}>
       <AppShell
@@ -3294,7 +3308,7 @@ export function App() {
         }
       >
         {/* Top bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
+        <div ref={topBarRef} className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
           <div className="flex items-baseline gap-2">
             <H2>{activeSection.label}</H2>
             <Text size="xs" tone="muted">kitchen sink</Text>

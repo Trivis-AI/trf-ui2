@@ -60,6 +60,10 @@
 
   --muted: oklch(0.95 0.008 240);
   --muted-foreground: oklch(0.52 0.02 240);
+  /* Sunken: a translucent black wash that darkens whatever sits under it, so it
+     reads as recessed on every theme's background without per-theme values.
+     Used for the shell's page-meta pill. */
+  --sunken: oklch(0 0 0 / 5%);
 
   --accent: oklch(0.93 0.012 240);
   --accent-foreground: oklch(0.3 0.02 240);
@@ -146,6 +150,7 @@
 
   --muted: oklch(0.3 0.02 240);
   --muted-foreground: oklch(0.68 0.02 240);
+  --sunken: oklch(0 0 0 / 50%);
 
   --accent: oklch(0.34 0.025 240);
   --accent-foreground: oklch(0.95 0.01 240);
@@ -625,6 +630,7 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
+  --color-sunken: var(--sunken);
   --color-muted-foreground: var(--muted-foreground);
   --color-code: var(--code);
   --color-syntax-keyword: var(--syntax-keyword);
