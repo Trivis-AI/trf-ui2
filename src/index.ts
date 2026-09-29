@@ -64,6 +64,8 @@ export { Row, Grow } from "./components/row";
 export type { RowProps } from "./components/row";
 export { Page, PageHeader } from "./components/page";
 export type { PageProps, PageSize, PageHeaderProps } from "./components/page";
+export { RecordHeader } from "./components/record-header";
+export type { RecordHeaderProps, RecordFact } from "./components/record-header";
 
 // Primitives
 export { Button, buttonVariants } from "./components/ui/button";

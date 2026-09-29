@@ -62,6 +62,14 @@ drop their `PageHeader`/`TablePage` heading (the crumb already names the page):
   fallback row so mobile keeps them (share one JSX variable; keep hidden file
   inputs and similar ref-holders outside the shared node so refs stay unique).
 
+Exception, record pages (decided 2026-09-29): a page about one record (a contact, an
+item, a product, a contract, a person, a ledger entry or period) opens with a
+`RecordHeader`: the name at title size, identity badges, and identifier facts (Reg
+code, VAT, number, dates). It is content and scrolls away. The crumb still names the
+record, and `ShellBarMeta` keeps only live status. Invoice and payment detail pages
+keep their identity in the meta pill instead, as designed. Lists, settings, forms and
+dashboards have no title.
+
 ## 3. Unsaved-changes guard
 
 Guard in-app navigation with react-router's `useBlocker` driving the ui2 `ConfirmDialog`,

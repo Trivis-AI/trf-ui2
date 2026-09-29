@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
-  Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
+  Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
   FileText, ImageIcon, X, Download, Eye,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
   type LucideIcon,
@@ -26,7 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
-  Logo, PageHeader, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
+  Logo, PageHeader, RecordHeader, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone,
   ColorBadge, ColorSwatchPicker, SWATCH_COLORS, type SwatchColor, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -1785,6 +1785,98 @@ function ColorBadgeDemo() {
   );
 }
 
+// Record pages (a contact, a contract, an entry) show the record's identity as
+// page content under the shell bar; it scrolls away, the crumb and the status
+// pill stay. Each frame mimics the real shell bar so it reads in context.
+function RecordPageFrame({ crumbs, actions, status, children }: {
+  crumbs: string[]; actions: React.ReactNode; status?: React.ReactNode; children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="flex h-14 items-center gap-1.5 border-b border-border bg-card px-6 text-sm">
+        {crumbs.map((c, i) => (
+          <Fragment key={c}>
+            {i > 0 && <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />}
+            <span className={i === crumbs.length - 1 ? "truncate font-medium" : "shrink-0 text-muted-foreground"}>{c}</span>
+          </Fragment>
+        ))}
+        <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>
+      </div>
+      {status && (
+        <div className="px-5 pb-2 pt-3">
+          <div className="inline-flex items-center gap-3 rounded-full bg-sunken p-1 text-sm">{status}</div>
+        </div>
+      )}
+      <div className="flex flex-col gap-5 px-6 pb-6 pt-5">{children}</div>
+    </div>
+  );
+}
+
+function RecordHeaderDemo() {
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <Text size="sm" tone="muted">
+        The record's name at title size, its badges, and the identifiers people check
+        (Reg code, VAT, numbers, dates). Content, not chrome: it scrolls away with the
+        page, while the crumb and the status pill stay in the shell bar.
+      </Text>
+
+      <RecordPageFrame
+        crumbs={["CRM", "Contacts", "Honest Mistake OÜ"]}
+        actions={<><Button size="sm" variant="secondary">Log interaction</Button><Button size="sm">New deal</Button></>}
+      >
+        <RecordHeader
+          title="Honest Mistake OÜ"
+          badges={<Badge variant="secondary">Customer</Badge>}
+          facts={[
+            { label: "Reg code", value: "16281128", mono: true },
+            { label: "VAT", value: "EE102766353", mono: true },
+            { label: "Country", value: "Estonia" },
+          ]}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Contact details, addresses…</Text></CardContent></Card>
+          <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Deals, interactions…</Text></CardContent></Card>
+        </div>
+      </RecordPageFrame>
+
+      <RecordPageFrame
+        crumbs={["Contracts", "Office lease, Tallinn"]}
+        status={<StatusBadge tone="success">active</StatusBadge>}
+        actions={<><Button size="sm" variant="secondary">Suspend</Button><Button size="sm">Invoice now</Button></>}
+      >
+        <RecordHeader
+          title="Office lease, Tallinn"
+          facts={[
+            { label: "Contract no.", value: "C-2026-014", mono: true },
+            { label: "Customer", value: "Pukser OÜ" },
+            { label: "Period", value: "1 Jan 2026 – 31 Dec 2027" },
+          ]}
+          description="Monthly rent and service charge, billed on the first working day."
+        />
+        <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Items, billing schedule…</Text></CardContent></Card>
+      </RecordPageFrame>
+
+      <RecordPageFrame
+        crumbs={["Ledger", "Entries", "Entry #1042"]}
+        status={<><StatusBadge tone="success">posted</StatusBadge><Text size="sm" tone="muted" className="pr-2">Period: September 2026</Text></>}
+        actions={<><Button size="sm" variant="secondary">Reverse</Button><Button size="sm" variant="secondary" className="px-2" title="Copy" aria-label="Copy"><Copy /></Button></>}
+      >
+        <RecordHeader
+          title="Entry #1042"
+          facts={[
+            { label: "Date", value: "28 Sep 2026" },
+            { label: "Reference", value: "INV-2026-0931", mono: true },
+            { label: "Currency", value: "EUR" },
+          ]}
+          description="Sales invoice 2026-0931, Pukser OÜ"
+        />
+        <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Journal lines…</Text></CardContent></Card>
+      </RecordPageFrame>
+    </div>
+  );
+}
+
 function ColorsSection() {
   return (
     <div className="w-full">
@@ -3018,6 +3110,7 @@ const GROUPS: GroupDef[] = [
         ),
       },
       { id: "confirm", label: "Confirm dialog", render: () => <ConfirmDialogDemo /> },
+      { id: "record-header", label: "Record header", render: () => <RecordHeaderDemo /> },
       { id: "floating-window", label: "Floating window", render: () => <FloatingWindowDemo /> },
     ],
   },

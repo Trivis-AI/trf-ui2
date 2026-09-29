@@ -39,6 +39,12 @@ Started 2026-09-29. Status is kept here, not in chat. Update the checkboxes as w
 - [x] **3. Pins + ready lists, all apps** (13 apps pushed and tagged 2026-09-29; frontinvoices verified live on invoices.trf.is): bump both pins, add `stickyHeader="page"` to
       the lists that are ready (table below), ship each to staging. frontinvoices first.
 - [x] **4. Page structure**, all 13 shell apps restructured and on staging (2026-09-29).
+- [ ] **4b. Record headers** (decided 2026-09-29 after staging review): record pages get
+      their title back as a scrolling `RecordHeader` (ui2 v7.12.0) on frontcrm
+      ContactDetail, frontitems ItemDetail, frontproducts ProductEdit, frontcontracts
+      ContractDetail, frontsettings PersonnelDetail, fronttables TableDetailPage,
+      frontledger EntryDetail and PeriodDetail. Identity leaves the pill, which keeps
+      status only. Invoice and payment detail pages keep the pill as designed.
 - [ ] **5. Prod**: promote each app after Jaak signs off staging.
 
 ## Inventory (audit 2026-09-29, read at origin/main)
