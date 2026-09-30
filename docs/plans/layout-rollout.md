@@ -81,6 +81,12 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 
 ## Follow-ups found on the way
 
+- **Filter mark wording**: one-sided date ranges read "to 30/09/2026" (reusing
+  `<trn-from>`/`<trn-to>`); a `<trn-until>` key would read better. frontpayments'
+  direction filter shows raw "inbound"/"outbound" (no translated labels), and its method
+  options differ from the column's labels. frontaudit's date filter matches `created_at`
+  while its "When" column shows `occurred_at`.
+
 - **Considered, deferred (2026-09-30): infinite scroll instead of pagination.** Feasible
   with page-mode tables (a sentinel under the last row, `useInfiniteQuery`, prefetch a
   screen ahead), but it costs page jumps and shareable positions, needs scroll
@@ -140,3 +146,8 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 - 2026-09-29: ui2 v7.13.0 adds `--table-head` (black 2.5% light, 25% dark), the band behind
   every table's column headers. All 15 apps bumped and on staging, frontsupport included
   (its first bump since v7.6.4; staging sits behind auth, so verified by build and deploy).
+- 2026-09-30: ui2 v7.14.0 adds filter marks in column headers (`activeFilters`): a filled
+  funnel on a filtered column, tooltip with the filter in words, click to clear. Wired
+  into 10 lists (sales/purchase invoices, purchase import, payments, ledger entries, audit
+  log, contracts, CRM tasks, products, absences) and on staging. `<trn-click-to-clear>`
+  added to services (e0d3ecc), needs seeding.
