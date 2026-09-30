@@ -81,6 +81,13 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 
 ## Follow-ups found on the way
 
+- **Considered, deferred (2026-09-30): infinite scroll instead of pagination.** Feasible
+  with page-mode tables (a sentinel under the last row, `useInfiniteQuery`, prefetch a
+  screen ahead), but it costs page jumps and shareable positions, needs scroll
+  restoration on back-navigation, a clear "select all" meaning, virtualization past
+  ~500 rows, and cursor paging to avoid duplicate rows. If revisited: try one list first,
+  or a "Load more" button.
+
 - **Seed translations**: services 7e312af fixes 11 stored values that still carried
   glyphs or em dashes and adds 7 new keys. Needs the POST to `/v1/translations` (admin
   token) on staging, and again on prod when promoting.
