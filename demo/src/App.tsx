@@ -2263,6 +2263,15 @@ function ServerDataTableDemo() {
   );
 
   const hasFilters = !!q.search || Object.keys(q.filters).length > 0;
+  // Filter marks in the column headers: the page words them, the table draws them.
+  const activeFilters = {
+    ...(q.filters.status && {
+      status: { label: `Status: ${q.filters.status}`, onClear: () => q.setFilter("status", ""), clearHint: "Click to clear" },
+    }),
+    ...(q.filters.method && {
+      method: { label: `Method: ${q.filters.method}`, onClear: () => q.setFilter("method", ""), clearHint: "Click to clear" },
+    }),
+  };
 
   return (
     <div className="w-full">
@@ -2332,6 +2341,7 @@ function ServerDataTableDemo() {
       >
         <ServerDataTable<InvoiceRow>
           stickyHeader="page"
+          activeFilters={activeFilters}
           columns={columns}
           data={rows}
           pageIndex={q.pageIndex}

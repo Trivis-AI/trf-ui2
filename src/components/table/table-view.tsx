@@ -23,7 +23,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronsUpDown, ChevronUp, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, Filter, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { CardView, type CardSlot, type TableViewMode } from "./card-view";
 import { Checkbox } from "../ui/checkbox";
@@ -37,6 +37,7 @@ import {
   TableRow,
 } from "../ui/table";
 import { TableProgress } from "./table-progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 /**
  * Per-column inline cell-editor descriptor. A column opts a cell into inline
@@ -110,6 +111,20 @@ declare module "@tanstack/react-table" {
   }
 }
 
+/**
+ * A filter applied to one column, marked in that column's header. Pages build
+ * these from their filter state (useTableQuery's `filters`) because only the page
+ * knows its option labels: the mark says "Status: Paid", not "status=paid".
+ */
+export interface ColumnFilterMark {
+  /** What the filter keeps, in words. Shown in the tooltip. */
+  label: React.ReactNode;
+  /** Clears this filter. With it, the mark is a button. */
+  onClear?: () => void;
+  /** Second tooltip line when clearable, e.g. a translated "Click to clear". */
+  clearHint?: React.ReactNode;
+}
+
 export interface TableViewProps<TData> {
   /** A built TanStack table instance (client or manual models). */
   table: TanStackTable<TData>;
@@ -139,6 +154,12 @@ export interface TableViewProps<TData> {
    * - `false`: the header scrolls away with the rows.
    */
   stickyHeader?: boolean | "page";
+  /**
+   * Active filters by column id. A marked column shows a filter icon in its
+   * header whose tooltip describes the filter, so a stuck header still says
+   * what the list is narrowed to after the filter bar has scrolled away.
+   */
+  activeFilters?: Record<string, ColumnFilterMark>;
   /**
    * Row virtualization. Reserved seam: the prop is accepted so callers can opt in,
    * but windowing is not active yet (needs @tanstack/react-virtual). Rows render in
@@ -205,7 +226,53 @@ function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   return <ChevronsUpDown className="size-3.5 opacity-50" />;
 }
 
-function HeaderLabel<TData>({ header }: { header: Header<TData, unknown> }) {
+function FilterMark({ mark }: { mark: ColumnFilterMark }) {
+  const name = typeof mark.label === "string" ? mark.label : undefined;
+  const icon = <Filter className="size-3.5 fill-current" />;
+  // Its own provider: Radix tooltips need one, and apps do not all mount one.
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {mark.onClear ? (
+            <button
+              type="button"
+              aria-label={name}
+              onClick={(e) => { e.stopPropagation(); mark.onClear?.(); }}
+              className="inline-flex size-5 items-center justify-center rounded text-primary outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {icon}
+            </button>
+          ) : (
+            <span role="img" aria-label={name} className="inline-flex size-5 items-center justify-center text-primary">
+              {icon}
+            </span>
+          )}
+        </TooltipTrigger>
+        <TooltipContent side="top" className="font-normal">
+          {mark.label}
+          {mark.onClear && mark.clearHint && <span className="block opacity-70">{mark.clearHint}</span>}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function HeaderLabel<TData>({ header, mark }: { header: Header<TData, unknown>; mark?: ColumnFilterMark }) {
+  const align = header.column.columnDef.meta?.align;
+  const inner = <HeaderLabelInner header={header} />;
+  if (!mark) return inner;
+  // The mark sits beside the label, outside the sort button (no nested buttons),
+  // on the side away from the column's alignment edge.
+  return (
+    <span className={cn("inline-flex items-center gap-1", align === "right" && "flex-row-reverse")}>
+      {inner}
+      <FilterMark mark={mark} />
+    </span>
+  );
+}
+
+function HeaderLabelInner<TData>({ header }: { header: Header<TData, unknown> }) {
   const canSort = header.column.getCanSort();
   const align = header.column.columnDef.meta?.align;
   const label = flexRender(header.column.columnDef.header, header.getContext());
@@ -234,9 +301,11 @@ function HeaderLabel<TData>({ header }: { header: Header<TData, unknown> }) {
 function DraggableHeader<TData>({
   header,
   stickyClass,
+  mark,
 }: {
   header: Header<TData, unknown>;
   stickyClass?: string;
+  mark?: ColumnFilterMark;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: header.column.id,
@@ -270,7 +339,7 @@ function DraggableHeader<TData>({
         >
           <GripVertical />
         </span>
-        {header.isPlaceholder ? null : <HeaderLabel header={header} />}
+        {header.isPlaceholder ? null : <HeaderLabel header={header} mark={mark} />}
       </div>
     </TableHead>
   );
@@ -284,6 +353,7 @@ export function TableView<TData>({
   expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
+  activeFilters,
   virtualize: _virtualize = false,
   emptyMessage = "No results.",
   skeletonRows = 8,
@@ -429,7 +499,7 @@ export function TableView<TData>({
                   strategy={horizontalListSortingStrategy}
                 >
                   {hg.headers.map((header) => (
-                    <DraggableHeader key={header.id} header={header} stickyClass={headStickyClass} />
+                    <DraggableHeader key={header.id} header={header} stickyClass={headStickyClass} mark={activeFilters?.[header.column.id]} />
                   ))}
                 </SortableContext>
               ) : (
@@ -446,7 +516,7 @@ export function TableView<TData>({
                       header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
                   >
-                    {header.isPlaceholder ? null : <HeaderLabel header={header} />}
+                    {header.isPlaceholder ? null : <HeaderLabel header={header} mark={activeFilters?.[header.column.id]} />}
                   </TableHead>
                 ))
               )}

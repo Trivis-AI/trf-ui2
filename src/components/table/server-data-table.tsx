@@ -10,7 +10,7 @@ import {
   type Updater,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { TableView } from "./table-view";
+import { TableView, type ColumnFilterMark } from "./table-view";
 import type { TableViewMode } from "./card-view";
 import { InlineEditCell } from "./inline-edit-cell";
 
@@ -81,6 +81,8 @@ export interface ServerDataTableProps<TData> {
   rowClassName?: (row: TData) => string | undefined;
   /** Default true. */
   stickyHeader?: boolean | "page";
+  /** Active filters by column id: marks those column headers. See TableView. */
+  activeFilters?: Record<string, ColumnFilterMark>;
   /** "list" (default) or "cards". See TableView's `view`. */
   view?: TableViewMode;
   /** Minimum card width in `view="cards"`. Default 16rem. */
@@ -130,6 +132,7 @@ export function ServerDataTable<TData>({
   expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
+  activeFilters,
   view,
   minCardWidth,
   virtualize = false,
@@ -248,6 +251,7 @@ export function ServerDataTable<TData>({
       expandOnRowClick={expandOnRowClick}
       rowClassName={rowClassName}
       stickyHeader={stickyHeader}
+      activeFilters={activeFilters}
       virtualize={virtualize}
       emptyMessage={emptyMessage}
       skeletonRows={skeletonRows ?? pageSize}

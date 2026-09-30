@@ -123,9 +123,31 @@ table.
 | `loading` / `fetching` | `false` | The two-state loading model above. |
 | `onRowClick` | optional | Whole-row click opens the item. No per-row "Open" button (guardrail). |
 | `rowClassName` | optional | e.g. archived rows `opacity-60`. |
-| `stickyHeader` | `true` | |
+| `stickyHeader` | `true` | `"page"` on a list page: the page scrolls and the header sticks under the shell bar (doc 17 §4). |
+| `activeFilters` | none | `{ [columnId]: { label, onClear?, clearHint? } }`. Marks a filtered column's header with a filter icon; the tooltip shows `label`, and with `onClear` the icon clears that filter. Build it from `useTableQuery`'s `filters` with your own option labels. |
 | `virtualize` | `false` | Reserved; auto-on above a threshold once virtualization lands. |
 | `mode` | `"pagination"` | `"infinite"` is reserved for a later add. |
+
+### Filter marks in column headers
+
+A filter that narrows one column is marked in that column's header, so the header
+still says what the list is narrowed to after the filter bar has scrolled away:
+
+```tsx
+const activeFilters = {
+  ...(q.filters.status && {
+    status: {
+      label: `${t.translate('<trn-status>', 'Status')}: ${statusLabel(q.filters.status)}`,
+      onClear: () => q.setFilter('status', ''),
+      clearHint: t.translate('<trn-click-to-clear>', 'Click to clear'),
+    },
+  }),
+}
+<ServerDataTable activeFilters={activeFilters} … />
+```
+
+Filters with no column of their own (search, "include archived") stay in the filter
+bar only. `DataTable` takes the same prop.
 
 ## `useTableQuery`
 
