@@ -3,7 +3,7 @@ import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
-  FileText, ImageIcon, X, Download, Eye,
+  FileText, ImageIcon, X, Download, Eye, Check,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
-  Logo, PageHeader, RecordHeader, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
+  Logo, PageHeader, RecordHeader, SelectionBarAction, SelectionBarFacts, SelectionBarGroup, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone,
   ColorBadge, ColorSwatchPicker, SWATCH_COLORS, type SwatchColor, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -1977,7 +1977,6 @@ const DOC_TONE: Record<DocRow["status"], StatusTone> = {
 function GalleryViewDemo() {
   const [view, setView] = useState<TableViewMode>("cards");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   const columns: ColumnDef<DocRow>[] = useMemo(
     () => [
@@ -2070,11 +2069,13 @@ function GalleryViewDemo() {
         onSelectedRowIdsChange={setSelected}
         bulkActions={
           <>
-            <Text size="sm" weight="medium">{selectedCount} selected</Text>
-            <div className="ml-auto flex items-center gap-2">
-              <Button size="sm" variant="destructive">Delete</Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelected({})}>Cancel</Button>
-            </div>
+            <SelectionBarGroup>
+              <SelectionBarAction label="Download" icon={<Download />} onClick={() => setSelected({})} />
+            </SelectionBarGroup>
+            <SelectionBarGroup>
+              <SelectionBarAction label="Confirm" icon={<Check />} variant="success" onClick={() => setSelected({})} />
+              <SelectionBarAction label="Delete" icon={<Trash2 />} iconOnly variant="destructive" onClick={() => setSelected({})} />
+            </SelectionBarGroup>
           </>
         }
       />
@@ -2136,7 +2137,6 @@ function ServerDataTableDemo() {
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   // The mock stand-in for react-query: keeps previous data during refetch and
   // serves seen queries from cache. Bumping reloadNonce forces a background
@@ -2263,6 +2263,9 @@ function ServerDataTableDemo() {
   );
 
   const hasFilters = !!q.search || Object.keys(q.filters).length > 0;
+  // The selection bar's info row: net, VAT and total of the selected invoices on this page.
+  const selectedTotal = rows.filter((r) => selected[r.number]).reduce((sum, r) => sum + r.totalGross, 0);
+  const money = (n: number) => n.toLocaleString("en-GB", { style: "currency", currency: "EUR" });
   // Filter marks in the column headers: the page words them, the table draws them.
   const activeFilters = {
     ...(q.filters.status && {
@@ -2365,11 +2368,25 @@ function ServerDataTableDemo() {
           onSelectedRowIdsChange={setSelected}
           bulkActions={
             <>
-              <Text size="sm" className="font-medium">{selectedCount} selected</Text>
-              <Button variant="secondary" size="sm">Export</Button>
-              <Button variant="destructive" size="sm">Delete</Button>
-              <Button variant="ghost" size="sm" onClick={() => setSelected({})}>Cancel</Button>
+              <SelectionBarGroup>
+                <SelectionBarAction label="Download" icon={<Download />} tooltip="Download the selected invoices as PDFs" onClick={() => setSelected({})} />
+              </SelectionBarGroup>
+              <SelectionBarGroup>
+                <SelectionBarAction label="Confirm" icon={<Check />} variant="success" tooltip="Confirm the selected drafts" onClick={() => setSelected({})} />
+                <SelectionBarAction label="Delete" icon={<Trash2 />} iconOnly variant="destructive" tooltip="Delete the selected invoices" onClick={() => setSelected({})} />
+              </SelectionBarGroup>
             </>
+          }
+          bulkInfo={
+            selectedTotal > 0 ? (
+              <SelectionBarFacts
+                items={[
+                  { label: "Net", value: money(selectedTotal / 1.24) },
+                  { label: "VAT 24%", value: money(selectedTotal - selectedTotal / 1.24) },
+                  { label: "Total", value: money(selectedTotal), strong: true },
+                ]}
+              />
+            ) : undefined
           }
           onCellEdit={(rowId, columnId, value) =>
             setEdits((prev) => ({ ...prev, [rowId]: { ...prev[rowId], [columnId]: value } }))

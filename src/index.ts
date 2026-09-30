@@ -65,6 +65,8 @@ export type { RowProps } from "./components/row";
 export { Page, PageHeader } from "./components/page";
 export type { PageProps, PageSize, PageHeaderProps } from "./components/page";
 export { RecordHeader } from "./components/record-header";
+export { SelectionBar, SelectionBarGroup, SelectionBarAction, SelectionBarFacts } from "./components/selection-bar";
+export type { SelectionBarProps, SelectionBarActionProps, SelectionFact } from "./components/selection-bar";
 export type { RecordHeaderProps, RecordFact } from "./components/record-header";
 
 // Primitives

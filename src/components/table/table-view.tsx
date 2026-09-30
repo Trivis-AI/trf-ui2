@@ -38,6 +38,7 @@ import {
 } from "../ui/table";
 import { TableProgress } from "./table-progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { SelectionBar } from "../selection-bar";
 
 /**
  * Per-column inline cell-editor descriptor. A column opts a cell into inline
@@ -175,8 +176,22 @@ export interface TableViewProps<TData> {
   enableRowSelection?: boolean;
   /** Show the header select-all checkbox. Default true (only when selection is on). */
   enableSelectAll?: boolean;
-  /** When set, replaces the column-header row with this bulk toolbar (selection active). */
+  /**
+   * Actions for the selected rows (`SelectionBarAction`s, optionally grouped with
+   * `SelectionBarGroup`). While `bulkCount` > 0 they float in a `SelectionBar` at the
+   * bottom centre of the table; the column header stays put.
+   */
   bulkBar?: React.ReactNode;
+  /** Number of selected rows; the bar shows while it is above 0. */
+  bulkCount?: number;
+  /** Optional facts about the selection, e.g. the sum of the selected invoices. */
+  bulkInfo?: React.ReactNode;
+  /** Translated "N selected" line. Default `${count} selected`. */
+  bulkCountLabel?: React.ReactNode;
+  /** Translated tooltip for the bar's X. Default "Clear selection". */
+  bulkClearLabel?: string;
+  /** Clears the selection (the bar's X and Esc). */
+  onBulkClear?: () => void;
   /** Drag headers to reorder columns (drives the table's columnOrder state). */
   enableColumnReorder?: boolean;
   /**
@@ -322,6 +337,7 @@ function DraggableHeader<TData>({
       ref={setNodeRef}
       style={style}
       colSpan={header.colSpan}
+      data-pinned={header.column.columnDef.meta?.sticky === "right" ? "" : undefined}
       className={cn(
         alignClass(align),
         stickyClass,
@@ -361,6 +377,11 @@ export function TableView<TData>({
   enableRowSelection = false,
   enableSelectAll = true,
   bulkBar,
+  bulkCount = 0,
+  bulkInfo,
+  bulkCountLabel,
+  bulkClearLabel,
+  onBulkClear,
   enableColumnReorder = false,
   view = "list",
   minCardWidth,
@@ -450,7 +471,9 @@ export function TableView<TData>({
   const headStickyClass = stickyHeader
     ? cn(
         stickToPage ? "top-[var(--trf-topbar-h,0px)]" : "top-0",
-        "sticky z-20 bg-background shadow-[inset_0_-1px_0_var(--border)]",
+        // One inset shadow draws the column rule (right) and the divider (bottom);
+        // the last cell keeps only the divider.
+        "sticky z-20 bg-background shadow-[inset_-1px_-1px_0_var(--border)] last:shadow-[inset_0_-1px_0_var(--border)]",
       )
     : undefined;
 
@@ -481,16 +504,7 @@ export function TableView<TData>({
     // not trap the sticky header — it backs off entirely when sticky is on.
     <Table className={className} containerClassName={stickyHeader ? "overflow-x-visible" : undefined}>
       <TableHeader className={stickyHeader ? "[&_tr]:border-b-0" : undefined}>
-        {bulkBar ? (
-          // Selection active: the column-header row becomes the bulk toolbar.
-          <TableRow className="hover:bg-transparent">
-            {selectionHead}
-            <TableHead colSpan={leafColumns.length} className={headStickyClass}>
-              <div className="flex items-center gap-2">{bulkBar}</div>
-            </TableHead>
-          </TableRow>
-        ) : (
-          headerGroups.map((hg) => (
+        {headerGroups.map((hg) => (
             <TableRow key={hg.id}>
               {selectionHead}
               {enableColumnReorder ? (
@@ -507,11 +521,11 @@ export function TableView<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    data-pinned={header.column.columnDef.meta?.sticky === "right" ? "" : undefined}
                     className={cn(
                       alignClass(header.column.columnDef.meta?.align),
                       headStickyClass,
                       header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
-        header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                       header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                       header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
@@ -521,8 +535,7 @@ export function TableView<TData>({
                 ))
               )}
             </TableRow>
-          ))
-        )}
+          ))}
       </TableHeader>
       <TableBody>
         {loading ? (
@@ -588,6 +601,7 @@ export function TableView<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
+                      data-pinned={cell.column.columnDef.meta?.sticky === "right" ? "" : undefined}
                       className={cn(
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
@@ -614,16 +628,49 @@ export function TableView<TData>({
     </Table>
   );
 
+  // The selection bar floats at the bottom centre of the table. The spacer gives it
+  // a band under the last row to rest in, as tall as the bar itself (it grows with
+  // the info row), so no row stays hidden behind it; the zero-height sticky anchor
+  // pins it to the bottom of whatever part of the table is visible (the page's
+  // scroller in page mode, the table's own box otherwise).
+  const barBoxRef = React.useRef<HTMLDivElement>(null);
+  const [barHeight, setBarHeight] = React.useState(0);
+  React.useLayoutEffect(() => {
+    const el = barBoxRef.current;
+    if (!el) return;
+    const measure = () => setBarHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [bulkBar ? view : null]);
+  const selectionBar = bulkBar ? (
+    <>
+      <div
+        aria-hidden
+        className="transition-[height] duration-200 motion-reduce:transition-none"
+        style={{ height: bulkCount > 0 && barHeight > 0 ? barHeight + 24 : 0 }}
+      />
+      <div className="pointer-events-none sticky bottom-3 left-0 z-30 h-0">
+        <div ref={barBoxRef} className="absolute inset-x-0 bottom-3 flex justify-center px-4">
+          <SelectionBar
+            open={bulkCount > 0}
+            count={bulkCount}
+            info={bulkInfo}
+            countLabel={bulkCountLabel}
+            clearLabel={bulkClearLabel}
+            onClear={() => onBulkClear?.()}
+          >
+            {bulkBar}
+          </SelectionBar>
+        </div>
+      </div>
+    </>
+  ) : null;
+
   if (view === "cards") {
     return (
       <div className={cn("relative rounded-lg border border-border", className)}>
-        {/* A grid has no column-header row to take over, so the bulk toolbar gets its
-            own strip above the cards rather than disappearing in this view. */}
-        {bulkBar && (
-          <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
-            {bulkBar}
-          </div>
-        )}
         <CardView<TData>
           rows={rows}
           enableRowSelection={enableRowSelection}
@@ -632,6 +679,7 @@ export function TableView<TData>({
           emptyMessage={emptyMessage}
           minCardWidth={minCardWidth}
         />
+        {selectionBar}
         {fetching && !loading && <TableProgress className="absolute inset-x-0 top-0 z-20" />}
       </div>
     );
@@ -664,6 +712,7 @@ export function TableView<TData>({
       ) : (
         tableEl
       )}
+      {selectionBar}
       {fetching && !loading && (
         <TableProgress
           className="absolute inset-x-0 z-20"

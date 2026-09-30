@@ -136,6 +136,12 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
 
 ## Log
 
+- 2026-09-30: ui2 v7.15.0: floating SelectionBar for bulk actions (replaces the header-row
+  bulk bar), table headers 14px regular, and a 1px grid on every table (vertical rules as
+  inset shadows so a stuck header keeps them). Consumers of `bulkActions` move to
+  `SelectionBarAction`s: frontinvoices and frontpurchase invoice lists (with Net/VAT/Total),
+  frontpurchase import, frontcrm contacts and tasks.
+
 - 2026-09-29: audit done. ui2 v7.11.0 and app-shell v0.39.0 released. All 13 shell apps
   bumped, ready lists opted in, pushed to staging. Phase 4 done for frontinvoices,
   frontpurchase, frontpayments (on staging); the other 11 repos in progress.

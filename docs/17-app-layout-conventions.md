@@ -104,7 +104,9 @@ Reference: frontpurchase `src/pages/invoices/InvoiceEdit.tsx`.
   refetch; pass `fetching={query.isFetching && !query.isLoading}`).
 - Row click navigates to detail (`onRowClick`); no link column.
 - Where bulk operations exist, wire `enableRowSelection` + `enableSelectAll` +
-  `getRowId` + `selectedRowIds` + `bulkActions`, with a `useConfirm` dialog per action.
+  `getRowId` + `selectedRowIds` + `bulkActions` (`SelectionBarAction`s in the floating
+  selection bar; `bulkInfo` for sums over the selection), with a `useConfirm` dialog per
+  action.
 
 Reference: frontinvoices `src/pages/invoices/InvoiceList.tsx`.
 

@@ -63,6 +63,7 @@
     "InlineEditCell": "08-ui-components/server-data-table.md",
     "CellEditor": "08-ui-components/server-data-table.md",
     "TablePage": "08-ui-components/server-data-table.md",
+    "SelectionBar": "08-ui-components/server-data-table.md",
     "useTableQuery": "08-ui-components/server-data-table.md",
     "createHistoryUrlState": "08-ui-components/server-data-table.md",
     "TableSearch": "08-ui-components/server-data-table.md",
