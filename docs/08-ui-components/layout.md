@@ -7,7 +7,7 @@ The most-used layer in the apps. Compose screens from these instead of hand-writ
 
 ## Page — the screen container
 
-Width-capped, centered, padded. Put a `PageHeader` and a `Stack` inside.
+Width-capped, padded, anchored left (no centering since v7.16.0: pages start at the same left edge as the shell bar and the lists). Put a `PageHeader` and a `Stack` inside.
 
 ```tsx
 <Page size="lg">

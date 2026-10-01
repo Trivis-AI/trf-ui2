@@ -103,6 +103,14 @@
   --input: oklch(0.89 0.012 240);
   --ring: oklch(0.22 0.018 240);
 
+  /* The sidebar rail and the inside of input fields. Every theme but Default
+   * leaves them alone: the rail is card-colored and a field shows the page
+   * background, as before these tokens existed. Declared once here; the var()
+   * resolves on <html>, so it follows each theme's and .dark's --card and
+   * --background without restating them. */
+  --sidebar: var(--card);
+  --field: var(--background);
+
   /* Chart series colors (Chart component). Spans hues away from
    * --destructive (25) and --warning (75) so a chart series is never
    * confused with an error/warning color; distinct lightness/chroma per
@@ -218,6 +226,7 @@
  * semantic status colours --destructive / --success / --warning (those stay the
  * system's red/green/amber, inherited from :root / .dark) — so "delete"/error always
  * reads red regardless of theme — nor --radius / fonts / --font-scale (colour only).
+ * The one exception is Default (last below), which also sets --radius.
  *
  * Colours are adapted from tweakcn (Tailwind v4 / oklch export); chart-*, sidebar-*,
  * radius, fonts and shadows from the export are dropped — we only keep core tokens.
@@ -593,6 +602,23 @@
   --ring: oklch(0.7729 0.1535 163.2231);
 }
 
+/* --- Default: Trivis with the page and the sidebar swapped (2026-10-01) -----
+ * Everything Trivis has, except: the page takes the sidebar's color and the
+ * sidebar the page's, input fields share the sidebar's color, and corners are
+ * 6px instead of 4px. Cards stay --card, so on the light page they read by
+ * their border. The localhost default. */
+.theme-default {
+  --radius: 0.375rem; /* 6px */
+  --background: oklch(1 0 0);        /* Trivis --card */
+  --sidebar: oklch(0.98 0.005 240);  /* Trivis --background */
+  --field: oklch(0.98 0.005 240);
+}
+.theme-default.dark {
+  --background: oklch(0.25 0.018 240); /* Trivis dark --card */
+  --sidebar: oklch(0.22 0.018 240);    /* Trivis dark --background */
+  --field: oklch(0.22 0.018 240);
+}
+
 @theme inline {
   /* Derived radius scale — all computed from --radius. Change the base, all of these move. */
   --radius-sm: calc(var(--radius) - 4px);
@@ -656,6 +682,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-field: var(--field);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

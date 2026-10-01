@@ -81,7 +81,8 @@ export function TablePage({
 }: TablePageProps) {
   return (
     // px-6 matches Page's gutter so full-width list pages and constrained pages share the same left edge.
-    <div className={cn("mx-auto flex w-full flex-col gap-4 px-6 py-6", pageSizeClass(size), className)}>
+    // Anchored left like Page: a capped size stops at its width instead of centering.
+    <div className={cn("flex w-full flex-col gap-4 px-6 py-6", pageSizeClass(size), className)}>
       {/* Header (skipped entirely when the shell bar carries title and actions) */}
       {(title != null || description != null || primaryAction || secondaryActions) && (
         <div className="flex items-start justify-between gap-4">

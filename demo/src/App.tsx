@@ -3228,6 +3228,7 @@ const GROUPS: GroupDef[] = [
 /* ------------------------------------------------------------------ app */
 
 const THEME_OPTIONS = [
+  { value: "default", label: "Default" },
   { value: "trivis", label: "Trivis" },
   { value: "neutral", label: "Neutral" },
   { value: "amber", label: "Amber" },
@@ -3340,7 +3341,8 @@ function SidebarSearchBox({ query, setQuery, onPick }: {
 export function App() {
   const [dark, setDark] = useState(false);
   // "trivis" = the default brand theme (base :root/.dark, no class). Other values add a theme-* class.
-  const [theme, setTheme] = useState("trivis");
+  // Default is the localhost theme (as in app-shell); deployed demos open on Trivis.
+  const [theme, setTheme] = useState(() => (window.location.hostname === "localhost" ? "default" : "trivis"));
   const [radius, setRadius] = useState(8);
   const [textSize, setTextSize] = useState<SizeBracket>("M");
   // Deep-linkable sections: /#<section-id> opens that section (falls back to Buttons).
@@ -3473,7 +3475,7 @@ export function App() {
         {activeSection.id === "server-datatable" ? (
           <div className="w-full px-6 py-8">{activeSection.render()}</div>
         ) : (
-          <div className="mx-auto w-full max-w-5xl px-6 py-8">
+          <div className="w-full max-w-5xl px-6 py-8">
             <div className="flex flex-wrap items-start gap-4">{activeSection.render()}</div>
           </div>
         )}

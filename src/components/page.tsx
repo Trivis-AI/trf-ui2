@@ -24,10 +24,14 @@ export interface PageProps extends React.HTMLAttributes<HTMLDivElement> {
   size?: PageSize;
 }
 
-/** Width-constrained, centered page content container. Compose PageHeader + Stack inside. */
+/**
+ * Width-constrained page content container, anchored left: the width cap stops
+ * at its size, with no centering margin, so every page starts at the same left
+ * edge as the shell bar and the lists. Compose PageHeader + Stack inside.
+ */
 export function Page({ size = "lg", className, ...props }: PageProps) {
   return (
-    <div className={cn("mx-auto w-full px-6 py-8", SIZE[size], className)} {...props} />
+    <div className={cn("w-full px-6 py-8", SIZE[size], className)} {...props} />
   );
 }
 
