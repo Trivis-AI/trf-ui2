@@ -40,6 +40,7 @@
     "Text": "08-ui-components/typography.md",
     "Page": "08-ui-components/layout.md",
     "PageHeader": "08-ui-components/layout.md",
+    "RecordHeader": "08-ui-components/layout.md",
     "Stack": "08-ui-components/layout.md",
     "Row": "08-ui-components/layout.md",
     "Grow": "08-ui-components/layout.md",
@@ -62,6 +63,7 @@
     "InlineEditCell": "08-ui-components/server-data-table.md",
     "CellEditor": "08-ui-components/server-data-table.md",
     "TablePage": "08-ui-components/server-data-table.md",
+    "SelectionBar": "08-ui-components/server-data-table.md",
     "useTableQuery": "08-ui-components/server-data-table.md",
     "createHistoryUrlState": "08-ui-components/server-data-table.md",
     "TableSearch": "08-ui-components/server-data-table.md",
@@ -164,7 +166,11 @@
     "CardSlot": "08-ui-components/server-data-table.md",
     "TableViewMode": "08-ui-components/server-data-table.md",
     "Toaster": "08-ui-components/toaster.md",
-    "toast": "08-ui-components/toaster.md"
+    "toast": "08-ui-components/toaster.md",
+    "CountRow": "08-ui-components/dashboard-primitives.md",
+    "DeadlineItem": "08-ui-components/dashboard-primitives.md",
+    "Meter": "08-ui-components/dashboard-primitives.md",
+    "StatTile": "08-ui-components/dashboard-primitives.md"
   },
   "status": {
     "legend": {

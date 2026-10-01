@@ -131,7 +131,7 @@ export function MarkdownEditor({
   return (
     <div
       className={cn(
-        "rounded-md border border-input bg-background shadow-xs transition-colors",
+        "rounded-md border border-input bg-field shadow-xs transition-colors",
         "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background",
         disabled && "cursor-not-allowed opacity-50",
         className

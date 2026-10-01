@@ -60,6 +60,13 @@
 
   --muted: oklch(0.95 0.008 240);
   --muted-foreground: oklch(0.52 0.02 240);
+  /* Sunken: a translucent black wash that darkens whatever sits under it, so it
+     reads as recessed on every theme's background without per-theme values.
+     Used for the shell's page-meta pill. */
+  --sunken: oklch(0 0 0 / 5%);
+  /* Table header band: half the sunken wash, so column headers read as a strip
+     without competing with the meta pill. */
+  --table-head: oklch(0 0 0 / 2.5%);
 
   --accent: oklch(0.93 0.012 240);
   --accent-foreground: oklch(0.3 0.02 240);
@@ -95,6 +102,14 @@
   --border: oklch(0.89 0.012 240);
   --input: oklch(0.89 0.012 240);
   --ring: oklch(0.22 0.018 240);
+
+  /* The sidebar rail and the inside of input fields. Every theme but Default
+   * leaves them alone: the rail is card-colored and a field shows the page
+   * background, as before these tokens existed. Declared once here; the var()
+   * resolves on <html>, so it follows each theme's and .dark's --card and
+   * --background without restating them. */
+  --sidebar: var(--card);
+  --field: var(--background);
 
   /* Chart series colors (Chart component). Spans hues away from
    * --destructive (25) and --warning (75) so a chart series is never
@@ -146,6 +161,8 @@
 
   --muted: oklch(0.3 0.02 240);
   --muted-foreground: oklch(0.68 0.02 240);
+  --sunken: oklch(0 0 0 / 50%);
+  --table-head: oklch(0 0 0 / 25%);
 
   --accent: oklch(0.34 0.025 240);
   --accent-foreground: oklch(0.95 0.01 240);
@@ -209,6 +226,7 @@
  * semantic status colours --destructive / --success / --warning (those stay the
  * system's red/green/amber, inherited from :root / .dark) — so "delete"/error always
  * reads red regardless of theme — nor --radius / fonts / --font-scale (colour only).
+ * The one exception is Default (last below), which also sets --radius.
  *
  * Colours are adapted from tweakcn (Tailwind v4 / oklch export); chart-*, sidebar-*,
  * radius, fonts and shadows from the export are dropped — we only keep core tokens.
@@ -584,6 +602,23 @@
   --ring: oklch(0.7729 0.1535 163.2231);
 }
 
+/* --- Default: Trivis with the page and the sidebar swapped (2026-10-01) -----
+ * Everything Trivis has, except: the page takes the sidebar's color and the
+ * sidebar the page's, input fields share the sidebar's color, and corners are
+ * 6px instead of 4px. Cards stay --card, so on the light page they read by
+ * their border. The localhost default. */
+.theme-default {
+  --radius: 0.375rem; /* 6px */
+  --background: oklch(1 0 0);        /* Trivis --card */
+  --sidebar: oklch(0.98 0.005 240);  /* Trivis --background */
+  --field: oklch(0.98 0.005 240);
+}
+.theme-default.dark {
+  --background: oklch(0.25 0.018 240); /* Trivis dark --card */
+  --sidebar: oklch(0.22 0.018 240);    /* Trivis dark --background */
+  --field: oklch(0.22 0.018 240);
+}
+
 @theme inline {
   /* Derived radius scale — all computed from --radius. Change the base, all of these move. */
   --radius-sm: calc(var(--radius) - 4px);
@@ -625,6 +660,8 @@
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
+  --color-sunken: var(--sunken);
+  --color-table-head: var(--table-head);
   --color-muted-foreground: var(--muted-foreground);
   --color-code: var(--code);
   --color-syntax-keyword: var(--syntax-keyword);
@@ -645,6 +682,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-field: var(--field);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);

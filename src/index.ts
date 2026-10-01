@@ -64,6 +64,10 @@ export { Row, Grow } from "./components/row";
 export type { RowProps } from "./components/row";
 export { Page, PageHeader } from "./components/page";
 export type { PageProps, PageSize, PageHeaderProps } from "./components/page";
+export { RecordHeader } from "./components/record-header";
+export { SelectionBar, SelectionBarGroup, SelectionBarAction, SelectionBarFacts } from "./components/selection-bar";
+export type { SelectionBarProps, SelectionBarActionProps, SelectionFact } from "./components/selection-bar";
+export type { RecordHeaderProps, RecordFact } from "./components/record-header";
 
 // Primitives
 export { Button, buttonVariants } from "./components/ui/button";
@@ -257,6 +261,15 @@ export type { InfoGridProps, InfoFieldProps } from "./components/info-grid";
 
 export { EmptyState } from "./components/empty-state";
 export type { EmptyStateProps } from "./components/empty-state";
+
+export { StatTile } from "./components/stat-tile";
+export type { StatTileProps } from "./components/stat-tile";
+export { CountRow } from "./components/count-row";
+export type { CountRowProps } from "./components/count-row";
+export { DeadlineItem } from "./components/deadline-item";
+export type { DeadlineItemProps } from "./components/deadline-item";
+export { Meter } from "./components/meter";
+export type { MeterProps } from "./components/meter";
 
 export { LoadingState } from "./components/loading-state";
 export type { LoadingStateProps } from "./components/loading-state";

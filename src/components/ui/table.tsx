@@ -54,6 +54,15 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
 );
 TableRow.displayName = "TableRow";
 
+// The header tint is a background *image* (a flat gradient) rather than a colour:
+// it is translucent, and sticky header cells set an opaque bg-background
+// underneath it, so rows scrolling under a stuck header never show through.
+// --table-head is half the meta pill's --sunken strength.
+// Column rules (the grid's vertical lines) are inset shadows on the cells, not
+// borders: the table collapses borders, and collapsed borders belong to the table,
+// so they would stay behind when a header cell sticks. The last column has none;
+// the table's own border closes the grid. A body cell right before a pinned column
+// (data-pinned) has none either: pinned body cells draw their own left border.
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -61,7 +70,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-3 text-left align-middle text-xs font-semibold text-muted-foreground whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+      "h-10 px-3 text-left align-middle text-sm font-normal text-muted-foreground whitespace-nowrap [background-image:linear-gradient(var(--table-head),var(--table-head))] shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}
@@ -72,7 +81,7 @@ TableHead.displayName = "TableHead";
 function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={cn("px-3 py-2 align-middle [&:has([role=checkbox])]:pr-0", className)}
+      className={cn("px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0", className)}
       {...props}
     />
   );

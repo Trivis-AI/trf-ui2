@@ -8,12 +8,28 @@ import { StatusCell } from "./status-cell";
 // re-derive this per page (see docs/08-ui-components/server-data-table.md).
 
 export interface InvoiceStatusInput {
-  /** The document status: "draft" | "confirmed" | "cancelled" | "credited" | ... */
+  /** The document status: "draft" | "confirmed" | "cancelled" | ... ("credited" is legacy, see creditStatus). */
   status: string;
-  /** Payment status when the document is confirmed/active: "paid" | "partial" | "unpaid". */
+  /**
+   * Payment status when the document is confirmed/active: "paid" | "partial" | "unpaid".
+   * Measured by the backends against the OPEN balance: a document a credit has
+   * netted to zero reads "paid" (settled).
+   */
   paymentStatus?: string | null;
   /** Due date, used only to flag an unpaid confirmed invoice as overdue. */
   dueDate?: string | Date | null;
+  /**
+   * Credit dimension, independent of the document and payment status:
+   * "none" | "partial" | "credited" — how much of this invoice its credit notes reverse.
+   */
+  creditStatus?: string | null;
+  /** Amount credited so far (a magnitude), shown under a partly credited invoice. */
+  creditedAmount?: string | number | null;
+  /**
+   * The document IS a credit note (the backend's correction_type === "reversal").
+   * Decide it from that marker, never from a negative amount.
+   */
+  isCreditNote?: boolean;
   /** Injectable "today" for testing; defaults to the current date. */
   now?: Date;
 }
@@ -42,31 +58,73 @@ function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
 
+function amount2(v: string | number | null | undefined): string | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.abs(n).toFixed(2) : String(v);
+}
+
 /**
  * The single invoice-lifecycle state machine. Maps raw backend fields to a stable
- * `{ key, label, tone }`. Use this everywhere an invoice status is shown.
+ * `{ key, label, tone, note? }`. Use this everywhere an invoice status is shown.
+ *
+ * An invoice has three independent dimensions — document (draft / confirmed /
+ * cancelled), payment (unpaid / partial / paid) and credit (none / partial /
+ * credited) — and a list column has room for one pill. The pill shows the one
+ * that matters, in this order:
+ *
+ *   draft · cancelled                 the document status is the whole story
+ *   a credit note                     "Credit note"; note "Refund due" while money is owed back
+ *   fully credited                    "Credited", neutral: nothing is owed
+ *   otherwise                         Paid / Partial / Unpaid / Overdue on the open balance
+ *   … partly credited                 the same pill, note "Credited 40.00"
+ *
+ * `note` is the rare second line, rendered under the pill by InvoiceStatusCell.
  */
 export function deriveInvoiceStatus(
   input: InvoiceStatusInput,
-): { key: string; label: string; tone: StatusTone } {
-  const { status, paymentStatus, dueDate, now } = input;
+): { key: string; label: string; tone: StatusTone; note?: string } {
+  const { status, paymentStatus, dueDate, creditStatus, creditedAmount, isCreditNote, now } = input;
 
   if (status === "draft") return { key: "draft", label: "Draft", tone: "neutral" };
   if (status === "cancelled") return { key: "cancelled", label: "Cancelled", tone: "error" };
-  if (status === "credited") return { key: "credited", label: "Credited", tone: "warning" };
+
+  if (isCreditNote) {
+    // A credit note is not paid; it is netted against its original or refunded.
+    // It is still open only while money is owed back.
+    const owed = paymentStatus === "unpaid" || paymentStatus === "partial";
+    return owed
+      ? { key: "credit_note", label: "Credit note", tone: "info", note: "Refund due" }
+      : { key: "credit_note", label: "Credit note", tone: "info" };
+  }
+
+  // "credited" as a document status is the pre-migration form of the same fact.
+  if (creditStatus === "credited" || status === "credited") {
+    return { key: "credited", label: "Credited", tone: "neutral" };
+  }
+
+  const partlyCredited = creditStatus === "partial";
+  const creditNote = partlyCredited
+    ? (() => {
+        const amt = amount2(creditedAmount);
+        return amt ? `Credited ${amt}` : "Partly credited";
+      })()
+    : undefined;
+  const withCredit = (s: { key: string; label: string; tone: StatusTone }) =>
+    creditNote ? { ...s, note: creditNote } : s;
 
   // Confirmed / active: resolve by payment status.
   if (status === "confirmed" || status === "active") {
-    if (paymentStatus === "paid") return { key: "paid", label: "Paid", tone: "success" };
+    if (paymentStatus === "paid") return withCredit({ key: "paid", label: "Paid", tone: "success" });
     if (paymentStatus === "partial") {
-      return { key: "partial", label: "Partial", tone: "warning" };
+      return withCredit({ key: "partial", label: "Partial", tone: "warning" });
     }
     // Unpaid or missing payment status: overdue if the due date has passed.
     const due = toDate(dueDate);
     if (due && startOfDay(due) < startOfDay(now ?? new Date())) {
-      return { key: "overdue", label: "Overdue", tone: "error" };
+      return withCredit({ key: "overdue", label: "Overdue", tone: "error" });
     }
-    return { key: "awaiting", label: "Unpaid", tone: "info" };
+    return withCredit({ key: "awaiting", label: "Unpaid", tone: "info" });
   }
 
   // Unknown status: surface it verbatim rather than swallowing it.
@@ -152,5 +210,12 @@ export function invoiceStatusFilterFromParams(
  */
 export function InvoiceStatusCell({ className, ...input }: InvoiceStatusCellProps) {
   const s = deriveInvoiceStatus(input);
-  return <StatusCell tone={s.tone} label={s.label} className={cn("capitalize", className)} />;
+  return (
+    <StatusCell
+      tone={s.tone}
+      label={s.label}
+      subText={s.note && <span className="whitespace-nowrap normal-case">{s.note}</span>}
+      className={cn("capitalize", className)}
+    />
+  );
 }

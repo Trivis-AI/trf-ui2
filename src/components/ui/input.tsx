@@ -22,11 +22,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "file:border-0 file:bg-transparent file:text-sm file:font-medium",
-          variant === "default" && "border border-input bg-background px-3 shadow-xs",
+          variant === "default" && "border border-input bg-field px-3 shadow-xs",
           variant === "quiet" && [
             "border border-transparent bg-transparent px-2",
-            "hover:border-input hover:bg-background",
-            "focus-visible:border-input focus-visible:bg-background focus-visible:ring-offset-0",
+            "hover:border-input hover:bg-field",
+            "focus-visible:border-input focus-visible:bg-field focus-visible:ring-offset-0",
             "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           ],
           className

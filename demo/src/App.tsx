@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
-  Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil,
-  FileText, ImageIcon, X, Download, Eye,
+  Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
+  FileText, ImageIcon, X, Download, Eye, Check,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger,
   Board, CopyField, EmptyState, MultiSelect, Field, Grow, H1, H2, H3, InfoField, InfoGrid, Input, Label, LoadingState, Markdown, MarkdownEditor, SearchInput, SecretReveal,
-  Logo, PageHeader, QuantityInput, Row, Stack, StepCard, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
+  Logo, PageHeader, RecordHeader, SelectionBarAction, SelectionBarFacts, SelectionBarGroup, QuantityInput, Row, Stack, StepCard, StatTile, CountRow, DeadlineItem, Meter, Text, RadioGroup, RadioGroupItem, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue, SimpleSelect, Separator, Skeleton, Spinner, StatusBadge, type StatusTone,
   ColorBadge, ColorSwatchPicker, SWATCH_COLORS, type SwatchColor, Switch, Tabs, TabsContent, TabsList,
   TabsTrigger, Table, TableBody, TableCell,
@@ -44,7 +44,7 @@ import {
 import {
   ServerDataTable, TablePage, TableFilterBar, TableFilterNotice, TableColumnOptions, useTableQuery,
   TableViewToggle, type TableViewMode,
-  StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell,
+  StatusCell, MoneyCell, MonoCell, DateCell, TextCell, IconCell, ActionsCell, InvoiceStatusCell,
   AmountBreakdown, EditableDataTable, RowEditModal, type RowEditField,
   RecordPaymentDialog,
 } from "@trf/ui2";
@@ -676,6 +676,46 @@ function SimpleSelectDemo() {
         noneLabel="— None —"
       />
     </Field>
+  );
+}
+
+/* ------------------------------------- section: Dashboard primitives */
+
+function DashboardPrimitivesDemo() {
+  return (
+    <Stack gap={5} className="w-full max-w-2xl">
+      <div className="flex w-full gap-4">
+        <StatTile label="Käive 2026" value="21 600 €" sub="kalendriaasta algusest (jaan–sept)" />
+        <StatTile label="Kasum 2026" value="12 400 €" sub="majandusaasta algusest" />
+        <StatTile label="Raha kontodel täna" value="1 705,77 €" sub="LHV …2815 · hinnang" />
+      </div>
+      <Stack gap={2} className="max-w-md">
+        <CountRow title="Kinnitamata ostuarved" subtitle="2 ootab üle 3 päeva" count={3} tone="warning" onClick={() => toast("CountRow click")} />
+        <CountRow title="Sidumata pangaread" subtitle="2 ettepanekuga, 0 ilma" count={2} onClick={() => toast("CountRow click")} />
+        <CountRow title="Maksmata ostuarved" subtitle="kõik makstud" count={0} onClick={() => toast("CountRow click")} />
+      </Stack>
+      <Stack gap={3} className="max-w-md">
+        <DeadlineItem
+          month="OKT" day="10" title="TSD september"
+          description="Maksid 20.09 dividende 2 250 €: lisa 7 ja tulumaks 634,62 €. Oto on deklaratsiooni ette valmistanud."
+          action={<Button variant="link" size="sm" className="h-auto p-0">Vaata ja esita</Button>}
+        />
+        <DeadlineItem
+          month="OKT" day="20" title="KMD september"
+          description="Tasumisele umbes 540 €. Lõplik summa selgub pärast 3 ostuarve kinnitamist."
+        />
+      </Stack>
+      <Stack gap={2} className="max-w-md">
+        <Meter value={1} label="Dividendid ja tulumaks" valueLabel="2 884 €" />
+        <Meter value={0.38} label="Käibemaks" valueLabel="1 094 €" />
+        <Meter value={0.12} label="Tegevuskulud" valueLabel="341 €" />
+        <Meter value={0.62} />
+      </Stack>
+      <Text size="xs" tone="muted" className="w-full">
+        Dashboard primitives (doc: 08-ui-components/dashboard-primitives.md). Figures render
+        light-weight (not mono); CountRow is a button; Meter without labels renders just the track.
+      </Text>
+    </Stack>
   );
 }
 
@@ -1721,7 +1761,7 @@ function BrandMarksDemo() {
 /* ------------------------------------------------------- section: Colors */
 
 const COLOR_TOKENS = [
-  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "accent",
+  "background", "foreground", "card", "popover", "primary", "secondary", "muted", "sunken", "table-head", "accent",
   "destructive", "success", "warning", "border", "input", "ring",
 ];
 
@@ -1742,6 +1782,98 @@ function ColorBadgeDemo() {
         <ColorBadge color="">No colour set</ColorBadge>
       </Row>
     </Stack>
+  );
+}
+
+// Record pages (a contact, a contract, an entry) show the record's identity as
+// page content under the shell bar; it scrolls away, the crumb and the status
+// pill stay. Each frame mimics the real shell bar so it reads in context.
+function RecordPageFrame({ crumbs, actions, status, children }: {
+  crumbs: string[]; actions: React.ReactNode; status?: React.ReactNode; children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-background">
+      <div className="flex h-14 items-center gap-1.5 border-b border-border bg-card px-6 text-sm">
+        {crumbs.map((c, i) => (
+          <Fragment key={c}>
+            {i > 0 && <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />}
+            <span className={i === crumbs.length - 1 ? "truncate font-medium" : "shrink-0 text-muted-foreground"}>{c}</span>
+          </Fragment>
+        ))}
+        <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>
+      </div>
+      {status && (
+        <div className="px-5 pb-2 pt-3">
+          <div className="inline-flex items-center gap-3 rounded-full bg-sunken p-1 text-sm">{status}</div>
+        </div>
+      )}
+      <div className="flex flex-col gap-5 px-6 pb-6 pt-5">{children}</div>
+    </div>
+  );
+}
+
+function RecordHeaderDemo() {
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <Text size="sm" tone="muted">
+        The record's name at title size, its badges, and the identifiers people check
+        (Reg code, VAT, numbers, dates). Content, not chrome: it scrolls away with the
+        page, while the crumb and the status pill stay in the shell bar.
+      </Text>
+
+      <RecordPageFrame
+        crumbs={["CRM", "Contacts", "Honest Mistake OÜ"]}
+        actions={<><Button size="sm" variant="secondary">Log interaction</Button><Button size="sm">New deal</Button></>}
+      >
+        <RecordHeader
+          title="Honest Mistake OÜ"
+          badges={<Badge variant="secondary">Customer</Badge>}
+          facts={[
+            { label: "Reg code", value: "16281128", mono: true },
+            { label: "VAT", value: "EE102766353", mono: true },
+            { label: "Country", value: "Estonia" },
+          ]}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Contact details, addresses…</Text></CardContent></Card>
+          <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Deals, interactions…</Text></CardContent></Card>
+        </div>
+      </RecordPageFrame>
+
+      <RecordPageFrame
+        crumbs={["Contracts", "Office lease, Tallinn"]}
+        status={<StatusBadge tone="success">active</StatusBadge>}
+        actions={<><Button size="sm" variant="secondary">Suspend</Button><Button size="sm">Invoice now</Button></>}
+      >
+        <RecordHeader
+          title="Office lease, Tallinn"
+          facts={[
+            { label: "Contract no.", value: "C-2026-014", mono: true },
+            { label: "Customer", value: "Pukser OÜ" },
+            { label: "Period", value: "1 Jan 2026 – 31 Dec 2027" },
+          ]}
+          description="Monthly rent and service charge, billed on the first working day."
+        />
+        <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Items, billing schedule…</Text></CardContent></Card>
+      </RecordPageFrame>
+
+      <RecordPageFrame
+        crumbs={["Ledger", "Entries", "Entry #1042"]}
+        status={<><StatusBadge tone="success">posted</StatusBadge><Text size="sm" tone="muted" className="pr-2">Period: September 2026</Text></>}
+        actions={<><Button size="sm" variant="secondary">Reverse</Button><Button size="sm" variant="secondary" className="px-2" title="Copy" aria-label="Copy"><Copy /></Button></>}
+      >
+        <RecordHeader
+          title="Entry #1042"
+          facts={[
+            { label: "Date", value: "28 Sep 2026" },
+            { label: "Reference", value: "INV-2026-0931", mono: true },
+            { label: "Currency", value: "EUR" },
+          ]}
+          description="Sales invoice 2026-0931, Pukser OÜ"
+        />
+        <Card><CardContent className="pt-6"><Text size="sm" tone="muted">Journal lines…</Text></CardContent></Card>
+      </RecordPageFrame>
+    </div>
   );
 }
 
@@ -1845,7 +1977,6 @@ const DOC_TONE: Record<DocRow["status"], StatusTone> = {
 function GalleryViewDemo() {
   const [view, setView] = useState<TableViewMode>("cards");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   const columns: ColumnDef<DocRow>[] = useMemo(
     () => [
@@ -1938,11 +2069,13 @@ function GalleryViewDemo() {
         onSelectedRowIdsChange={setSelected}
         bulkActions={
           <>
-            <Text size="sm" weight="medium">{selectedCount} selected</Text>
-            <div className="ml-auto flex items-center gap-2">
-              <Button size="sm" variant="destructive">Delete</Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelected({})}>Cancel</Button>
-            </div>
+            <SelectionBarGroup>
+              <SelectionBarAction label="Download" icon={<Download />} onClick={() => setSelected({})} />
+            </SelectionBarGroup>
+            <SelectionBarGroup>
+              <SelectionBarAction label="Confirm" icon={<Check />} variant="success" onClick={() => setSelected({})} />
+              <SelectionBarAction label="Delete" icon={<Trash2 />} iconOnly variant="destructive" onClick={() => setSelected({})} />
+            </SelectionBarGroup>
           </>
         }
       />
@@ -2004,7 +2137,6 @@ function ServerDataTableDemo() {
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   // The mock stand-in for react-query: keeps previous data during refetch and
   // serves seen queries from cache. Bumping reloadNonce forces a background
@@ -2131,6 +2263,18 @@ function ServerDataTableDemo() {
   );
 
   const hasFilters = !!q.search || Object.keys(q.filters).length > 0;
+  // The selection bar's info row: net, VAT and total of the selected invoices on this page.
+  const selectedTotal = rows.filter((r) => selected[r.number]).reduce((sum, r) => sum + r.totalGross, 0);
+  const money = (n: number) => n.toLocaleString("en-GB", { style: "currency", currency: "EUR" });
+  // Filter marks in the column headers: the page words them, the table draws them.
+  const activeFilters = {
+    ...(q.filters.status && {
+      status: { label: `Status: ${q.filters.status}`, onClear: () => q.setFilter("status", ""), clearHint: "Click to clear" },
+    }),
+    ...(q.filters.method && {
+      method: { label: `Method: ${q.filters.method}`, onClear: () => q.setFilter("method", ""), clearHint: "Click to clear" },
+    }),
+  };
 
   return (
     <div className="w-full">
@@ -2199,6 +2343,8 @@ function ServerDataTableDemo() {
         }}
       >
         <ServerDataTable<InvoiceRow>
+          stickyHeader="page"
+          activeFilters={activeFilters}
           columns={columns}
           data={rows}
           pageIndex={q.pageIndex}
@@ -2222,11 +2368,25 @@ function ServerDataTableDemo() {
           onSelectedRowIdsChange={setSelected}
           bulkActions={
             <>
-              <Text size="sm" className="font-medium">{selectedCount} selected</Text>
-              <Button variant="secondary" size="sm">Export</Button>
-              <Button variant="destructive" size="sm">Delete</Button>
-              <Button variant="ghost" size="sm" onClick={() => setSelected({})}>Cancel</Button>
+              <SelectionBarGroup>
+                <SelectionBarAction label="Download" icon={<Download />} tooltip="Download the selected invoices as PDFs" onClick={() => setSelected({})} />
+              </SelectionBarGroup>
+              <SelectionBarGroup>
+                <SelectionBarAction label="Confirm" icon={<Check />} variant="success" tooltip="Confirm the selected drafts" onClick={() => setSelected({})} />
+                <SelectionBarAction label="Delete" icon={<Trash2 />} iconOnly variant="destructive" tooltip="Delete the selected invoices" onClick={() => setSelected({})} />
+              </SelectionBarGroup>
             </>
+          }
+          bulkInfo={
+            selectedTotal > 0 ? (
+              <SelectionBarFacts
+                items={[
+                  { label: "Net", value: money(selectedTotal / 1.24) },
+                  { label: "VAT 24%", value: money(selectedTotal - selectedTotal / 1.24) },
+                  { label: "Total", value: money(selectedTotal), strong: true },
+                ]}
+              />
+            ) : undefined
           }
           onCellEdit={(rowId, columnId, value) =>
             setEdits((prev) => ({ ...prev, [rowId]: { ...prev[rowId], [columnId]: value } }))
@@ -2783,6 +2943,24 @@ const GROUPS: GroupDef[] = [
           </>
         ),
       },
+      {
+        // Document, payment and credit are three backend fields; the pill shows
+        // the one that matters and a rare second line (task #262).
+        id: "invoicestatus", label: "Invoice status", render: () => (
+          <div className="flex flex-wrap items-start gap-6">
+            <InvoiceStatusCell status="draft" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2099-01-01" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2020-01-01" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="partial" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="paid" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="paid" creditStatus="credited" creditedAmount="100" />
+            <InvoiceStatusCell status="confirmed" paymentStatus="unpaid" dueDate="2099-01-01" creditStatus="partial" creditedAmount="40" />
+            <InvoiceStatusCell status="confirmed" isCreditNote paymentStatus="paid" />
+            <InvoiceStatusCell status="confirmed" isCreditNote paymentStatus="unpaid" />
+            <InvoiceStatusCell status="cancelled" />
+          </div>
+        ),
+      },
       { id: "colorbadge", label: "Color badge", render: () => <ColorBadgeDemo /> },
       { id: "combobox", label: "Combobox", render: () => <ComboboxDemo /> },
       { id: "async-combobox", label: "Async combobox", render: () => <AsyncComboboxDemo /> },
@@ -2910,6 +3088,7 @@ const GROUPS: GroupDef[] = [
       { id: "multi-select", label: "Multi select", render: () => <MultiSelectDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
+      { id: "dashboard-primitives", label: "Dashboard primitives", render: () => <DashboardPrimitivesDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
       { id: "attachment-dropzone", label: "Attachment dropzone", render: () => <AttachmentDropzoneDemo /> },
       {
@@ -2958,6 +3137,7 @@ const GROUPS: GroupDef[] = [
         ),
       },
       { id: "confirm", label: "Confirm dialog", render: () => <ConfirmDialogDemo /> },
+      { id: "record-header", label: "Record header", render: () => <RecordHeaderDemo /> },
       { id: "floating-window", label: "Floating window", render: () => <FloatingWindowDemo /> },
     ],
   },
@@ -3048,6 +3228,7 @@ const GROUPS: GroupDef[] = [
 /* ------------------------------------------------------------------ app */
 
 const THEME_OPTIONS = [
+  { value: "default", label: "Default" },
   { value: "trivis", label: "Trivis" },
   { value: "neutral", label: "Neutral" },
   { value: "amber", label: "Amber" },
@@ -3160,10 +3341,12 @@ function SidebarSearchBox({ query, setQuery, onPick }: {
 export function App() {
   const [dark, setDark] = useState(false);
   // "trivis" = the default brand theme (base :root/.dark, no class). Other values add a theme-* class.
-  const [theme, setTheme] = useState("trivis");
+  // Default is the localhost theme (as in app-shell); deployed demos open on Trivis.
+  const [theme, setTheme] = useState(() => (window.location.hostname === "localhost" ? "default" : "trivis"));
   const [radius, setRadius] = useState(8);
   const [textSize, setTextSize] = useState<SizeBracket>("M");
-  const [active, setActive] = useState("buttons");
+  // Deep-linkable sections: /#<section-id> opens that section (falls back to Buttons).
+  const [active, setActive] = useState(() => window.location.hash.slice(1) || "buttons");
   const [query, setQuery] = useState("");
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
@@ -3182,6 +3365,19 @@ export function App() {
 
   const hits = useMemo(() => searchSections(query), [query]);
   const pickSection = (id: string) => { setActive(id); setQuery(""); };
+
+  // Publish the top bar's height as --trf-topbar-h, as @trf/app-shell does, so
+  // page-mode table headers (stickyHeader="page") stick right under it.
+  const topBarRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = topBarRef.current;
+    if (!el) return;
+    const publish = () => document.documentElement.style.setProperty("--trf-topbar-h", `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -3234,7 +3430,7 @@ export function App() {
         }
       >
         {/* Top bar */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
+        <div ref={topBarRef} className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-background/80 px-6 py-3 backdrop-blur">
           <div className="flex items-baseline gap-2">
             <H2>{activeSection.label}</H2>
             <Text size="xs" tone="muted">kitchen sink</Text>
@@ -3279,7 +3475,7 @@ export function App() {
         {activeSection.id === "server-datatable" ? (
           <div className="w-full px-6 py-8">{activeSection.render()}</div>
         ) : (
-          <div className="mx-auto w-full max-w-5xl px-6 py-8">
+          <div className="w-full max-w-5xl px-6 py-8">
             <div className="flex flex-wrap items-start gap-4">{activeSection.render()}</div>
           </div>
         )}

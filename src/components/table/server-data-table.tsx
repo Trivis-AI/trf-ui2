@@ -10,7 +10,7 @@ import {
   type Updater,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { TableView } from "./table-view";
+import { TableView, type ColumnFilterMark } from "./table-view";
 import type { TableViewMode } from "./card-view";
 import { InlineEditCell } from "./inline-edit-cell";
 
@@ -51,8 +51,18 @@ export interface ServerDataTableProps<TData> {
   selectedRowIds?: Record<string, boolean>;
   onSelectedRowIdsChange?: (next: Record<string, boolean>) => void;
   getRowId?: (row: TData) => string;
-  /** Bulk toolbar shown in place of the column-header row while rows are selected. */
+  /**
+   * Actions for the selected rows, shown in a floating SelectionBar at the bottom
+   * centre of the table while any row is selected (`SelectionBarAction`s, grouped
+   * with `SelectionBarGroup` when useful). The bar's X and Esc clear the selection.
+   */
   bulkActions?: React.ReactNode;
+  /** Optional facts about the selection shown in the bar, e.g. the selected total. */
+  bulkInfo?: React.ReactNode;
+  /** Translated "N selected" line for the bar. Default `${count} selected`. */
+  bulkCountLabel?: (count: number) => React.ReactNode;
+  /** Translated tooltip for the bar's X. Default "Clear selection". */
+  bulkClearLabel?: string;
 
   // Inline editing (optional). Columns opt in with `meta.editor`; without this
   // handler those columns render normally, so adding an editor descriptor is
@@ -80,7 +90,9 @@ export interface ServerDataTableProps<TData> {
   expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
   /** Default true. */
-  stickyHeader?: boolean;
+  stickyHeader?: boolean | "page";
+  /** Active filters by column id: marks those column headers. See TableView. */
+  activeFilters?: Record<string, ColumnFilterMark>;
   /** "list" (default) or "cards". See TableView's `view`. */
   view?: TableViewMode;
   /** Minimum card width in `view="cards"`. Default 16rem. */
@@ -121,6 +133,9 @@ export function ServerDataTable<TData>({
   onSelectedRowIdsChange,
   getRowId,
   bulkActions,
+  bulkInfo,
+  bulkCountLabel,
+  bulkClearLabel,
   onCellEdit,
   readOnly = false,
   renderSubRow,
@@ -130,6 +145,7 @@ export function ServerDataTable<TData>({
   expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
+  activeFilters,
   view,
   minCardWidth,
   virtualize = false,
@@ -248,13 +264,19 @@ export function ServerDataTable<TData>({
       expandOnRowClick={expandOnRowClick}
       rowClassName={rowClassName}
       stickyHeader={stickyHeader}
+      activeFilters={activeFilters}
       virtualize={virtualize}
       emptyMessage={emptyMessage}
       skeletonRows={skeletonRows ?? pageSize}
       renderSubRow={renderSubRow}
       enableRowSelection={enableRowSelection}
       enableSelectAll={enableSelectAll}
-      bulkBar={selectedCount > 0 ? bulkActions : undefined}
+      bulkBar={bulkActions}
+      bulkCount={selectedCount}
+      bulkInfo={bulkInfo}
+      bulkCountLabel={bulkCountLabel?.(selectedCount)}
+      bulkClearLabel={bulkClearLabel}
+      onBulkClear={() => handleSelectionChange({})}
       enableColumnReorder={false}
       view={view}
       minCardWidth={minCardWidth}

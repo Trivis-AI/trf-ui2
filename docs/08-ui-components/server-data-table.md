@@ -123,9 +123,68 @@ table.
 | `loading` / `fetching` | `false` | The two-state loading model above. |
 | `onRowClick` | optional | Whole-row click opens the item. No per-row "Open" button (guardrail). |
 | `rowClassName` | optional | e.g. archived rows `opacity-60`. |
-| `stickyHeader` | `true` | |
+| `stickyHeader` | `true` | `"page"` on a list page: the page scrolls and the header sticks under the shell bar (doc 17 §4). |
+| `activeFilters` | none | `{ [columnId]: { label, onClear?, clearHint? } }`. Marks a filtered column's header with a filter icon; the tooltip shows `label`, and with `onClear` the icon clears that filter. Build it from `useTableQuery`'s `filters` with your own option labels. |
 | `virtualize` | `false` | Reserved; auto-on above a threshold once virtualization lands. |
 | `mode` | `"pagination"` | `"infinite"` is reserved for a later add. |
+
+### Selection bar (bulk actions)
+
+While rows are selected, `bulkActions` renders in a floating bar at the bottom centre of
+the table. It sticks to the bottom of the viewport while the table continues below, and
+rests in a band under the last row at the end, so no row stays hidden behind it. It slides
+up on selection and down when the selection clears (its X, Esc, or the page clearing it
+after an action). Esc is ignored while a dialog, menu or text field has focus.
+
+```tsx
+<ServerDataTable
+  enableRowSelection enableSelectAll getRowId={(r) => r.id}
+  selectedRowIds={selected} onSelectedRowIdsChange={setSelected}
+  bulkCountLabel={(n) => `${n} ${t.translate('<trn-selected>', 'selected')}`}
+  bulkClearLabel={t.translate('<trn-clear-selection>', 'Clear selection')}
+  bulkActions={<>
+    <SelectionBarGroup>
+      <SelectionBarAction label="Download" icon={<Download />} onClick={download} />
+    </SelectionBarGroup>
+    <SelectionBarGroup>
+      <SelectionBarAction label="Confirm" icon={<Check />} variant="success" onClick={confirm} />
+      <SelectionBarAction label="Delete" icon={<Trash2 />} iconOnly variant="destructive" onClick={remove} />
+    </SelectionBarGroup>
+  </>}
+  bulkInfo={<SelectionBarFacts items={[
+    { label: 'Net', value: net }, { label: 'VAT', value: vat }, { label: 'Total', value: total, strong: true },
+  ]} />}
+/>
+```
+
+- Without `bulkInfo` the bar is one row: the count, the groups (split by a thin rule), X.
+- With `bulkInfo` a full-width muted box holds the count and the facts (right-aligned), and
+  the buttons follow on their own row, without dividers.
+- Do not add your own "N selected" text or a Cancel button: the bar has both.
+- Every action shows a tooltip (its label, or `tooltip`). `iconOnly` moves the label there.
+  Variants: `secondary` (default), `primary`, `success` (confirm-like), `destructive`
+  (delete-like). `loading` swaps the icon for a spinner.
+
+### Filter marks in column headers
+
+A filter that narrows one column is marked in that column's header, so the header
+still says what the list is narrowed to after the filter bar has scrolled away:
+
+```tsx
+const activeFilters = {
+  ...(q.filters.status && {
+    status: {
+      label: `${t.translate('<trn-status>', 'Status')}: ${statusLabel(q.filters.status)}`,
+      onClear: () => q.setFilter('status', ''),
+      clearHint: t.translate('<trn-click-to-clear>', 'Click to clear'),
+    },
+  }),
+}
+<ServerDataTable activeFilters={activeFilters} … />
+```
+
+Filters with no column of their own (search, "include archived") stay in the filter
+bar only. `DataTable` takes the same prop.
 
 ## `useTableQuery`
 
@@ -206,7 +265,8 @@ it is called. `TablePage` uses structured props, not one free-form slot:
 - **Filters**: the filter bar between toolbar and table, with an auto ghost `Clear`.
 - **Notice**: full-width strip between the filter row and the table (`notice`), for
   filter state that must stay visible — never for errors or empty states.
-- **Bulk actions**: a bar above the table when rows are selected (`bulkActions`).
+- **Bulk actions**: a floating `SelectionBar` at the bottom centre of the table while rows
+  are selected (`bulkActions`, optional `bulkInfo`). See "Selection bar" below.
 - **Pagination**: always the footer, one consistent format.
 
 Copy conventions baked in as defaults: primary create button `New <Noun>`, search
@@ -221,7 +281,7 @@ helper used inside `ColumnDef.cell`, composing existing ui2 primitives.
 | Cell | Use |
 |---|---|
 | `StatusCell` | `StatusBadge` pill, optional inline sub-text. Status column always uses this. |
-| `InvoiceStatusCell` | Canonical sell-invoice lifecycle pill. Maps `{ status, paymentStatus, dueDate }` to Draft / Awaiting payment / Partially paid / Paid / Overdue / Credited / Cancelled via `deriveInvoiceStatus`. Use for every invoice status, never re-derive the tone per page. |
+| `InvoiceStatusCell` | Canonical invoice lifecycle pill (sales and purchase). Maps `{ status, paymentStatus, dueDate, creditStatus, creditedAmount, isCreditNote }` to Draft / Cancelled / Credit note / Credited / Paid / Partial / Unpaid / Overdue via `deriveInvoiceStatus`. Document, payment and credit are three independent backend fields; the pill shows the one that matters and puts the rare extra fact on a second line ("Refund due" on a credit note still owed back, "Credited 40.00" on a partly credited invoice). Pass `isCreditNote` from `correction_type === "reversal"`, never from a negative amount. Use for every invoice status, never re-derive the tone per page. |
 | `MoneyCell` | Right-aligned, `tabular-nums`, mono; passes raw backend strings through. `signed` variant colors +/-. |
 | `MonoCell` | Codes / SKU / IBAN / numbers, with empty fallback. |
 | `DateCell` | Date / datetime / date-range, one canonical format. Never format dates per page. |
@@ -275,8 +335,8 @@ Notes:
   title and the rest become meta lines, so a gallery is usable before anyone annotates.
 - **A `meta` line's label is the column `header`**, and only when that header is a plain
   string. A header rendered as a node has no text to borrow, so the value renders full-width.
-- **Selection works in both views.** The bulk toolbar normally replaces the column-header
-  row; a grid has no header row, so in card mode it becomes a strip above the cards.
+- **Selection works in both views.** The selection bar floats over the table in list view
+  and over the grid in card view.
 - **`minCardWidth`** (default `16rem`) is the reflow threshold; the grid is
   `auto-fill, minmax(minCardWidth, 1fr)`, so column count follows the container.
 - **Media wants a `width: "min"` column** so the same cell stays a thumbnail in list view.

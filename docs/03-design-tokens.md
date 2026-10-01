@@ -35,13 +35,37 @@ See [08-ui-components/typography.md](08-ui-components/typography.md).
 
 | Group | Tokens |
 |---|---|
-| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent` |
+| Surface | `background`, `card`, `popover`, `muted`, `secondary`, `accent`, `sunken`, `table-head`, `sidebar`, `field` |
 | Text-on-surface | `foreground`, `card-foreground`, `popover-foreground`, `muted-foreground`, `secondary-foreground`, `accent-foreground`, `primary-foreground` |
 | Interactive | `primary`, `border`, `input`, `ring` |
 | Status | `destructive`, `success`, `warning` (+ each `*-foreground`) |
 
 Use them as Tailwind utilities: `bg-primary`, `text-muted-foreground`, `border-input`,
 `bg-destructive`, `text-success-foreground`. Opacity is allowed (`bg-primary/90`).
+
+`sunken` is the one translucent surface: black at 5% in light and 50% in dark, so it
+darkens whatever sits under it and reads as recessed on every theme without per-theme
+values. It backs the shell's page-meta pill (`ShellBarMeta`). Use `bg-sunken` for a
+recessed strip or pill on the page background; for a flat grey block, use `bg-muted`.
+
+`table-head` is the same wash at half strength (2.5% light, 25% dark): the band behind
+every table's column headers. `TableHead` applies it as a background image over its
+own background, so a sticky header stays opaque.
+
+`sidebar` is the sidebar rail (`Sidebar`), and `field` the inside of every input surface
+(`Input`, `Textarea`, the select, combobox, date and month pickers, the markdown editor).
+They default to `card` and `background`, which is how those surfaces looked before the
+tokens existed, so only a theme that sets them changes anything. Use `bg-field` for a
+hand-built input-like box; buttons stay on `bg-background`.
+
+### Themes and the Default theme
+
+Themes are classes on `<html>` (`theme-amber`, ...), composed with `.dark`; no class is
+the Trivis base. They change colour only, except **Default** (`theme-default`, 2026-10-01):
+Trivis with the page and the sidebar swapped (the page takes the old card white, the
+sidebar the old page tint), input fields on the sidebar's tint, and `--radius` 6px instead
+of 4px. Cards keep `--card`, so on the white page they read by their border. app-shell
+opens on Default on localhost; everywhere else the stored pick or Trivis.
 
 ### `--primary` is theme-dependent (brand + action)
 

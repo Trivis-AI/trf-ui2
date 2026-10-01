@@ -23,7 +23,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronsUpDown, ChevronUp, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronsUpDown, ChevronUp, Filter, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { CardView, type CardSlot, type TableViewMode } from "./card-view";
 import { Checkbox } from "../ui/checkbox";
@@ -37,6 +37,8 @@ import {
   TableRow,
 } from "../ui/table";
 import { TableProgress } from "./table-progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { SelectionBar } from "../selection-bar";
 
 /**
  * Per-column inline cell-editor descriptor. A column opts a cell into inline
@@ -110,6 +112,20 @@ declare module "@tanstack/react-table" {
   }
 }
 
+/**
+ * A filter applied to one column, marked in that column's header. Pages build
+ * these from their filter state (useTableQuery's `filters`) because only the page
+ * knows its option labels: the mark says "Status: Paid", not "status=paid".
+ */
+export interface ColumnFilterMark {
+  /** What the filter keeps, in words. Shown in the tooltip. */
+  label: React.ReactNode;
+  /** Clears this filter. With it, the mark is a button. */
+  onClear?: () => void;
+  /** Second tooltip line when clearable, e.g. a translated "Click to clear". */
+  clearHint?: React.ReactNode;
+}
+
 export interface TableViewProps<TData> {
   /** A built TanStack table instance (client or manual models). */
   table: TanStackTable<TData>;
@@ -125,8 +141,26 @@ export interface TableViewProps<TData> {
    */
   expandOnRowClick?: boolean;
   rowClassName?: (row: TData) => string | undefined;
-  /** Pin the header to the top of the scroll container. Default true. */
-  stickyHeader?: boolean;
+  /**
+   * Keep the column header in view while scrolling. Default true.
+   *
+   * - `true`: the table owns its scroll box, capped to the viewport, and the
+   *   header sticks to the top of that box.
+   * - `"page"`: the page scrolls, and the header sticks to the page right under
+   *   the shell's top bar (`--trf-topbar-h`), so filters above the table scroll
+   *   away. Pure CSS sticky, so it stays smooth on every platform. While the
+   *   table is wider than its container, the table falls back to its own scroll
+   *   box, because a horizontally scrolling wrapper would trap a page-sticky
+   *   header.
+   * - `false`: the header scrolls away with the rows.
+   */
+  stickyHeader?: boolean | "page";
+  /**
+   * Active filters by column id. A marked column shows a filter icon in its
+   * header whose tooltip describes the filter, so a stuck header still says
+   * what the list is narrowed to after the filter bar has scrolled away.
+   */
+  activeFilters?: Record<string, ColumnFilterMark>;
   /**
    * Row virtualization. Reserved seam: the prop is accepted so callers can opt in,
    * but windowing is not active yet (needs @tanstack/react-virtual). Rows render in
@@ -142,8 +176,22 @@ export interface TableViewProps<TData> {
   enableRowSelection?: boolean;
   /** Show the header select-all checkbox. Default true (only when selection is on). */
   enableSelectAll?: boolean;
-  /** When set, replaces the column-header row with this bulk toolbar (selection active). */
+  /**
+   * Actions for the selected rows (`SelectionBarAction`s, optionally grouped with
+   * `SelectionBarGroup`). While `bulkCount` > 0 they float in a `SelectionBar` at the
+   * bottom centre of the table; the column header stays put.
+   */
   bulkBar?: React.ReactNode;
+  /** Number of selected rows; the bar shows while it is above 0. */
+  bulkCount?: number;
+  /** Optional facts about the selection, e.g. the sum of the selected invoices. */
+  bulkInfo?: React.ReactNode;
+  /** Translated "N selected" line. Default `${count} selected`. */
+  bulkCountLabel?: React.ReactNode;
+  /** Translated tooltip for the bar's X. Default "Clear selection". */
+  bulkClearLabel?: string;
+  /** Clears the selection (the bar's X and Esc). */
+  onBulkClear?: () => void;
   /** Drag headers to reorder columns (drives the table's columnOrder state). */
   enableColumnReorder?: boolean;
   /**
@@ -169,7 +217,9 @@ function alignClass(align?: "left" | "right" | "center") {
 
 // Canonical pinned-column treatment, shared by the header and body cells so the
 // two never drift apart.
-const STICKY_HEAD = "sticky right-0 z-10 bg-background";
+// z-20: above the pinned body cells (z-10), which otherwise paint over the
+// header as they scroll under it, being later in the DOM.
+const STICKY_HEAD = "sticky right-0 z-20 bg-background";
 const STICKY_CELL = "sticky right-0 z-10 border-l border-border bg-background";
 
 // In an auto-layout table a w-px cell collapses to its content width, so the
@@ -182,13 +232,62 @@ const WIDTH_MIN = "w-px whitespace-nowrap px-2";
 // column's preferred width, which is what keeps the table inside its container.
 const WIDTH_FILL = "w-full max-w-0";
 
+// Spare width a page-mode table needs before it leaves its fallback scroll box.
+const FIT_SLACK = 24;
+
 function SortIcon({ dir }: { dir: false | "asc" | "desc" }) {
   if (dir === "asc") return <ChevronUp className="size-3.5" />;
   if (dir === "desc") return <ChevronDown className="size-3.5" />;
   return <ChevronsUpDown className="size-3.5 opacity-50" />;
 }
 
-function HeaderLabel<TData>({ header }: { header: Header<TData, unknown> }) {
+function FilterMark({ mark }: { mark: ColumnFilterMark }) {
+  const name = typeof mark.label === "string" ? mark.label : undefined;
+  const icon = <Filter className="size-3.5 fill-current" />;
+  // Its own provider: Radix tooltips need one, and apps do not all mount one.
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {mark.onClear ? (
+            <button
+              type="button"
+              aria-label={name}
+              onClick={(e) => { e.stopPropagation(); mark.onClear?.(); }}
+              className="inline-flex size-5 items-center justify-center rounded text-primary outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {icon}
+            </button>
+          ) : (
+            <span role="img" aria-label={name} className="inline-flex size-5 items-center justify-center text-primary">
+              {icon}
+            </span>
+          )}
+        </TooltipTrigger>
+        <TooltipContent side="top" className="font-normal">
+          {mark.label}
+          {mark.onClear && mark.clearHint && <span className="block opacity-70">{mark.clearHint}</span>}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+function HeaderLabel<TData>({ header, mark }: { header: Header<TData, unknown>; mark?: ColumnFilterMark }) {
+  const align = header.column.columnDef.meta?.align;
+  const inner = <HeaderLabelInner header={header} />;
+  if (!mark) return inner;
+  // The mark sits beside the label, outside the sort button (no nested buttons),
+  // on the side away from the column's alignment edge.
+  return (
+    <span className={cn("inline-flex items-center gap-1", align === "right" && "flex-row-reverse")}>
+      {inner}
+      <FilterMark mark={mark} />
+    </span>
+  );
+}
+
+function HeaderLabelInner<TData>({ header }: { header: Header<TData, unknown> }) {
   const canSort = header.column.getCanSort();
   const align = header.column.columnDef.meta?.align;
   const label = flexRender(header.column.columnDef.header, header.getContext());
@@ -217,9 +316,11 @@ function HeaderLabel<TData>({ header }: { header: Header<TData, unknown> }) {
 function DraggableHeader<TData>({
   header,
   stickyClass,
+  mark,
 }: {
   header: Header<TData, unknown>;
   stickyClass?: string;
+  mark?: ColumnFilterMark;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useSortable({
     id: header.column.id,
@@ -227,8 +328,8 @@ function DraggableHeader<TData>({
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.8 : 1,
-    // While dragging, rise above the (sticky, z-10) sibling headers.
-    zIndex: isDragging ? 20 : undefined,
+    // While dragging, rise above the (sticky, z-20) sibling headers.
+    zIndex: isDragging ? 30 : undefined,
   };
   const align = header.column.columnDef.meta?.align;
   return (
@@ -236,6 +337,7 @@ function DraggableHeader<TData>({
       ref={setNodeRef}
       style={style}
       colSpan={header.colSpan}
+      data-pinned={header.column.columnDef.meta?.sticky === "right" ? "" : undefined}
       className={cn(
         alignClass(align),
         stickyClass,
@@ -253,7 +355,7 @@ function DraggableHeader<TData>({
         >
           <GripVertical />
         </span>
-        {header.isPlaceholder ? null : <HeaderLabel header={header} />}
+        {header.isPlaceholder ? null : <HeaderLabel header={header} mark={mark} />}
       </div>
     </TableHead>
   );
@@ -267,6 +369,7 @@ export function TableView<TData>({
   expandOnRowClick = false,
   rowClassName,
   stickyHeader = true,
+  activeFilters,
   virtualize: _virtualize = false,
   emptyMessage = "No results.",
   skeletonRows = 8,
@@ -274,6 +377,11 @@ export function TableView<TData>({
   enableRowSelection = false,
   enableSelectAll = true,
   bulkBar,
+  bulkCount = 0,
+  bulkInfo,
+  bulkCountLabel,
+  bulkClearLabel,
+  onBulkClear,
   enableColumnReorder = false,
   view = "list",
   minCardWidth,
@@ -293,6 +401,42 @@ export function TableView<TData>({
     ro.observe(thead);
     return () => ro.disconnect();
   }, []);
+
+  // Page mode needs a table that fits its container: a horizontally scrolling
+  // wrapper becomes the header's scroll container and stops it sticking to the
+  // page. So while the table overflows, fall back to the table's own scroll box.
+  // Switching back needs FIT_SLACK spare pixels, more than any classic scrollbar
+  // (Windows and Linux reserve ~17px), so a scrollbar appearing or disappearing
+  // as the mode changes can never flip it straight back.
+  const [overflowing, setOverflowing] = React.useState(false);
+  React.useLayoutEffect(() => {
+    if (stickyHeader !== "page") return;
+    const wrapper = wrapperRef.current;
+    const tableEl = wrapper?.querySelector("table");
+    if (!wrapper || !tableEl) return;
+    const check = () => {
+      // Measured the same way in both modes: the wrapper's inner width without
+      // any scrollbar of its own, against the narrowest the table can get. The
+      // table is w-full, so its laid-out width would just echo the container.
+      // The inline width is restored before the next frame, so nothing paints.
+      const cs = getComputedStyle(wrapper);
+      const available =
+        wrapper.getBoundingClientRect().width -
+        parseFloat(cs.borderLeftWidth) -
+        parseFloat(cs.borderRightWidth);
+      const prev = tableEl.style.width;
+      tableEl.style.width = "min-content";
+      const needed = tableEl.getBoundingClientRect().width;
+      tableEl.style.width = prev;
+      setOverflowing((was) => (was ? needed > available - FIT_SLACK : needed > available + 0.5));
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(wrapper);
+    ro.observe(tableEl);
+    return () => ro.disconnect();
+  }, [stickyHeader, view]);
+  const stickToPage = stickyHeader === "page" && !overflowing;
 
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
@@ -321,8 +465,16 @@ export function TableView<TData>({
   // to the viewport minus shell/page chrome), so the header sticks to the
   // wrapper's top edge at every viewport width — no breakpoint gating and no
   // dependence on the page scroller or the shell's --trf-topbar-h offset.
+  // z-20 keeps the header above pinned body cells (z-10). The divider is an
+  // inset shadow on the cells because the row's own border stays behind when
+  // the cells stick, so the header row drops that border (see TableHeader).
   const headStickyClass = stickyHeader
-    ? "sticky top-0 z-10 bg-background"
+    ? cn(
+        stickToPage ? "top-[var(--trf-topbar-h,0px)]" : "top-0",
+        // One inset shadow draws the column rule (right) and the divider (bottom);
+        // the last cell keeps only the divider.
+        "sticky z-20 bg-background shadow-[inset_-1px_-1px_0_var(--border)] last:shadow-[inset_0_-1px_0_var(--border)]",
+      )
     : undefined;
 
   const selectionHead = enableRowSelection ? (
@@ -351,17 +503,8 @@ export function TableView<TData>({
     // With the outer wrapper as the scrollport, the inner overflow wrapper must
     // not trap the sticky header — it backs off entirely when sticky is on.
     <Table className={className} containerClassName={stickyHeader ? "overflow-x-visible" : undefined}>
-      <TableHeader>
-        {bulkBar ? (
-          // Selection active: the column-header row becomes the bulk toolbar.
-          <TableRow className="hover:bg-transparent">
-            {selectionHead}
-            <TableHead colSpan={leafColumns.length} className={headStickyClass}>
-              <div className="flex items-center gap-2">{bulkBar}</div>
-            </TableHead>
-          </TableRow>
-        ) : (
-          headerGroups.map((hg) => (
+      <TableHeader className={stickyHeader ? "[&_tr]:border-b-0" : undefined}>
+        {headerGroups.map((hg) => (
             <TableRow key={hg.id}>
               {selectionHead}
               {enableColumnReorder ? (
@@ -370,7 +513,7 @@ export function TableView<TData>({
                   strategy={horizontalListSortingStrategy}
                 >
                   {hg.headers.map((header) => (
-                    <DraggableHeader key={header.id} header={header} stickyClass={headStickyClass} />
+                    <DraggableHeader key={header.id} header={header} stickyClass={headStickyClass} mark={activeFilters?.[header.column.id]} />
                   ))}
                 </SortableContext>
               ) : (
@@ -378,22 +521,21 @@ export function TableView<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    data-pinned={header.column.columnDef.meta?.sticky === "right" ? "" : undefined}
                     className={cn(
                       alignClass(header.column.columnDef.meta?.align),
                       headStickyClass,
                       header.column.columnDef.meta?.width === "min" && WIDTH_MIN,
-        header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                       header.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
                       header.column.columnDef.meta?.sticky === "right" && STICKY_HEAD
                     )}
                   >
-                    {header.isPlaceholder ? null : <HeaderLabel header={header} />}
+                    {header.isPlaceholder ? null : <HeaderLabel header={header} mark={activeFilters?.[header.column.id]} />}
                   </TableHead>
                 ))
               )}
             </TableRow>
-          ))
-        )}
+          ))}
       </TableHeader>
       <TableBody>
         {loading ? (
@@ -459,6 +601,7 @@ export function TableView<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
+                      data-pinned={cell.column.columnDef.meta?.sticky === "right" ? "" : undefined}
                       className={cn(
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
@@ -485,16 +628,49 @@ export function TableView<TData>({
     </Table>
   );
 
+  // The selection bar floats at the bottom centre of the table. The spacer gives it
+  // a band under the last row to rest in, as tall as the bar itself (it grows with
+  // the info row), so no row stays hidden behind it; the zero-height sticky anchor
+  // pins it to the bottom of whatever part of the table is visible (the page's
+  // scroller in page mode, the table's own box otherwise).
+  const barBoxRef = React.useRef<HTMLDivElement>(null);
+  const [barHeight, setBarHeight] = React.useState(0);
+  React.useLayoutEffect(() => {
+    const el = barBoxRef.current;
+    if (!el) return;
+    const measure = () => setBarHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [bulkBar ? view : null]);
+  const selectionBar = bulkBar ? (
+    <>
+      <div
+        aria-hidden
+        className="transition-[height] duration-200 motion-reduce:transition-none"
+        style={{ height: bulkCount > 0 && barHeight > 0 ? barHeight + 24 : 0 }}
+      />
+      <div className="pointer-events-none sticky bottom-3 left-0 z-30 h-0">
+        <div ref={barBoxRef} className="absolute inset-x-0 bottom-3 flex justify-center px-4">
+          <SelectionBar
+            open={bulkCount > 0}
+            count={bulkCount}
+            info={bulkInfo}
+            countLabel={bulkCountLabel}
+            clearLabel={bulkClearLabel}
+            onClear={() => onBulkClear?.()}
+          >
+            {bulkBar}
+          </SelectionBar>
+        </div>
+      </div>
+    </>
+  ) : null;
+
   if (view === "cards") {
     return (
       <div className={cn("relative rounded-lg border border-border", className)}>
-        {/* A grid has no column-header row to take over, so the bulk toolbar gets its
-            own strip above the cards rather than disappearing in this view. */}
-        {bulkBar && (
-          <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
-            {bulkBar}
-          </div>
-        )}
         <CardView<TData>
           rows={rows}
           enableRowSelection={enableRowSelection}
@@ -503,6 +679,7 @@ export function TableView<TData>({
           emptyMessage={emptyMessage}
           minCardWidth={minCardWidth}
         />
+        {selectionBar}
         {fetching && !loading && <TableProgress className="absolute inset-x-0 top-0 z-20" />}
       </div>
     );
@@ -513,10 +690,12 @@ export function TableView<TData>({
       ref={wrapperRef}
       className={cn(
         "relative rounded-lg border border-border",
+        // Page mode: clip rather than scroll, since overflow-clip creates no
+        // scroll container and so leaves the header free to stick to the page.
         // Scrollport mode: both axes scroll inside the table, capped so header
         // and pagination stay reachable. --trf-table-chrome is the estimated
         // page chrome around the table; apps may override it.
-        stickyHeader
+        stickyHeader && !stickToPage
           ? "overflow-auto max-h-[calc(100dvh-var(--trf-topbar-h,0px)-var(--trf-table-chrome,13rem))]"
           : "overflow-clip",
       )}
@@ -533,6 +712,7 @@ export function TableView<TData>({
       ) : (
         tableEl
       )}
+      {selectionBar}
       {fetching && !loading && (
         <TableProgress
           className="absolute inset-x-0 z-20"

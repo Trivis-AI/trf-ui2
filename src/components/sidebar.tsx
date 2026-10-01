@@ -149,7 +149,7 @@ export function Sidebar({
         data-collapsed={collapsed || undefined}
         style={{ width: collapsed ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH }}
         className={cn(
-          "hidden h-full shrink-0 flex-col overflow-hidden border-r border-border bg-card text-card-foreground",
+          "hidden h-full shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar text-card-foreground",
           "transition-[width] duration-300 ease-in-out md:flex",
           className
         )}
@@ -170,7 +170,7 @@ export function Sidebar({
       >
         {/* No transform: the header bar is identical/aligned to the closed-state bar,
             so a fade (on the wrapper) keeps it visually static — only the body appears. */}
-        <aside className="flex h-full w-full flex-col overflow-hidden bg-card text-card-foreground pb-[env(safe-area-inset-bottom)]">
+        <aside className="flex h-full w-full flex-col overflow-hidden bg-sidebar text-card-foreground pb-[env(safe-area-inset-bottom)]">
 
           {/* The header bar (with its own ☰/✕ toggle) is part of `children`, so it
               aligns exactly with the closed-state bar. */}
