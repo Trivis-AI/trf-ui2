@@ -58,13 +58,30 @@ They default to `card` and `background`, which is how those surfaces looked befo
 tokens existed, so only a theme that sets them changes anything. Use `bg-field` for a
 hand-built input-like box; buttons stay on `bg-background`.
 
+`sidebar-field` is a field on the rail: the shell's menu search. It follows `field`
+everywhere except Default, where it takes the page color (white in light, the lighter
+page tint in dark) so the search stands out against the rail.
+
+`input-focus`, `field-focus` and `sidebar-field-focus` are a field while active: focused,
+or with its picker open (`data-[state=open]`). Every field surface above applies them.
+They equal `input`, `field` and `sidebar-field` everywhere except Default: there the
+border takes 20% white in dark (20% black in light), and the inside 50% black in dark
+(light leaves it as it is).
+
+`field-ring` and `field-ring-offset` are a focused field's ring and the gap around it
+(`ring` and `background` by default). Default sets both transparent: the active border
+and inside are the focus cue there. `composer-focus` is the chat composer's inside while
+active: `card`, or 50% black on it in dark Default. A field embedded transparently in another
+surface (the markdown editor's textarea, the chat composer's) sets
+`focus-visible:bg-transparent` so it stays see-through when focused.
+
 ### Themes and the Default theme
 
 Themes are classes on `<html>` (`theme-amber`, ...), composed with `.dark`; no class is
 the Trivis base. They change colour only, except **Default** (`theme-default`, 2026-10-01):
 Trivis with the page and the sidebar swapped (the page takes the old card white, the
-sidebar the old page tint), input fields on the sidebar's tint, and `--radius` 6px instead
-of 4px. Cards keep `--card`, so on the white page they read by their border. app-shell
+sidebar the old page tint), input fields on the sidebar's tint (except the menu search on
+the rail, which takes the page color), and `--radius` 6px instead of 4px. Cards keep `--card`, so on the white page they read by their border. app-shell
 opens on Default on localhost; everywhere else the stored pick or Trivis.
 
 ### `--primary` is theme-dependent (brand + action)

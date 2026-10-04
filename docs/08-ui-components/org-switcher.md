@@ -39,6 +39,7 @@ import { OrgSwitcher } from "@trf/ui2";
 | `openLabel` | `string` | Accessible label for that link. Default `"Open in a new tab"`. |
 | `searchPlaceholder` / `emptyText` / `loadingText` | `string` | Copy overrides. |
 | `align` / `side` | | Popover placement relative to the trigger. Default `"start"` / `"bottom"`. |
+| `sideOffset` | `number` | Gap between trigger and panel in px (default 4). Negative overlaps the trigger, e.g. when its visible block is inset from its edge. |
 | `className` | `string` | Extra classes for the popover panel, e.g. a custom width. |
 | `children` | `ReactNode` | The trigger, rendered as-is via `asChild`. |
 

@@ -31,7 +31,9 @@ export interface PageProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 export function Page({ size = "lg", className, ...props }: PageProps) {
   return (
-    <div className={cn("w-full px-6 py-8", SIZE[size], className)} {...props} />
+    // No top padding (2026-10-04, was py-8): content starts right under the shell bar.
+    // Pages showing the bar's meta pill get their gap from the shell.
+    <div className={cn("w-full px-6 pt-0 pb-8", SIZE[size], className)} {...props} />
   );
 }
 

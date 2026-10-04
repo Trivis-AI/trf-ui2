@@ -16,7 +16,7 @@ import {
   BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, TableCard,
+  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, PalettePicker, PaletteSwatches, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
@@ -1372,6 +1372,13 @@ function RadioCardDemo() {
       <RadioCard selected={val === "offer"} onClick={() => setVal("offer")} icon={<ScrollText />} title="Offer" description="A price quote / proposal." />
     </div>
   );
+}
+
+// The Appearance setting's palette choice. Local state only: picking here does not
+// change the demo's own theme (the header's theme select does that).
+function PalettePickerDemo() {
+  const [val, setVal] = useState("default");
+  return <PalettePicker options={THEME_OPTIONS} value={val} onValueChange={setVal} aria-label="Palette" className="w-full max-w-3xl" />;
 }
 
 /* ------------------------------------------------------- section: Markdown */
@@ -3087,6 +3094,7 @@ const GROUPS: GroupDef[] = [
       { id: "board", label: "Board", render: () => <BoardDemo /> },
       { id: "multi-select", label: "Multi select", render: () => <MultiSelectDemo /> },
       { id: "radiocard", label: "Radio card", render: () => <RadioCardDemo /> },
+      { id: "palette-picker", label: "Palette picker", render: () => <PalettePickerDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "dashboard-primitives", label: "Dashboard primitives", render: () => <DashboardPrimitivesDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
@@ -3240,19 +3248,6 @@ const THEME_OPTIONS = [
   { value: "disco", label: "Disco" },
   { value: "modern", label: "Modern" },
 ];
-
-/* Four representative swatches for a theme. The wrapper carries the theme's class (+ dark)
- * so `bg-primary` etc. resolve to THAT theme's tokens in the current mode — letting the
- * dropdown preview every theme at once. "trivis" is the base (no class). */
-function ThemeSwatches({ theme, dark }: { theme: string; dark: boolean }) {
-  return (
-    <span className={cn("flex shrink-0 items-center gap-0.5", theme !== "trivis" && `theme-${theme}`, dark && "dark")}>
-      {["bg-primary", "bg-secondary", "bg-accent", "bg-muted"].map((c) => (
-        <span key={c} className={cn("size-3 rounded-full ring-1 ring-black/10 dark:ring-white/20", c)} />
-      ))}
-    </span>
-  );
-}
 
 function ThemeToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
   const { collapsed } = useSidebar();
@@ -3441,7 +3436,7 @@ export function App() {
               <Select value={theme} onValueChange={setTheme}>
                 <SelectTrigger className="w-52">
                   <div className="flex items-center gap-2">
-                    <ThemeSwatches theme={theme} dark={dark} />
+                    <PaletteSwatches palette={theme} dark={dark} />
                     {THEME_OPTIONS.find((t) => t.value === theme)?.label}
                   </div>
                 </SelectTrigger>
@@ -3449,7 +3444,7 @@ export function App() {
                   {THEME_OPTIONS.map((t) => (
                     <SelectItem key={t.value} value={t.value}>
                       <span className="flex items-center gap-2">
-                        <ThemeSwatches theme={t.value} dark={dark} />
+                        <PaletteSwatches palette={t.value} dark={dark} />
                         {t.label}
                       </span>
                     </SelectItem>

@@ -228,6 +228,8 @@ export type { EntityComboboxProps, EntityComboboxItem } from "./components/entit
 
 export { OrgSwitcher } from "./components/org-switcher";
 export type { OrgSwitcherProps, OrgSwitcherOrg } from "./components/org-switcher";
+export { PalettePicker, PaletteSwatches } from "./components/palette-picker";
+export type { PalettePickerProps, PaletteSwatchesProps, PaletteOption } from "./components/palette-picker";
 
 export { Calendar } from "./components/ui/calendar";
 export type { CalendarProps } from "./components/ui/calendar";

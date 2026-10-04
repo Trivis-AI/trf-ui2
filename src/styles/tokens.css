@@ -110,6 +110,21 @@
    * --background without restating them. */
   --sidebar: var(--card);
   --field: var(--background);
+  /* A field sitting on the rail (the shell's menu search). Same as any field, except in
+   * Default, where it takes the page color so it stands out against the rail. */
+  --sidebar-field: var(--field);
+  /* A field while active (focused, or its picker open): border and inside. Unchanged
+   * everywhere but Default, which darkens the inside and sharpens the border. */
+  --input-focus: var(--input);
+  --field-focus: var(--field);
+  --sidebar-field-focus: var(--sidebar-field);
+  /* A focused field's ring and the gap around it. Default draws none: there the
+   * active border and inside are the focus cue. */
+  --field-ring: var(--ring);
+  --field-ring-offset: var(--background);
+  /* The chat composer's card-coloured inside while active (dark Default darkens it
+   * like a field). */
+  --composer-focus: var(--card);
 
   /* Chart series colors (Chart component). Spans hues away from
    * --destructive (25) and --warning (75) so a chart series is never
@@ -612,11 +627,21 @@
   --background: oklch(1 0 0);        /* Trivis --card */
   --sidebar: oklch(0.98 0.005 240);  /* Trivis --background */
   --field: oklch(0.98 0.005 240);
+  --sidebar-field: var(--background); /* resolves per mode: white, or the dark page */
+  /* Active field: 20% black on the border, the inside stays as it is. No ring. */
+  --input-focus: color-mix(in srgb, var(--input), black 20%);
+  --field-ring: transparent;
+  --field-ring-offset: transparent;
 }
 .theme-default.dark {
   --background: oklch(0.25 0.018 240); /* Trivis dark --card */
   --sidebar: oklch(0.22 0.018 240);    /* Trivis dark --background */
   --field: oklch(0.22 0.018 240);
+  /* Active field: 20% white on the border, 50% black on the inside. */
+  --input-focus: color-mix(in srgb, var(--input), white 20%);
+  --field-focus: color-mix(in srgb, var(--field), black 50%);
+  --sidebar-field-focus: color-mix(in srgb, var(--sidebar-field), black 50%);
+  --composer-focus: color-mix(in srgb, var(--card), black 50%);
 }
 
 @theme inline {
@@ -684,6 +709,13 @@
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
   --color-field: var(--field);
+  --color-sidebar-field: var(--sidebar-field);
+  --color-input-focus: var(--input-focus);
+  --color-field-focus: var(--field-focus);
+  --color-sidebar-field-focus: var(--sidebar-field-focus);
+  --color-field-ring: var(--field-ring);
+  --color-field-ring-offset: var(--field-ring-offset);
+  --color-composer-focus: var(--composer-focus);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
