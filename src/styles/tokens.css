@@ -737,6 +737,19 @@
 }
 
 /*
+ * Text smoothing: one global rule. Grayscale antialiasing renders text lighter and crisper
+ * on macOS (no effect elsewhere), the look of design-led products. Set once here so every
+ * app matches; frontlogin used to set it on its own, which made its sidebar look thinner.
+ * On <html> because it inherits: portalled popovers, dialogs and toasts get it too.
+ */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/*
  * Cursor: clickable things get a pointer — ONE global rule, never per-component.
  * Tailwind v4 Preflight (and shadcn) reset native <button> to `cursor: default`. Instead of
  * sprinkling `cursor-pointer` everywhere, we restore it once here for everything interactive

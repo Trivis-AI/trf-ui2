@@ -40,14 +40,24 @@ is checked locally, then everything ships as one release at the end.
 | 22 | Org picker opens 4px into the header (new ui2 `OrgSwitcher` prop `sideOffset`, app-shell passes -4) so the menu search does not peek out above it; hover inset now 8px | ui2, app-shell | done locally |
 | 23 | ui2 `Page` has no top padding (was `py-8`, now `pt-0 pb-8`); one class in `src/components/page.tsx` | ui2 | shipping to staging (Jaak chose 0px) |
 | 24 | Meta pill (status/date/sum under the bar): 16px margin under the bar while it shows, so content starts 24px below it (scrolls away, pinned bar not taller); pill row top padding 12px to 4px, centring the pill on the sidebar search | app-shell | done locally |
+| 25 | Text smoothing everywhere: `antialiased` on `<html>` in ui2 `tokens.css` (the portal had it alone, so its sidebar looked thinner); frontlogin's own line removed | ui2, frontlogin | done locally |
 
 Open: the mobile top bar still has its bottom line (ask whether it goes too).
 Open: the same bounce (`if (!token) navigate("/")` before the token is minted) is in frontlogin's AccountOverview, OrganizationSettings and Members. Overview hides it because "/" forwards there anyway.
-Open: frontlogin renders thinner text than every other app: its `index.css` sets `-webkit-font-smoothing: antialiased` on body (since its first commit). Reported, not changed.
 Open: with no palette picker, prod users stay on their stored pick or Trivis, so the
 Default-only colour changes would reach nobody on prod. Decide whether Default becomes the
 default everywhere before shipping.
 Open: "Oto AI" also appears in genericdata knowledge articles (the assistant's own menu guide) and the trivislanding demo sidebar.
+
+## Shipped
+
+2026-10-04, staging (trf.is): ui2 v7.17.0, app-shell v0.42.0, services v7.11.1, and all 14
+frontends on the new pins: frontai v7.8.64, frontaudit v7.0.26, frontcontracts v7.0.27,
+frontcrm v7.0.76, frontinvoices v7.12.10, frontitems v7.1.3, frontledger v7.3.14,
+frontlogin v7.0.60 (User settings tabs), frontpayments v7.18.2, frontproducts v7.0.34,
+frontpurchase v7.22.1, frontreports v7.2.1, frontsettings v7.1.38, fronttables v7.0.26.
+Every staging site confirmed serving the new shell. Still to do: the translations POST (new
+keys not served on staging yet), Jaak's staging check, then prod.
 
 ## Shipping (after sign-off)
 

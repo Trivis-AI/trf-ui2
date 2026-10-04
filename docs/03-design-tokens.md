@@ -31,6 +31,10 @@ Scale: `xs 12 · sm 14 (body) · base 16 · lg 18 · xl 20 · 2xl 24 · 3xl 30`.
 typography components (`H1/H2/H3/Text`) or `text-*` utilities — never off-scale (`text-[13px]`).
 See [08-ui-components/typography.md](08-ui-components/typography.md).
 
+**Smoothing.** `tokens.css` sets `-webkit-font-smoothing: antialiased` (and the Firefox
+equivalent) on `<html>` for every app: lighter, crisper text on macOS. Don't set it, or
+`subpixel-antialiased`, in an app; all apps must render text the same way.
+
 ## Color tokens (semantic — use these names)
 
 | Group | Tokens |
