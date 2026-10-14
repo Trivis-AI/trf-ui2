@@ -23,6 +23,26 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 Parts: `Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption`.
 Zero dependencies — these are plain token-styled HTML.
 
+### Editable cells
+
+For a table people type into (invoice rows, purchase rows), the cell is the field. An
+`<Input variant="cell">` draws nothing of its own and fills the cell; `<TableCell editable>`
+has no padding and shows every state in its place: the field background on hover, the
+field-focus background with an inset ring while the input has focus, and `invalid` adds an
+inset destructive ring. States live on the cell, so there is no box inside a box, and the
+row reads as one surface with the figures beside it.
+
+```tsx
+<TableCell editable invalid={qty === 0}>
+  <Input variant="cell" aria-label="Quantity" aria-invalid={qty === 0 || undefined}
+    inputMode="decimal" className="text-right font-mono tabular-nums" value={qty} onChange={…} />
+</TableCell>
+```
+
+`editable` sets `group`, so an icon button inside the cell can fade in on hover with
+`group-hover:opacity-100`. Read-only figure cells beside editable ones use `py-0` so the row
+keeps the input's height. Demo: "Line items" in the kitchen sink.
+
 ## Tier 2 — `DataTable` (TanStack-powered)
 
 For **interactive** tables: sorting, filtering, column reorder, inline editing. Built on

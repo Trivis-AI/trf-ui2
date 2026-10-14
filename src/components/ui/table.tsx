@@ -78,10 +78,32 @@ const TableHead = React.forwardRef<
 ));
 TableHead.displayName = "TableHead";
 
-function TableCell({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
+export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  /**
+   * The cell is the field. An editable cell has no padding, so an
+   * `<Input variant="cell">` fills it, and it carries the states the input
+   * does not draw: the field background on hover, the field-focus background
+   * and an inset ring while something inside it has focus. Nothing sits inside
+   * anything; the row reads as one surface with the figures beside it.
+   */
+  editable?: boolean;
+  /** A validation error on this cell: an inset destructive ring. */
+  invalid?: boolean;
+}
+
+// The inset ring and the column rule are both box-shadow layers (Tailwind v4
+// composes ring and shadow), so the ring draws over the rule at the right edge
+// instead of replacing it.
+function TableCell({ className, editable, invalid, ...props }: TableCellProps) {
   return (
     <td
-      className={cn("px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0", className)}
+      className={cn(
+        "px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0",
+        editable &&
+          "group p-0 transition-colors hover:bg-field has-[:focus-visible]:bg-field-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-field-ring",
+        invalid && "ring-2 ring-inset ring-destructive",
+        className
+      )}
       {...props}
     />
   );

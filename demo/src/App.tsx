@@ -4,7 +4,7 @@ import {
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
   FileText, ImageIcon, X, Download, Eye, Check,
-  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown,
+  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -1113,6 +1113,87 @@ function EditableGridDemo() {
       <Text size="xs" tone="muted" className="mt-2 block">
         Click a cell to edit (Enter commits, Esc cancels). Booleans toggle in the new-row select;
         dates use an inline DatePicker. “+ Column” adds a typed column.
+      </Text>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------- section: Line items */
+
+// The cell is the field: Input variant="cell" draws nothing, TableCell editable
+// carries hover, focus and invalid. This is the row shape of the invoice
+// editor card and the purchase table.
+type LineItem = { id: string; description: string; qty: string; price: string };
+
+function LineItemsDemo() {
+  const [rows, setRows] = useState<LineItem[]>([
+    { id: "a", description: "Consulting", qty: "12", price: "90" },
+    { id: "b", description: "Setup fee", qty: "0", price: "250" },
+    { id: "c", description: "Hosting, October", qty: "1", price: "48" },
+  ]);
+  const patch = (id: string, p: Partial<LineItem>) =>
+    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...p } : r)));
+  const net = (r: LineItem) => {
+    const n = Number(r.qty) * Number(r.price);
+    return Number.isFinite(n) ? n.toFixed(2) : "";
+  };
+  const figure = "h-9 text-right font-mono tabular-nums";
+
+  return (
+    <div className="w-full">
+      <div className="overflow-x-auto rounded-md border border-border">
+        <Table className="table-fixed [&_th]:px-2">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-8 text-right">#</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="w-20 text-right">Qty</TableHead>
+              <TableHead className="w-28 text-right">Price</TableHead>
+              <TableHead className="w-28 text-right">Net</TableHead>
+              <TableHead className="w-12" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((r, i) => {
+              const bad = Number(r.qty) === 0;
+              return (
+                <TableRow key={r.id}>
+                  <TableCell className="px-2 py-0 text-right">
+                    <Text as="span" size="xs" tone="muted" mono>{i + 1}</Text>
+                  </TableCell>
+                  <TableCell editable>
+                    <div className="flex items-center">
+                      <Input variant="cell" aria-label="Description" className="flex-1" value={r.description} onChange={(e) => patch(r.id, { description: e.target.value })} />
+                      <Button type="button" size="icon-xs" variant="ghost" className="mr-1 shrink-0 text-muted-foreground opacity-60 group-hover:opacity-100 focus-visible:opacity-100" aria-label="Pick from catalogue" title="Pick from catalogue" onClick={() => toast("Catalogue picker")}>
+                        <Package />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell editable invalid={bad}>
+                    <Input variant="cell" aria-label="Quantity" aria-invalid={bad || undefined} inputMode="decimal" className={figure} value={r.qty} onChange={(e) => patch(r.id, { qty: e.target.value })} />
+                  </TableCell>
+                  <TableCell editable>
+                    <Input variant="cell" aria-label="Price" inputMode="decimal" className={figure} value={r.price} onChange={(e) => patch(r.id, { price: e.target.value })} />
+                  </TableCell>
+                  <TableCell className="px-2 py-0 text-right">
+                    <Text as="span" mono tone={bad ? "muted" : "default"}>{net(r)}</Text>
+                  </TableCell>
+                  <TableCell className="px-1 py-0">
+                    <div className="flex justify-end">
+                      <Button type="button" size="icon-xs" variant="ghost" aria-label="Remove row" title="Remove row" onClick={() => setRows((rs) => rs.filter((x) => x.id !== r.id))}>
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      <Text size="xs" tone="muted" className="mt-2 block">
+        Hover a cell for the field background, click into it for the inset ring. A quantity of
+        zero marks its cell invalid. The input draws nothing; the cell shows every state.
       </Text>
     </div>
   );
@@ -3201,6 +3282,9 @@ const GROUPS: GroupDef[] = [
       },
       {
         id: "editable-grid", label: "Editable grid", render: () => <EditableGridDemo />,
+      },
+      {
+        id: "line-items", label: "Line items", render: () => <LineItemsDemo />,
       },
       {
         id: "tablecard", label: "Table card", render: () => (

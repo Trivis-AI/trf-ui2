@@ -354,6 +354,7 @@ export {
   TableHead,
   TableCell,
   TableCaption,
+  type TableCellProps,
 } from "./components/ui/table";
 
 // Financial statement renderer (balance sheet / income statement).
