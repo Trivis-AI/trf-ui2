@@ -56,8 +56,12 @@ export interface EntityComboboxProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
-  /** Style of the underlying Input — pass "quiet" inside editable table cells. */
-  inputVariant?: "default" | "quiet";
+  /**
+   * Style of the underlying Input. "cell" inside `<TableCell editable>`: the
+   * input draws nothing and the cell shows the states (the invoice row's
+   * description). "quiet" is the older table style with its own hover chrome.
+   */
+  inputVariant?: "default" | "quiet" | "cell";
 }
 
 /**
