@@ -114,3 +114,9 @@ muted inline, description as a muted sub-line.
 ## Related
 
 - [AsyncCombobox](async-combobox.md) · [Combobox](combobox.md) · [Inputs](inputs.md)
+
+## In a table cell
+
+`inputVariant="cell"` inside `<TableCell editable>` makes the field the cell: the input draws
+nothing and the cell shows hover, focus and invalid (the invoice row's description, which doubles
+as the catalogue search). See [Table, editable cells](table.md#editable-cells).

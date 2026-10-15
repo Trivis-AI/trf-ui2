@@ -19,8 +19,12 @@ export interface QuantityInputProps {
   unitId?: string;
   /** Omit to render the unit as a plain read-only suffix. */
   onUnitChange?: (unitId: string) => void;
-  /** "quiet" is the editable-table cell style; "default" the form chrome. */
-  variant?: "default" | "quiet";
+  /**
+   * "cell" inside `<TableCell editable>`: the input draws nothing and the cell
+   * shows the states. "quiet" is the older table style with its own hover
+   * chrome; "default" the form chrome.
+   */
+  variant?: "default" | "quiet" | "cell";
   disabled?: boolean;
   className?: string;
   /** Accessible name for the quantity input. */

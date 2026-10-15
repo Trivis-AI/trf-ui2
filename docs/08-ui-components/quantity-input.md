@@ -35,7 +35,7 @@ too via `variant="default"`.
 | `units` | `QuantityInputUnit[]` | `{ id, label }` — label is the short code shown in the field ("tk", "h", "kg"). |
 | `unitId` | `string` | The selected unit. Unknown/absent id renders "—". |
 | `onUnitChange` | `(unitId: string) => void` | Omit to render the unit as a plain read-only suffix. |
-| `variant` | `"default" \| "quiet"` | `"quiet"` (default) is the editable-table cell style; `"default"` the form chrome. |
+| `variant` | `"default" \| "quiet" \| "cell"` | `"cell"` inside `<TableCell editable>`: the input draws nothing and the cell shows the states (see [Table, editable cells](table.md#editable-cells)). `"quiet"` (default) is the older table style with its own hover chrome; `"default"` the form chrome. |
 | `disabled` | `boolean` | Disables both the input and the picker. |
 | `aria-label` | `string` | Accessible name for the quantity input. |
 | `unitLabel` | `string` | Accessible name for the unit picker. Default `"Unit"`. |
