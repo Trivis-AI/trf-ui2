@@ -72,7 +72,9 @@ They equal `input`, `field` and `sidebar-field` everywhere except Default: there
 border takes 20% white in dark (20% black in light), and the inside 50% black in dark
 (light leaves it as it is).
 
-`field-ring` and `field-ring-offset` are a focused field's ring and the gap around it
+`field-ring` and `field-ring-offset` are a focused field's ring and the gap around it;
+`cell-ring` is the inset ring of a focused editable table cell, which has no border to
+darken: the field ring where the theme draws one, else (Default) the active border colour
 (`ring` and `background` by default). Default sets both transparent: the active border
 and inside are the focus cue there. `composer-focus` is the chat composer's inside while
 active: `card`, or 50% black on it in dark Default. A field embedded transparently in another
