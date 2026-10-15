@@ -82,10 +82,12 @@ export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElem
   /**
    * The cell is the field. An editable cell has no padding, so an
    * `<Input variant="cell">` fills it, and it carries the states the input
-   * does not draw: the field background on hover, the field-focus background
-   * and an inset ring while something inside it has focus or is open (a
-   * `SelectTrigger` or `DatePicker` with `variant="cell"`). Nothing sits
-   * inside anything; the row reads as one surface with the figures beside it.
+   * does not draw, each the way a field of the theme looks: on hover the
+   * field background with the field's border drawn inside the cell, and
+   * while something inside it has focus or is open (a `SelectTrigger` or
+   * `DatePicker` with `variant="cell"`) the field-focus background with a
+   * 2px inset ring in `--cell-ring`. Nothing sits inside anything; the row
+   * reads as one surface with the figures beside it.
    */
   editable?: boolean;
   /** A validation error on this cell: an inset destructive ring. */
@@ -94,14 +96,22 @@ export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElem
 
 // The inset ring and the column rule are both box-shadow layers (Tailwind v4
 // composes ring and shadow), so the ring draws over the rule at the right edge
-// instead of replacing it.
+// instead of replacing it. Hover and focus both use the ring layer, a 1px
+// border colour on hover and the 2px cell ring on focus; the has-variants
+// sort after hover, so a hovered focused cell shows the focus ring. The
+// class strings are written out in full: Tailwind only generates what it
+// finds literally in the source.
 function TableCell({ className, editable, invalid, ...props }: TableCellProps) {
   return (
     <td
       className={cn(
         "px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0",
-        editable &&
-          "group p-0 transition-colors hover:bg-field has-[:focus-visible]:bg-field-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-field-ring has-[[data-state=open]]:bg-field-focus has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-inset has-[[data-state=open]]:ring-field-ring",
+        editable && [
+          "group p-0 transition-colors",
+          "hover:bg-field hover:ring-1 hover:ring-inset hover:ring-input",
+          "has-[:focus-visible]:bg-field-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-cell-ring",
+          "has-[[data-state=open]]:bg-field-focus has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-inset has-[[data-state=open]]:ring-cell-ring",
+        ],
         invalid && "ring-2 ring-inset ring-destructive",
         className
       )}

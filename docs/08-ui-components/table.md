@@ -27,10 +27,12 @@ Zero dependencies — these are plain token-styled HTML.
 
 For a table people type into (invoice rows, purchase rows), the cell is the field. An
 `<Input variant="cell">` draws nothing of its own and fills the cell; `<TableCell editable>`
-has no padding and shows every state in its place: the field background on hover, the
-field-focus background with an inset ring while the input has focus, and `invalid` adds an
-inset destructive ring. States live on the cell, so there is no box inside a box, and the
-row reads as one surface with the figures beside it.
+has no padding and shows every state in its place, each the way a field of the theme looks:
+on hover the field background with the field's border drawn inside the cell, while the
+input has focus the field-focus background with a 2px inset ring in `cell-ring` (the field
+ring, or in Default the active border colour, since Default draws no ring), and `invalid`
+adds an inset destructive ring. States live on the cell, so there is no box inside a box,
+and the row reads as one surface with the figures beside it.
 
 ```tsx
 <TableCell editable invalid={qty === 0}>

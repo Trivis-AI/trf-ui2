@@ -122,6 +122,10 @@
    * active border and inside are the focus cue. */
   --field-ring: var(--ring);
   --field-ring-offset: var(--background);
+  /* A focused editable table cell (the cell is the field) draws an inset ring in
+   * this colour, since it has no border to darken: the field ring where the theme
+   * draws one, else the active border colour (Default). */
+  --cell-ring: var(--field-ring);
   /* The chat composer's card-coloured inside while active (dark Default darkens it
    * like a field). */
   --composer-focus: var(--card);
@@ -632,6 +636,9 @@
   --input-focus: color-mix(in srgb, var(--input), black 20%);
   --field-ring: transparent;
   --field-ring-offset: transparent;
+  /* No field ring here, so a focused cell shows the active border colour instead,
+   * the same cue a bordered field gets. */
+  --cell-ring: var(--input-focus);
 }
 .theme-default.dark {
   --background: oklch(0.25 0.018 240); /* Trivis dark --card */
@@ -715,6 +722,7 @@
   --color-sidebar-field-focus: var(--sidebar-field-focus);
   --color-field-ring: var(--field-ring);
   --color-field-ring-offset: var(--field-ring-offset);
+  --color-cell-ring: var(--cell-ring);
   --color-composer-focus: var(--composer-focus);
 
   --color-chart-1: var(--chart-1);
