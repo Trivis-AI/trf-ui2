@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
+import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -71,9 +72,8 @@ export interface EditableGridProps {
 const DATA_TYPES: EditableGridDataType[] = ["string", "number", "date", "boolean"];
 // Radix Select can't hold an empty string value — sentinel for the blank boolean choice.
 const NONE = "__none__";
-
-const inputTypeFor = (dt: EditableGridDataType): React.HTMLInputTypeAttribute =>
-  dt === "number" ? "number" : dt === "date" ? "date" : "text";
+// Figures are right-aligned tabular numerals, as in every table of the suite.
+const figure = "text-right font-mono tabular-nums";
 
 const isoToDate = (iso?: string): Date | undefined => {
   if (!iso) return undefined;
@@ -87,11 +87,18 @@ const dateToIso = (d?: Date): string => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+type Draft = { rowId: string; colId: string; value: string };
+
 /**
  * Spreadsheet-style editable grid: per-type inline cell editing (text/number/date/boolean),
  * an inline new-row, row delete, dynamic add/remove columns, and a server-side pagination strip.
  * Presentational — the consumer owns persistence and passes updated `columns`/`rows` back in.
  * Graduated from trffronttables' TableDetailPage.
+ *
+ * Every cell is a field: `Input`, `SelectTrigger` and `DatePicker` in their `"cell"` variant
+ * inside `<TableCell editable>`, so the cell itself shows hover, focus and open. A text or
+ * number cell keeps a draft while it has focus and commits on blur or Enter; Escape restores
+ * the saved value. Dates and booleans commit on change.
  *
  * For read-mostly data with sorting/filtering, use `DataTable` instead.
  */
@@ -121,8 +128,10 @@ export function EditableGrid({
     ...labels,
   };
 
-  const [editingCell, setEditingCell] = React.useState<{ rowId: string; colId: string } | null>(null);
-  const [cellDraft, setCellDraft] = React.useState("");
+  // The draft lives in state for rendering and in a ref for the commit, so
+  // Escape can drop it before the blur it causes reaches the commit.
+  const [draft, setDraft] = React.useState<Draft | null>(null);
+  const draftRef = React.useRef<Draft | null>(null);
   const [addingCol, setAddingCol] = React.useState(false);
   const [newColName, setNewColName] = React.useState("");
   const [newColType, setNewColType] = React.useState<EditableGridDataType>("string");
@@ -130,25 +139,28 @@ export function EditableGrid({
   const [savingNewRow, setSavingNewRow] = React.useState(false);
   const newColRef = React.useRef<HTMLInputElement>(null);
 
-  const startEdit = (rowId: string, colId: string, current: string) => {
-    setEditingCell({ rowId, colId });
-    setCellDraft(current);
+  const setDraftBoth = (d: Draft | null) => {
+    draftRef.current = d;
+    setDraft(d);
   };
 
-  const commitEdit = () => {
-    if (!editingCell) return;
-    const { rowId, colId } = editingCell;
-    setEditingCell(null);
-    const current = rows.find((r) => r.id === rowId)?.values[colId] ?? "";
-    if (cellDraft !== current) onCellChange(rowId, colId, cellDraft);
+  const commitDraft = () => {
+    const d = draftRef.current;
+    if (!d) return;
+    setDraftBoth(null);
+    const current = rows.find((r) => r.id === d.rowId)?.values[d.colId] ?? "";
+    if (d.value !== current) onCellChange(d.rowId, d.colId, d.value);
   };
 
-  const handleCellKeyDown = (e: React.KeyboardEvent) => {
+  const handleCellKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      commitEdit();
+      e.currentTarget.blur(); // blur commits
     }
-    if (e.key === "Escape") setEditingCell(null);
+    if (e.key === "Escape") {
+      setDraftBoth(null);
+      e.currentTarget.blur();
+    }
   };
 
   const addColumn = () => {
@@ -174,24 +186,45 @@ export function EditableGrid({
   const setNewValue = (colId: string, value: string) =>
     setNewRowValues((prev) => ({ ...prev, [colId]: value }));
 
+  const booleanSelect = (value: string, onChange: (v: string) => void, placeholder: string, label: string) => (
+    <Select value={value || NONE} onValueChange={(v) => onChange(v === NONE ? "" : v)}>
+      <SelectTrigger variant="cell" aria-label={label}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={NONE}>—</SelectItem>
+        <SelectItem value="true">
+          <span className="flex items-center gap-1.5">
+            <Check className="size-4 text-success" /> true
+          </span>
+        </SelectItem>
+        <SelectItem value="false">
+          <span className="flex items-center gap-1.5">
+            <X className="size-4 text-muted-foreground" /> false
+          </span>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div className={className}>
-      <div className="rounded-lg border border-border">
-        <Table style={{ minWidth: `${Math.max(480, columns.length * 160)}px` }}>
+      <div className="rounded-md border border-border">
+        <Table className="[&_th]:px-2" style={{ minWidth: `${Math.max(480, columns.length * 160)}px` }}>
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
-                <TableHead key={col.id}>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-foreground">{col.name}</span>
-                    <span className="font-normal opacity-60">({col.dataType})</span>
+                <TableHead key={col.id} className={cn(col.dataType === "number" && "text-right")}>
+                  <div className={cn("flex items-center gap-1.5", col.dataType === "number" && "justify-end")}>
+                    <span>{col.name}</span>
+                    <span className="text-xs opacity-60">({col.dataType})</span>
                     {onColumnDelete && (
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
+                        size="icon-xs"
                         aria-label={`Remove column ${col.name}`}
-                        className="size-5 text-muted-foreground hover:text-destructive [&_svg]:size-3"
+                        className="text-muted-foreground hover:text-destructive [&_svg]:size-3"
                         onClick={() => onColumnDelete(col)}
                       >
                         <X />
@@ -266,64 +299,53 @@ export function EditableGrid({
             {rows.map((row) => (
               <TableRow key={row.id}>
                 {columns.map((col) => {
-                  const isEditing =
-                    editingCell?.rowId === row.id && editingCell?.colId === col.id;
                   const value = row.values[col.id] ?? "";
+                  const isDraft = draft?.rowId === row.id && draft?.colId === col.id;
                   return (
-                    <TableCell key={col.id} className="p-0">
+                    <TableCell key={col.id} editable>
                       {col.dataType === "date" ? (
-                        <div className="px-2 py-1">
-                          <DatePicker
-                            value={isoToDate(value)}
-                            onChange={(d) => onCellChange(row.id, col.id, dateToIso(d))}
-                            clearable
-                            captionLayout="dropdown"
-                            placeholder="—"
-                            className="h-8 border-transparent bg-transparent shadow-none hover:bg-muted/60"
-                          />
-                        </div>
-                      ) : isEditing ? (
-                        <Input
-                          autoFocus
-                          value={cellDraft}
-                          onChange={(e) => setCellDraft(e.target.value)}
-                          onBlur={commitEdit}
-                          onKeyDown={handleCellKeyDown}
-                          type={inputTypeFor(col.dataType)}
-                          className="h-9 rounded-none border-x-0 border-y-0 ring-2 ring-ring ring-inset"
+                        <DatePicker
+                          variant="cell"
+                          value={isoToDate(value)}
+                          onChange={(d) => onCellChange(row.id, col.id, dateToIso(d))}
+                          clearable
+                          captionLayout="dropdown"
+                          placeholder="—"
                         />
+                      ) : col.dataType === "boolean" ? (
+                        booleanSelect(value, (v) => { if (v !== value) onCellChange(row.id, col.id, v); }, "—", col.name)
                       ) : (
-                        <div
-                          onClick={() => startEdit(row.id, col.id, value)}
-                          className="min-h-9 cursor-text px-3 py-2 text-sm"
-                        >
-                          {col.dataType === "boolean" ? (
-                            value === "true" ? (
-                              <Check className="size-4 text-success" />
-                            ) : value === "false" ? (
-                              <X className="size-4 text-muted-foreground" />
-                            ) : null
-                          ) : (
-                            value
-                          )}
-                        </div>
+                        <Input
+                          variant="cell"
+                          aria-label={col.name}
+                          type={col.dataType === "number" ? "number" : "text"}
+                          inputMode={col.dataType === "number" ? "decimal" : undefined}
+                          className={cn(col.dataType === "number" && figure)}
+                          value={isDraft ? draft.value : value}
+                          onFocus={() => setDraftBoth({ rowId: row.id, colId: col.id, value })}
+                          onChange={(e) => setDraftBoth({ rowId: row.id, colId: col.id, value: e.target.value })}
+                          onBlur={commitDraft}
+                          onKeyDown={handleCellKeyDown}
+                        />
                       )}
                     </TableCell>
                   );
                 })}
                 <TableCell />
                 {onRowDelete && (
-                  <TableCell className="w-8 px-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Delete row"
-                      className="size-7 text-muted-foreground hover:text-destructive [&_svg]:size-3.5"
-                      onClick={() => onRowDelete(row.id)}
-                    >
-                      <Trash2 />
-                    </Button>
+                  <TableCell className="px-1 py-0">
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label="Delete row"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => onRowDelete(row.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
                   </TableCell>
                 )}
               </TableRow>
@@ -332,37 +354,28 @@ export function EditableGrid({
             {onRowAdd && (
               <TableRow>
                 {columns.map((col) => (
-                  <TableCell key={col.id} className="px-2 py-1.5">
+                  <TableCell key={col.id} editable>
                     {col.dataType === "date" ? (
                       <DatePicker
+                        variant="cell"
                         value={isoToDate(newRowValues[col.id])}
                         onChange={(d) => setNewValue(col.id, dateToIso(d))}
                         clearable
                         captionLayout="dropdown"
                         placeholder={col.name}
-                        className="h-8"
                       />
                     ) : col.dataType === "boolean" ? (
-                      <Select
-                        value={newRowValues[col.id] || NONE}
-                        onValueChange={(v) => setNewValue(col.id, v === NONE ? "" : v)}
-                      >
-                        <SelectTrigger className="h-8 min-w-28">
-                          <SelectValue placeholder="—" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={NONE}>—</SelectItem>
-                          <SelectItem value="true">true</SelectItem>
-                          <SelectItem value="false">false</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      booleanSelect(newRowValues[col.id] ?? "", (v) => setNewValue(col.id, v), col.name, col.name)
                     ) : (
                       <Input
-                        type={inputTypeFor(col.dataType)}
+                        variant="cell"
+                        aria-label={col.name}
+                        type={col.dataType === "number" ? "number" : "text"}
+                        inputMode={col.dataType === "number" ? "decimal" : undefined}
+                        className={cn(col.dataType === "number" && figure)}
                         value={newRowValues[col.id] ?? ""}
                         onChange={(e) => setNewValue(col.id, e.target.value)}
                         placeholder={col.name}
-                        className="h-8"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") void saveNewRow();
                         }}
@@ -370,10 +383,11 @@ export function EditableGrid({
                     )}
                   </TableCell>
                 ))}
-                <TableCell className="px-2 py-1.5">
+                <TableCell className="px-2 py-1">
                   <Button
                     type="button"
                     size="sm"
+                    className="whitespace-nowrap"
                     disabled={savingNewRow || !anyNewValue}
                     onClick={() => void saveNewRow()}
                   >

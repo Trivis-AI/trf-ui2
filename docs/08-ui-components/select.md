@@ -23,6 +23,26 @@ popup) · `SelectItem` · optional `SelectGroup`, `SelectLabel`, `SelectSeparato
 </Field>
 ```
 
+## In a table cell (`variant="cell"`)
+
+For a select that is a cell of an editable table (a tax rate per invoice row, a boolean in a
+grid), give the trigger `variant="cell"` inside `<TableCell editable>`. The trigger then draws
+nothing of its own, no border, background, ring or radius, and fills the cell; the cell shows
+hover, focus and the open state. Alignment is yours: `justify-end` for a figure.
+
+```tsx
+<TableCell editable>
+  <Select value={rateId} onValueChange={setRateId}>
+    <SelectTrigger variant="cell" aria-label="VAT rate" className="justify-end font-mono tabular-nums">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent align="end">…</SelectContent>
+  </Select>
+</TableCell>
+```
+
+See [Table, editable cells](table.md#editable-cells). Demo: "Line items" in the kitchen sink.
+
 ## Rules
 
 - Controlled via `value` + `onValueChange`, or uncontrolled via `defaultValue`.

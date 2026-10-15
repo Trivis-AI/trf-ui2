@@ -39,9 +39,28 @@ row reads as one surface with the figures beside it.
 </TableCell>
 ```
 
+A select or a date in such a row works the same way: `SelectTrigger` and `DatePicker` take
+`variant="cell"`, draw nothing of their own, and the cell also shows the open state while
+their popup is up.
+
+```tsx
+<TableCell editable>
+  <Select value={rateId} onValueChange={setRateId}>
+    <SelectTrigger variant="cell" aria-label="VAT rate" className="justify-end font-mono tabular-nums">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent align="end">…</SelectContent>
+  </Select>
+</TableCell>
+<TableCell editable>
+  <DatePicker variant="cell" value={due} onChange={setDue} clearable placeholder="—" />
+</TableCell>
+```
+
 `editable` sets `group`, so an icon button inside the cell can fade in on hover with
 `group-hover:opacity-100`. Read-only figure cells beside editable ones use `py-0` so the row
-keeps the input's height. Demo: "Line items" in the kitchen sink.
+keeps the input's height. Demo: "Line items" in the kitchen sink; `EditableGrid` is built the
+same way.
 
 ## Tier 2 — `DataTable` (TanStack-powered)
 

@@ -13,15 +13,28 @@ const SelectTrigger = React.forwardRef<
     /** Size to the selected value (with a min floor and max cap) instead of filling
      *  the container. Use for filter selects; leave off for full-width form selects. */
     autoWidth?: boolean;
+    /**
+     * "cell" draws nothing of its own: no border, background, ring or radius,
+     * and it fills the cell. Pair it with `<TableCell editable>`, which shows
+     * the hover, focus and open states in its place, so a select in a table
+     * row is the cell itself. Alignment is the caller's (`justify-end` for a
+     * figure such as a rate).
+     */
+    variant?: "default" | "cell";
   }
->(({ className, children, autoWidth, ...props }, ref) => (
+>(({ className, children, autoWidth, variant = "default", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-field px-3 py-2 text-sm shadow-xs transition-colors",
-      autoWidth ? "w-auto min-w-[7rem] max-w-[16rem]" : "w-full",
+      "flex h-9 items-center justify-between gap-2 text-sm transition-colors",
+      variant === "default" && [
+        "rounded-md border border-input bg-field px-3 py-2 shadow-xs",
+        autoWidth ? "w-auto min-w-[7rem] max-w-[16rem]" : "w-full",
+        "focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus data-[state=open]:border-input-focus data-[state=open]:bg-field-focus",
+      ],
+      variant === "cell" && "w-full rounded-none border-0 bg-transparent px-2 py-2 shadow-none",
       "data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus data-[state=open]:border-input-focus data-[state=open]:bg-field-focus",
+      "focus-visible:outline-none",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className
     )}

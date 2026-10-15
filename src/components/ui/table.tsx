@@ -83,8 +83,9 @@ export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElem
    * The cell is the field. An editable cell has no padding, so an
    * `<Input variant="cell">` fills it, and it carries the states the input
    * does not draw: the field background on hover, the field-focus background
-   * and an inset ring while something inside it has focus. Nothing sits inside
-   * anything; the row reads as one surface with the figures beside it.
+   * and an inset ring while something inside it has focus or is open (a
+   * `SelectTrigger` or `DatePicker` with `variant="cell"`). Nothing sits
+   * inside anything; the row reads as one surface with the figures beside it.
    */
   editable?: boolean;
   /** A validation error on this cell: an inset destructive ring. */
@@ -100,7 +101,7 @@ function TableCell({ className, editable, invalid, ...props }: TableCellProps) {
       className={cn(
         "px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0",
         editable &&
-          "group p-0 transition-colors hover:bg-field has-[:focus-visible]:bg-field-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-field-ring",
+          "group p-0 transition-colors hover:bg-field has-[:focus-visible]:bg-field-focus has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-field-ring has-[[data-state=open]]:bg-field-focus has-[[data-state=open]]:ring-2 has-[[data-state=open]]:ring-inset has-[[data-state=open]]:ring-field-ring",
         invalid && "ring-2 ring-inset ring-destructive",
         className
       )}

@@ -1111,8 +1111,9 @@ function EditableGridDemo() {
         onColumnDelete={(col) => setGridCols((cs) => cs.filter((c) => c.id !== col.id))}
       />
       <Text size="xs" tone="muted" className="mt-2 block">
-        Click a cell to edit (Enter commits, Esc cancels). Booleans toggle in the new-row select;
-        dates use an inline DatePicker. “+ Column” adds a typed column.
+        Every cell is a field. Text and numbers commit on Enter or when the cell loses focus, Esc
+        restores the saved value; dates and booleans commit on change. “+ Column” adds a typed
+        column.
       </Text>
     </div>
   );
@@ -1123,13 +1124,14 @@ function EditableGridDemo() {
 // The cell is the field: Input variant="cell" draws nothing, TableCell editable
 // carries hover, focus and invalid. This is the row shape of the invoice
 // editor card and the purchase table.
-type LineItem = { id: string; description: string; qty: string; price: string };
+type LineItem = { id: string; description: string; qty: string; price: string; vat: string };
+const VAT_RATES = ["24", "9", "0"];
 
 function LineItemsDemo() {
   const [rows, setRows] = useState<LineItem[]>([
-    { id: "a", description: "Consulting", qty: "12", price: "90" },
-    { id: "b", description: "Setup fee", qty: "0", price: "250" },
-    { id: "c", description: "Hosting, October", qty: "1", price: "48" },
+    { id: "a", description: "Consulting", qty: "12", price: "90", vat: "24" },
+    { id: "b", description: "Setup fee", qty: "0", price: "250", vat: "24" },
+    { id: "c", description: "Hosting, October", qty: "1", price: "48", vat: "0" },
   ]);
   const patch = (id: string, p: Partial<LineItem>) =>
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...p } : r)));
@@ -1150,6 +1152,7 @@ function LineItemsDemo() {
               <TableHead className="w-20 text-right">Qty</TableHead>
               <TableHead className="w-28 text-right">Price</TableHead>
               <TableHead className="w-28 text-right">Net</TableHead>
+              <TableHead className="w-20 text-right">VAT %</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -1178,6 +1181,18 @@ function LineItemsDemo() {
                   <TableCell className="px-2 py-0 text-right">
                     <Text as="span" mono tone={bad ? "muted" : "default"}>{net(r)}</Text>
                   </TableCell>
+                  <TableCell editable>
+                    <Select value={r.vat} onValueChange={(v) => patch(r.id, { vat: v })}>
+                      <SelectTrigger variant="cell" aria-label="VAT rate" className="justify-end font-mono tabular-nums">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent align="end">
+                        {VAT_RATES.map((v) => (
+                          <SelectItem key={v} value={v}><span className="font-mono tabular-nums">{v}%</span></SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
                   <TableCell className="px-1 py-0">
                     <div className="flex justify-end">
                       <Button type="button" size="icon-xs" variant="ghost" aria-label="Remove row" title="Remove row" onClick={() => setRows((rs) => rs.filter((x) => x.id !== r.id))}>
@@ -1193,7 +1208,8 @@ function LineItemsDemo() {
       </div>
       <Text size="xs" tone="muted" className="mt-2 block">
         Hover a cell for the field background, click into it for the inset ring. A quantity of
-        zero marks its cell invalid. The input draws nothing; the cell shows every state.
+        zero marks its cell invalid. The input and the select draw nothing; the cell shows every
+        state, including the select being open.
       </Text>
     </div>
   );

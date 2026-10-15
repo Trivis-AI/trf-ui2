@@ -35,6 +35,13 @@ interface DatePickerBaseProps {
    * (emits `undefined`). Opt-in — for optional/filter fields where unsetting the date is valid.
    */
   clearable?: boolean;
+  /**
+   * "cell" draws nothing of its own: no border, background, ring or radius,
+   * and it fills the cell. Pair it with `<TableCell editable>`, which shows
+   * the hover, focus and open states in its place, so a date in a table row
+   * is the cell itself.
+   */
+  variant?: "default" | "cell";
   id?: string;
   disabled?: boolean;
   className?: string;
@@ -80,6 +87,7 @@ export function DatePicker(props: DatePickerProps) {
     endMonth,
     disabledDates,
     clearable,
+    variant = "default",
     id,
     disabled,
     className,
@@ -153,8 +161,13 @@ export function DatePicker(props: DatePickerProps) {
             type="button"
             disabled={disabled}
             className={cn(
-              "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-field px-3 py-2 text-sm shadow-xs transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus data-[state=open]:border-input-focus data-[state=open]:bg-field-focus",
+              "flex h-9 w-full items-center gap-2 py-2 text-sm transition-colors",
+              variant === "default" && [
+                "rounded-md border border-input bg-field px-3 shadow-xs",
+                "focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus data-[state=open]:border-input-focus data-[state=open]:bg-field-focus",
+              ],
+              variant === "cell" && "rounded-none border-0 bg-transparent px-2 shadow-none",
+              "focus-visible:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
               !label && "text-muted-foreground",
               showClear && "pr-9",
