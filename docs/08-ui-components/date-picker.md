@@ -56,6 +56,7 @@ const [period, setPeriod] = useState<DateRange>();
 | `disabledDates?` | `Matcher \| Matcher[]` | react-day-picker matcher for non-selectable dates (greyed out). E.g. `{ after: new Date() }` to forbid future dates. Distinct from the boolean `disabled` (which disables the whole trigger). |
 | `keepDayOnNavigate?` | `boolean` | **Single mode, opt-in.** Carry the selected day to the new month when navigating, re-emitting it in one action (Jun 10 → pick April → Apr 10). See below. |
 | `clearable?` | `boolean` | **Opt-in.** Show a clear (✕) button in the trigger when a value is set; clicking it resets the field to empty (emits `undefined`). For optional/filter dates where unsetting is valid. |
+| `variant?` | `"default"` \| `"cell"` | `"cell"` draws nothing of its own and fills the cell, for a date that is a cell of an editable table inside `<TableCell editable>`; the cell shows hover, focus and the open state. See [Table, editable cells](table.md#editable-cells). |
 | `id` / `disabled` / `className` | | Trigger mirrors the Combobox / Select trigger styling. |
 
 The calendar opens on the month of the current value (the range's `from` in range mode), and on

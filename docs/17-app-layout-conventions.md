@@ -58,6 +58,10 @@ drop their `PageHeader`/`TablePage` heading (the crumb already names the page):
   bar, outside its border, so the bar itself stays 56px and level with the sidebar
   header (app-shell >= v0.39.0). Lead with the status badge; it sits concentric in
   the pill.
+- `<ShellBarHidden />` removes the desktop bar while the page is mounted, for a page
+  that needs no crumb, actions or meta (the AI chat). The mobile bar stays.
+  `<ShellBarUnpinned />` (the bar scrolls away with the page) is the lighter option for
+  a page that just wants the room.
 - The bar is desktop-only: pages render the same nodes again in a `md:hidden`
   fallback row so mobile keeps them (share one JSX variable; keep hidden file
   inputs and similar ref-holders outside the shared node so refs stay unique).

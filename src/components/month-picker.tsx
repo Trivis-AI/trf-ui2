@@ -70,7 +70,7 @@ export function MonthPicker({
           disabled={disabled}
           className={cn(
             "flex h-9 w-full items-center gap-2 rounded-md border border-input bg-field px-3 py-2 text-sm shadow-xs transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus data-[state=open]:border-input-focus data-[state=open]:bg-field-focus",
             "disabled:cursor-not-allowed disabled:opacity-50",
             !label && "text-muted-foreground",
             className

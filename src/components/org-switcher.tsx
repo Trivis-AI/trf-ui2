@@ -49,6 +49,9 @@ export interface OrgSwitcherProps {
   /** Popover alignment relative to the trigger. */
   align?: "start" | "center" | "end";
   side?: "top" | "right" | "bottom" | "left";
+  /** Gap between trigger and panel in px (default 4). Negative overlaps the trigger, for
+   *  a trigger with empty space at its edge (the sidebar brand's inset hover block). */
+  sideOffset?: number;
   /** Extra classes for the popover panel (e.g. a custom width). */
   className?: string;
   /** The trigger element (rendered as-is via `asChild`), e.g. the sidebar brand block. */
@@ -87,6 +90,7 @@ export function OrgSwitcher({
   openLabel = "Open in a new tab",
   align = "start",
   side = "bottom",
+  sideOffset,
   className,
   children,
 }: OrgSwitcherProps) {
@@ -117,6 +121,7 @@ export function OrgSwitcher({
         )}
         align={align}
         side={side}
+        sideOffset={sideOffset}
         collisionPadding={8}
       >
         <Command filter={substringFilter}>

@@ -1,7 +1,8 @@
 # EditableGrid
 
 > **Status: ready** · `import { EditableGrid } from "@trf/ui2"` · source:
-> `src/components/editable-grid.tsx` (built on `Table`, `Input`, `Select`, `DatePicker`, `Button`)
+> `src/components/editable-grid.tsx` (built on `Table` with `TableCell editable`, and `Input`,
+> `SelectTrigger`, `DatePicker` in their `"cell"` variant, plus `Button`)
 
 **Spreadsheet-style editable grid**: per-type inline cell editing (text / number / date /
 boolean), an inline new-row, row delete, dynamic add/remove columns, and a server-side pagination
@@ -70,10 +71,14 @@ function TableDetail() {
 
 ## Behavior
 
-- Text/number cells: click to edit, Enter/blur commits, Escape cancels; `onCellChange` fires only
-  when the value actually changed
-- Date cells: always a borderless inline `DatePicker` — change commits immediately
-- Boolean cells: render ✓ / ✗; the new-row uses a `—`/true/false select
+- Every cell is a field ([Table, editable cells](table.md#editable-cells)): the cell shows
+  hover, focus, open and invalid; the control inside draws nothing. Tab moves between cells.
+- Text/number cells: an always-mounted `Input variant="cell"`. It keeps a draft while focused;
+  Enter or leaving the cell commits, Escape restores the saved value. `onCellChange` fires only
+  when the value actually changed. Number cells are right-aligned tabular figures.
+- Date cells: `DatePicker variant="cell"`, clearable; a change commits immediately
+- Boolean cells: `SelectTrigger variant="cell"` with `—` / ✓ true / ✗ false; a change commits
+  immediately. The new row uses the same select.
 - Optional features appear only when the callback is provided (`onRowAdd`, `onRowDelete`,
   `onColumnAdd`, `onColumnDelete`)
 - **Column delete is not confirmed by the grid** — confirm in the consumer (`useConfirm`)

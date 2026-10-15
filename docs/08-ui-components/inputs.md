@@ -13,6 +13,19 @@ Token-styled native `<input>` / `<textarea>`. All native props pass through (`ty
 <Textarea placeholder="Free-text notes…" />
 ```
 
+### Variants
+
+- `default`: the form field. Border, field background, focus ring.
+- `quiet`: no chrome at rest, border and field background on hover, the focus ring while
+  editing. For a figure that is typed into now and then, such as the rounding line in totals.
+- `cell`: draws nothing, ever. No border, no background, no ring, square corners, and it
+  fills its cell. For editable tables, inside `<TableCell editable>`: the cell is the field,
+  and it carries the hover, focus and invalid states, so nothing sits inside anything.
+  Alignment and numerals are yours to add (`text-right font-mono tabular-nums` for figures).
+  See [Table](table.md#editable-cells).
+
+Both table variants hide the native number spinners, which eat width in dense cells.
+
 ## Field — the form-row wrapper
 
 Composes a `Label` + control + helper/error text. Wrap every form control in a `Field`.

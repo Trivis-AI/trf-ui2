@@ -132,7 +132,7 @@ export function MarkdownEditor({
     <div
       className={cn(
         "rounded-md border border-input bg-field shadow-xs transition-colors",
-        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background",
+        "focus-within:ring-2 focus-within:ring-field-ring focus-within:ring-offset-1 focus-within:ring-offset-field-ring-offset focus-within:border-input-focus focus-within:bg-field-focus",
         disabled && "cursor-not-allowed opacity-50",
         className
       )}
@@ -166,7 +166,7 @@ export function MarkdownEditor({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          "rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0",
+          "rounded-none border-0 bg-transparent shadow-none focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
           textareaClassName
         )}
         {...props}

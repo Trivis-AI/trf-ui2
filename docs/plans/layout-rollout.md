@@ -45,7 +45,7 @@ Started 2026-09-29. Status is kept here, not in chat. Update the checkboxes as w
       ContractDetail, frontsettings PersonnelDetail, fronttables TableDetailPage,
       frontledger EntryDetail and PeriodDetail. Identity leaves the pill, which keeps
       status only. Invoice and payment detail pages keep the pill as designed.
-- [ ] **5. Prod**: promote each app after Jaak signs off staging.
+- [x] **5. Prod**: promoted 2026-10-01 after Jaak's sign-off (main merged into `trivis`).
 
 ## Inventory (audit 2026-09-29, read at origin/main)
 
@@ -157,3 +157,7 @@ page-sticky support; `TableCard` is `overflow-hidden`, so lists must not use it.
   into 10 lists (sales/purchase invoices, purchase import, payments, ledger entries, audit
   log, contracts, CRM tasks, products, absences) and on staging. `<trn-click-to-clear>`
   added to services (e0d3ecc), needs seeding.
+- 2026-10-01: Jaak signed off staging. main merged into `trivis` in all 15 apps, services,
+  trf-ui2 and app-shell, together with the table review release (ui2 v7.16.0, app-shell
+  v0.40.0); everything in this rollout is on prod. The translation fixes still need the
+  POST to `/v1/translations` on prod.
