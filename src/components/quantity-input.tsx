@@ -1,3 +1,4 @@
+import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
@@ -57,6 +58,27 @@ export function QuantityInput({
   const unit = units.find((u) => u.id === unitId);
   const canPickUnit = !disabled && !!onUnitChange && units.length > 0;
 
+  // The unit's lane is as wide as the unit itself. The chip is measured and
+  // the input's right padding follows it, so "päev" or "komplekt" gets the
+  // room it needs and the digits never run under it; the class is only the
+  // fallback until the first measurement. The chip sits 4px in from the
+  // edge and keeps a 4px gap to the digits.
+  const chipRef = React.useRef<HTMLElement | null>(null);
+  const [lane, setLane] = React.useState<number | null>(null);
+  React.useLayoutEffect(() => {
+    const el = chipRef.current;
+    if (!el) {
+      setLane(null);
+      return;
+    }
+    const measure = () => setLane(el.offsetWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [canPickUnit, unit?.label]);
+  const padRight = lane === null ? undefined : lane + (canPickUnit ? 4 : 8) + 4;
+
   return (
     <div className={cn("group/qty relative flex items-center", className)}>
       <Input
@@ -67,11 +89,11 @@ export function QuantityInput({
         aria-label={ariaLabel}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
-        // Right padding reserves the unit's lane so digits never run under it.
         className={cn(
           "text-right font-mono tabular-nums",
           canPickUnit ? "pr-12" : unit ? "pr-9" : undefined
         )}
+        style={padRight === undefined ? undefined : { paddingRight: padRight }}
       />
       {canPickUnit ? (
         <Select value={unitId} onValueChange={onUnitChange}>
@@ -79,6 +101,7 @@ export function QuantityInput({
               chip inside an input, not a form field, so it must not bring the
               h-9 / border / full-width chrome with it. */}
           <SelectPrimitive.Trigger
+            ref={(el) => { chipRef.current = el; }}
             aria-label={unitLabel}
             className={cn(
               "absolute right-1 flex h-6 items-center gap-0.5 rounded px-1 text-xs text-muted-foreground transition-colors",
@@ -106,7 +129,10 @@ export function QuantityInput({
           </SelectContent>
         </Select>
       ) : unit ? (
-        <span className="pointer-events-none absolute right-2 text-xs text-muted-foreground">
+        <span
+          ref={(el) => { chipRef.current = el; }}
+          className="pointer-events-none absolute right-2 text-xs text-muted-foreground"
+        >
           {unit.label}
         </span>
       ) : null}
