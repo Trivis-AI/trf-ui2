@@ -90,18 +90,21 @@ const CUSTOMERS = [
 ].map((name) => ({ value: name, label: name }));
 
 function QuantityInputDemo() {
+  // Short codes and the long ones the lane has to make room for.
   const UNITS = [
     { id: "tk", label: "tk" },
     { id: "h", label: "h" },
     { id: "kg", label: "kg" },
     { id: "km", label: "km" },
+    { id: "päev", label: "päev" },
+    { id: "komplekt", label: "komplekt" },
   ];
-  const [qty, setQty] = useState("1");
-  const [unit, setUnit] = useState("tk");
+  const [qty, setQty] = useState("123456");
+  const [unit, setUnit] = useState("päev");
   return (
     <Field
       label="Quantity"
-      description="Unit code rides inside the field; hover reveals the picker's chevron, clicking the code swaps the unit."
+      description="Unit code rides inside the field and the lane is as wide as the unit; hover reveals the picker's chevron, clicking the code swaps the unit."
       className="sm:col-span-2 max-w-48"
     >
       <QuantityInput
