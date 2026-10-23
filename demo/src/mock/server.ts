@@ -141,6 +141,18 @@ function sleep(ms: number): Promise<void> {
  * artificial delay. This is the single seam the real app swaps for a fetch against
  * the TRF API (or Supabase): only this function changes, not the table wiring.
  */
+/**
+ * Change one row in place, as a write from elsewhere (the assistant, another
+ * tab) would: the next queryTable answers with the new values. Returns the
+ * row as it now stands, or undefined when the number is unknown.
+ */
+export function mutateRow(number: string, patch: Partial<InvoiceRow>): InvoiceRow | undefined {
+  const row = ALL_ROWS.find((r) => r.number === number);
+  if (!row) return undefined;
+  Object.assign(row, patch);
+  return row;
+}
+
 export async function queryTable(
   input: TableQueryInput,
   opts: { delayMs?: number } = {}
@@ -162,7 +174,9 @@ export async function queryTable(
   const rowCount = rows.length;
   const pageCount = Math.max(1, Math.ceil(rowCount / pageSize));
   const start = pageIndex * pageSize;
-  const page = rows.slice(start, start + pageSize);
+  // Fresh objects, as a server answer is: a row that was changed in place (see
+  // mutateRow) must not share its identity with what the table already shows.
+  const page = rows.slice(start, start + pageSize).map((r) => ({ ...r }));
 
   await sleep(opts.delayMs ?? DEFAULT_DELAY_MS);
 

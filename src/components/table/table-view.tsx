@@ -26,6 +26,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronsUpDown, ChevronUp, Filter, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { CardView, type CardSlot, type TableViewMode } from "./card-view";
+import { useLiveGlow, type LiveChange } from "./live-change";
 import { Checkbox } from "../ui/checkbox";
 import { Skeleton } from "../ui/skeleton";
 import {
@@ -129,6 +130,11 @@ export interface ColumnFilterMark {
 export interface TableViewProps<TData> {
   /** A built TanStack table instance (client or manual models). */
   table: TanStackTable<TData>;
+  /**
+   * A refetch is coming because of a change made elsewhere: snapshot the rows
+   * now and glow what differs when the new ones arrive. See ./live-change.
+   */
+  liveChange?: LiveChange;
   /** Cold load, no rows yet: render skeleton rows instead of the body. */
   loading?: boolean;
   /** Background refetch with rows on screen: show the header progress line, keep rows. */
@@ -363,6 +369,7 @@ function DraggableHeader<TData>({
 
 export function TableView<TData>({
   table,
+  liveChange,
   loading = false,
   fetching = false,
   onRowClick,
@@ -440,6 +447,7 @@ export function TableView<TData>({
 
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
+  const liveGlow = useLiveGlow(table, rows, liveChange, fetching);
   const leafColumns = table.getVisibleLeafColumns();
   const colCount = leafColumns.length + (enableRowSelection ? 1 : 0);
   const columnOrder = table.getState().columnOrder;
@@ -571,6 +579,7 @@ export function TableView<TData>({
               <React.Fragment key={row.id}>
                 <TableRow
                   data-state={row.getIsSelected() ? "selected" : undefined}
+                  data-live={liveGlow.get(row.id) === "row" ? "row" : undefined}
                   onClick={
                     clickable
                       ? () => {
@@ -602,6 +611,7 @@ export function TableView<TData>({
                     <TableCell
                       key={cell.id}
                       data-pinned={cell.column.columnDef.meta?.sticky === "right" ? "" : undefined}
+                      data-live={(() => { const g = liveGlow.get(row.id); return g instanceof Set && g.has(cell.column.id) ? "cell" : undefined; })()}
                       className={cn(
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,

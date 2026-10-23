@@ -49,6 +49,11 @@ export type {
   TableFilterNoticeProps,
 } from "./table-toolbar";
 
+// Live changes: the prop a page sets when a refetch is caused elsewhere, and the
+// diff the table glows. See live-change.ts.
+export type { LiveChange, LiveRefreshReason, LiveGlow } from "./live-change";
+export { diffLiveRows, LIVE_GLOW_MS } from "./live-change";
+
 // The header progress line.
 export { TableProgress } from "./table-progress";
 export type { TableProgressProps } from "./table-progress";

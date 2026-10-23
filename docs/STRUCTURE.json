@@ -59,6 +59,8 @@
     "DataTable": "08-ui-components/table.md",
     "RowEditModal": "08-ui-components/row-edit-modal.md",
     "ServerDataTable": "08-ui-components/server-data-table.md",
+    "LiveChange": "08-ui-components/server-data-table.md",
+    "useChangeHighlight": "08-ui-components/server-data-table.md",
     "EditableDataTable": "08-ui-components/server-data-table.md",
     "InlineEditCell": "08-ui-components/server-data-table.md",
     "CellEditor": "08-ui-components/server-data-table.md",

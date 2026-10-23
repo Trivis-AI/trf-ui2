@@ -328,6 +328,9 @@ export { useTabAlert } from "./hooks/useTabAlert";
 export type { TabAlertOptions } from "./hooks/useTabAlert";
 export { useDesktopAlert } from "./hooks/useDesktopAlert";
 export type { DesktopAlertOptions, DesktopAlertState } from "./hooks/useDesktopAlert";
+// Glow a detail-page value that changed because of somebody else's write; the
+// table counterpart is ServerDataTable's `liveChange` prop.
+export { useChangeHighlight } from "./hooks/useChangeHighlight";
 
 export { AttachmentDropzone } from "./components/attachment-dropzone";
 export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";

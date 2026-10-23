@@ -80,6 +80,11 @@
   --warning: oklch(0.78 0.15 75);
   --warning-foreground: oklch(0.28 0.05 75);
 
+  /* A value that just changed elsewhere (the assistant, a colleague, another
+     tab): the tint a table cell or a form field glows with for a second. Warm
+     and light so it reads as "look here", never as an error or a selection. */
+  --change: oklch(0.93 0.09 85);
+
   /* Inline and block code inside prose. A hue of its own so code reads as code
      at a glance: foreground made it identical to body text, and muted made it
      fainter than the text around it. Violet (290) is clear of --destructive
@@ -194,6 +199,8 @@
 
   --warning: oklch(0.8 0.15 75);
   --warning-foreground: oklch(0.26 0.05 75);
+
+  --change: oklch(0.42 0.08 85);
 
   /* Lifted for the dark surface, same hue. */
   --code: oklch(0.82 0.13 290);
@@ -711,6 +718,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-change: var(--change);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -907,6 +915,36 @@
   }
   100% {
     transform: translateX(400%);
+  }
+}
+
+/*
+ * Live change glow. A table cell, a whole new row, or a form field whose value
+ * changed elsewhere carries data-live="cell" | "row" for LIVE_GLOW_MS (see
+ * components/table/live-change.ts and hooks/useChangeHighlight.ts): the tint
+ * comes in fast, holds, and fades. With reduced motion it is a plain tint for
+ * the same time, no animation.
+ */
+@theme {
+  --animate-live-glow: live-glow 1.3s ease-out both;
+}
+@keyframes live-glow {
+  0% { background-color: transparent; }
+  12% { background-color: var(--change); }
+  60% { background-color: var(--change); }
+  100% { background-color: transparent; }
+}
+[data-live="cell"],
+[data-live="row"] > td,
+[data-live="field"] {
+  animation: var(--animate-live-glow);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-live="cell"],
+  [data-live="row"] > td,
+  [data-live="field"] {
+    animation: none;
+    background-color: var(--change);
   }
 }
 

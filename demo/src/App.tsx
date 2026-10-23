@@ -4,7 +4,7 @@ import {
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
   FileText, ImageIcon, X, Download, Eye, Check,
-  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package,
+  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package, Radio,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -49,9 +49,10 @@ import {
   RecordPaymentDialog,
 } from "@trf/ui2";
 import {
-  queryTable, STATUS_OPTIONS, METHOD_OPTIONS, TOTAL_ROWS,
+  queryTable, mutateRow, STATUS_OPTIONS, METHOD_OPTIONS, TOTAL_ROWS,
   type InvoiceRow, type InvoiceStatus, type PaymentMethod,
 } from "./mock/server";
+import type { LiveChange } from "@trf/ui2";
 import { useMockQuery } from "./mock/use-mock-query";
 
 /* ------------------------------------------------------------------ helpers */
@@ -2241,6 +2242,27 @@ function ServerDataTableDemo() {
 
   const [reloadNonce, setReloadNonce] = useState(0);
   const [opened, setOpened] = useState<string>();
+
+  // Live changes: a write from elsewhere arrives as an event naming the row;
+  // the page refetches and the table glows the cells that differ. Here the
+  // "elsewhere" is a button that edits the mock data and plays the event. The
+  // view identity leaves the reload nonce out: it is the same list.
+  const [liveChange, setLiveChange] = useState<LiveChange>();
+  const liveView = JSON.stringify(q.queryKey);
+  const changeElsewhere = () => {
+    const target = rows[Math.min(2, rows.length - 1)];
+    if (!target) return;
+    // Status and payable only: the list sorts by date, and a date change would
+    // re-sort the row to the top, so the glow would land away from where the
+    // eye is. A row moving to its sorted place with a slide is the next phase.
+    const next: InvoiceStatus = target.status === "Paid" ? "Overdue" : "Paid";
+    mutateRow(target.number, {
+      status: next,
+      payable: next === "Paid" ? 0 : target.totalGross,
+    });
+    setLiveChange((c) => ({ version: (c?.version ?? 0) + 1, reason: "external", ids: [target.number], view: liveView }));
+    setReloadNonce((n) => n + 1);
+  };
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -2390,9 +2412,14 @@ function ServerDataTableDemo() {
         description="5000 rows from an in-memory mock: server-side search, filter, sort, and pagination with a flicker-free loading model."
         primaryAction={<Button size="sm">New invoice</Button>}
         secondaryActions={
-          <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
-            <RefreshCw /> Reload
-          </Button>
+          <>
+            <Button variant="secondary" size="sm" onClick={changeElsewhere} title="Edit the third row as another person would, then refetch: the changed cells glow">
+              <Radio /> Change elsewhere
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
+              <RefreshCw /> Reload
+            </Button>
+          </>
         }
         search={{
           value: q.searchInput,
@@ -2501,6 +2528,7 @@ function ServerDataTableDemo() {
           readOnly={inlineReadOnly}
           loading={result.isLoading}
           fetching={result.isFetching && !result.isLoading}
+          liveChange={liveChange}
           onRowClick={(row) => setOpened(row.number)}
           skeletonRows={10}
           emptyMessage="No invoices match your filters."

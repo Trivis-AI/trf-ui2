@@ -43,6 +43,7 @@ equivalent) on `<html>` for every app: lighter, crisper text on macOS. Don't set
 | Text-on-surface | `foreground`, `card-foreground`, `popover-foreground`, `muted-foreground`, `secondary-foreground`, `accent-foreground`, `primary-foreground` |
 | Interactive | `primary`, `border`, `input`, `ring` |
 | Status | `destructive`, `success`, `warning` (+ each `*-foreground`) |
+| Live change | `change`: the tint a table cell or a field glows with when its value changed elsewhere (see ServerDataTable, `useChangeHighlight`). Background only, no foreground pair |
 
 Use them as Tailwind utilities: `bg-primary`, `text-muted-foreground`, `border-input`,
 `bg-destructive`, `text-success-foreground`. Opacity is allowed (`bg-primary/90`).
