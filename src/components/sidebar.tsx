@@ -2,6 +2,7 @@ import * as React from "react";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen, Menu } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useScrollbarActivity } from "../hooks/useScrollbarActivity";
+import { readPrefCookie, writePrefCookie } from "../lib/prefCookie";
 
 /*
  * Composable sidebar (shadcn-shaped), presentational only — no routing/auth/data inside.
@@ -13,14 +14,65 @@ import { useScrollbarActivity } from "../hooks/useScrollbarActivity";
  *  - header + footer are flex-fixed; only the middle scrolls.
  */
 
-const COLLAPSE_KEY = "trf-ui2-sidebar-collapsed";
-const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_ICON = "3.5rem"; // 56px; icon (16px) centers at 20px left — see label note
+/*
+ * Width. The expanded rail is resizable from its right edge (SidebarResizeHandle, rendered by
+ * <Sidebar>): the width follows the hand between the minimum and the maximum; narrower than the
+ * snap width the rail collapses to icons, and dragging the icon rail out past the snap width
+ * expands it again. Double-click on the edge resets the default. The collapsed flag and the
+ * width persist together in one cookie on the apex domain (prefCookie.ts), like the theme and
+ * the AI panel state in @trf/app-shell, so every app shares them. Sizes are CSS px: --font-scale
+ * scales text, not rem, so the icon geometry (20px offset, 56px rail) ignores the text size.
+ */
+const COOKIE = "trf-sidebar";
+/** Where the collapsed flag lived before the cookie; read once as a fallback, never written. */
+const LEGACY_COLLAPSE_KEY = "trf-ui2-sidebar-collapsed";
+export const SIDEBAR_DEFAULT_WIDTH = 256;
+export const SIDEBAR_MIN_WIDTH = 200;
+export const SIDEBAR_MAX_WIDTH = 400;
+/** The icon rail: a 16px icon centers at 28px, so the icon column's left offset is 20px. */
+export const SIDEBAR_ICON_WIDTH = 56;
+/** Dragging the expanded rail narrower than this collapses it. */
+export const SIDEBAR_SNAP_WIDTH = 150;
+/** Dragging the icon rail out this far past the snap width expands it again (hysteresis). */
+const SIDEBAR_EXPAND_HYSTERESIS = 20;
+
+export function clampSidebarWidth(px: number): number {
+  return Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(px)));
+}
+
+function readStoredSidebar(defaultCollapsed: boolean): { collapsed: boolean; width: number } {
+  const fallback = { collapsed: defaultCollapsed, width: SIDEBAR_DEFAULT_WIDTH };
+  if (typeof window === "undefined") return fallback;
+  const v = readPrefCookie(COOKIE);
+  if (v) {
+    const [c, w] = v.split(".");
+    const n = Number(w);
+    return {
+      collapsed: c === "1",
+      width: Number.isFinite(n) && n >= SIDEBAR_MIN_WIDTH && n <= SIDEBAR_MAX_WIDTH ? n : SIDEBAR_DEFAULT_WIDTH,
+    };
+  }
+  try {
+    const legacy = window.localStorage.getItem(LEGACY_COLLAPSE_KEY);
+    if (legacy != null) return { ...fallback, collapsed: legacy === "1" };
+  } catch {
+    /* storage blocked: the default stands */
+  }
+  return fallback;
+}
 
 type SidebarContextValue = {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
   toggleCollapsed: () => void;
+  /** Expanded width in CSS px, within SIDEBAR_MIN_WIDTH..SIDEBAR_MAX_WIDTH. */
+  width: number;
+  setWidth: (px: number) => void;
+  /** Back to SIDEBAR_DEFAULT_WIDTH, expanded. */
+  resetWidth: () => void;
+  /** True while the edge is being dragged (the width transition is off meanwhile). */
+  resizing: boolean;
+  setResizing: (v: boolean) => void;
   openGroups: Set<string>;
   toggleGroup: (id: string, forceOpen?: boolean) => void;
   mobileOpen: boolean;
@@ -53,11 +105,11 @@ export function SidebarProvider({
   onOpenGroupsChange,
   children,
 }: SidebarProviderProps) {
-  const [collapsed, setCollapsedState] = React.useState<boolean>(() => {
-    if (typeof window === "undefined") return defaultCollapsed;
-    const stored = window.localStorage.getItem(COLLAPSE_KEY);
-    return stored == null ? defaultCollapsed : stored === "1";
-  });
+  // Read once, synchronously, so the first paint already has the stored width and state.
+  const [stored] = React.useState(() => readStoredSidebar(defaultCollapsed));
+  const [collapsed, setCollapsedState] = React.useState<boolean>(stored.collapsed);
+  const [width, setWidthState] = React.useState<number>(stored.width);
+  const [resizing, setResizing] = React.useState(false);
   const [openGroups, setOpenGroupsState] = React.useState<Set<string>>(
     () => new Set(openGroupsProp ?? defaultOpenGroups)
   );
@@ -86,10 +138,18 @@ export function SidebarProvider({
     [onOpenGroupsChange]
   );
 
-  const setCollapsed = React.useCallback((v: boolean) => {
-    setCollapsedState(v);
-    if (typeof window !== "undefined") window.localStorage.setItem(COLLAPSE_KEY, v ? "1" : "0");
+  const setCollapsed = React.useCallback((v: boolean) => setCollapsedState(v), []);
+  const setWidth = React.useCallback((px: number) => setWidthState(clampSidebarWidth(px)), []);
+  const resetWidth = React.useCallback(() => {
+    setWidthState(SIDEBAR_DEFAULT_WIDTH);
+    setCollapsedState(false);
   }, []);
+
+  // Persist both in one cookie, `<collapsed 0|1>.<width>`; not on every drag frame, once it ends.
+  React.useEffect(() => {
+    if (resizing) return;
+    writePrefCookie(COOKIE, `${collapsed ? 1 : 0}.${width}`);
+  }, [collapsed, width, resizing]);
 
   const toggleGroup = React.useCallback(
     (id: string, forceOpen?: boolean) => {
@@ -122,12 +182,17 @@ export function SidebarProvider({
       collapsed,
       setCollapsed,
       toggleCollapsed,
+      width,
+      setWidth,
+      resetWidth,
+      resizing,
+      setResizing,
       openGroups,
       toggleGroup,
       mobileOpen,
       setMobileOpen,
     }),
-    [collapsed, setCollapsed, toggleCollapsed, openGroups, toggleGroup, mobileOpen]
+    [collapsed, setCollapsed, toggleCollapsed, width, setWidth, resetWidth, resizing, openGroups, toggleGroup, mobileOpen]
   );
 
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
@@ -142,20 +207,21 @@ export function Sidebar({
   children: React.ReactNode;
 }) {
   const ctx = useSidebar();
-  const { collapsed, mobileOpen } = ctx;
+  const { collapsed, mobileOpen, width, resizing } = ctx;
   return (
     <>
-      {/* Desktop rail */}
+      {/* Desktop rail. `--sidebar-width` lets the labels' fade max-width follow the rail. */}
       <aside
         data-collapsed={collapsed || undefined}
-        style={{ width: collapsed ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH }}
+        style={{ width: collapsed ? SIDEBAR_ICON_WIDTH : width, "--sidebar-width": `${width}px` } as React.CSSProperties}
         className={cn(
-          "hidden h-full shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar text-card-foreground",
-          "transition-[width] duration-300 ease-in-out md:flex",
+          "relative hidden h-full shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar text-card-foreground md:flex",
+          resizing ? "transition-none" : "transition-[width] duration-300 ease-in-out motion-reduce:transition-none",
           className
         )}
       >
         {children}
+        <SidebarResizeHandle />
       </aside>
 
       {/* Mobile menu: a full-screen, touch-first panel (not a mini desktop rail).
@@ -265,7 +331,7 @@ function FadeLabel({ children, className }: { children: React.ReactNode; classNa
     <span
       className={cn(
         "min-w-0 flex-1 overflow-hidden whitespace-nowrap text-ellipsis transition-[max-width,opacity] duration-200 ease-in-out",
-        collapsed ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100 max-md:max-w-none",
+        collapsed ? "max-w-0 opacity-0" : "max-w-[var(--sidebar-width,12rem)] opacity-100 max-md:max-w-none",
         className
       )}
     >
@@ -421,6 +487,82 @@ export function SidebarMenuSub({
         </ul>
       </div>
     </div>
+  );
+}
+
+/**
+ * The grip on the rail's right edge: drag to resize, past the snap width to collapse or expand,
+ * double-click to reset. The width the hand asks for is always `start + dx`, whether the rail
+ * is collapsed or not, so the two snaps stay symmetric. Pointer capture keeps the drag alive
+ * over iframes (the AI panel) and the body cursor stays col-resize until release.
+ */
+function SidebarResizeHandle() {
+  const { collapsed, setCollapsed, width, setWidth, resetWidth, resizing, setResizing } = useSidebar();
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const el = e.currentTarget;
+    el.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startW = collapsed ? SIDEBAR_ICON_WIDTH : width;
+    let isCollapsed = collapsed;
+    const body = document.body;
+    const prev = { cursor: body.style.cursor, userSelect: body.style.userSelect };
+    body.style.cursor = "col-resize";
+    body.style.userSelect = "none";
+    setResizing(true);
+
+    const onMove = (ev: PointerEvent) => {
+      const w = startW + (ev.clientX - startX);
+      if (isCollapsed) {
+        if (w >= SIDEBAR_SNAP_WIDTH + SIDEBAR_EXPAND_HYSTERESIS) {
+          isCollapsed = false;
+          setCollapsed(false);
+          setWidth(w);
+        }
+      } else if (w < SIDEBAR_SNAP_WIDTH) {
+        // Collapse, and keep the width the drag started from, so the toggle reopens there
+        // rather than at the minimum the hand passed on the way down.
+        isCollapsed = true;
+        setCollapsed(true);
+        setWidth(width);
+      } else {
+        setWidth(w);
+      }
+    };
+    const end = () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", end);
+      el.removeEventListener("pointercancel", end);
+      body.style.cursor = prev.cursor;
+      body.style.userSelect = prev.userSelect;
+      setResizing(false);
+    };
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+  };
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize sidebar"
+      aria-valuemin={SIDEBAR_MIN_WIDTH}
+      aria-valuemax={SIDEBAR_MAX_WIDTH}
+      aria-valuenow={collapsed ? SIDEBAR_ICON_WIDTH : width}
+      data-sidebar-resize
+      onPointerDown={onPointerDown}
+      onDoubleClick={resetWidth}
+      className={cn(
+        "absolute inset-y-0 right-0 z-10 w-2 cursor-col-resize touch-none select-none",
+        // The 1px line on the edge: nothing at rest, ring-toned while hovered or dragging.
+        "after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-ring after:opacity-0 after:transition-opacity after:duration-150",
+        "hover:after:opacity-60",
+        resizing && "after:opacity-60"
+      )}
+    />
   );
 }
 

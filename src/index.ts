@@ -46,6 +46,13 @@ export {
   SidebarMobileTrigger,
   SidebarInset,
   useSidebar,
+  // Rail geometry (CSS px): default, bounds and snap of the resizable sidebar, the icon rail.
+  SIDEBAR_DEFAULT_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_ICON_WIDTH,
+  SIDEBAR_SNAP_WIDTH,
+  clampSidebarWidth,
 } from "./components/sidebar";
 export type {
   AppShellProps,

@@ -2956,6 +2956,13 @@ function SidebarDemo() {
               Collapse the rail (bottom-left): sub-items close first, then it narrows to icons —
               which stay centered and never move. Open a group to see the grid accordion.
             </Text>
+            <Text tone="muted" className="mt-3">
+              Drag the rail's right edge to resize it (200 to 400 px). Narrower than 150 px it snaps
+              to the icon rail; dragging the icon rail out expands it again; double-click the edge
+              resets 256 px. Collapsed state and width live in one cookie on the apex domain
+              (<code>trf-sidebar</code>), so every app shares them; this demo box and the page's own
+              menu share it too.
+            </Text>
           </main>
         </div>
       </SidebarProvider>
