@@ -419,11 +419,16 @@ useLiveChanges({                              // from @trf/app-shell
 - Detail pages use `useChangeHighlight(value, trigger)`: bump `trigger` on every refresh caused
   elsewhere and spread `props` on the element around the field; it glows only when the value
   differs across that refresh.
-- Demo: the kitchen sink's ServerDataTable section has a "Change elsewhere" button.
-
-Not yet here (next phase): the old-to-new value crossfade, rows that leave the filter animating
-out, rows entering from the next page, and a changed row sliding to its new sorted place (today
-it jumps, and the glow goes with it).
+- What a batch looks like once it settles: a changed cell crossfades from its old content (an
+  inert copy captured when the batch arrived) and glows; a new row glows whole; a row that no
+  longer belongs to the view is kept as an inert copy at its place, glows, then collapses while
+  the rows below slide up (rows leaving together start 40 ms apart); rows that paged in to fill
+  the gap fade in without a tint; a row that re-sorted slides to its new place over the rows it
+  displaced, which slide one slot. Exited rows are dropped from the selection
+  (`onLiveRowsExit`). Counts and the pager update with the data, not after the wave.
+- Reduced motion captures nothing: cells and fields get a static tint, exits simply disappear.
+- Demo: the kitchen sink's ServerDataTable section has "Sum elsewhere", "Date elsewhere" and
+  "Filter, then leave" buttons, one per animation.
 
 ## Rules
 

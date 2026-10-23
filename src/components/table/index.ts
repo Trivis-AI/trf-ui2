@@ -51,8 +51,8 @@ export type {
 
 // Live changes: the prop a page sets when a refetch is caused elsewhere, and the
 // diff the table glows. See live-change.ts.
-export type { LiveChange, LiveRefreshReason, LiveGlow } from "./live-change";
-export { diffLiveRows, LIVE_GLOW_MS } from "./live-change";
+export type { LiveChange, LiveRefreshReason, LiveGlow, LiveEffects } from "./live-change";
+export { diffLiveRows, exitedRows, enteredRows, LIVE_GLOW_MS } from "./live-change";
 
 // The header progress line.
 export { TableProgress } from "./table-progress";

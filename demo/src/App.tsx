@@ -2249,19 +2249,40 @@ function ServerDataTableDemo() {
   // view identity leaves the reload nonce out: it is the same list.
   const [liveChange, setLiveChange] = useState<LiveChange>();
   const liveView = JSON.stringify(q.queryKey);
-  const changeElsewhere = () => {
+  // Three kinds of change from elsewhere, each exercising one animation: a
+  // sum changes in place (cells crossfade and glow), a date changes (the row
+  // re-sorts and slides to its new place), a status leaves the active filter
+  // (the row glows, collapses, and the next page's first row fades in).
+  const playChange = (ids: string[]) => {
+    setLiveChange((c) => ({ version: (c?.version ?? 0) + 1, reason: "external", ids, view: liveView }));
+    setReloadNonce((n) => n + 1);
+  };
+  const changeSumElsewhere = () => {
     const target = rows[Math.min(2, rows.length - 1)];
     if (!target) return;
-    // Status and payable only: the list sorts by date, and a date change would
-    // re-sort the row to the top, so the glow would land away from where the
-    // eye is. A row moving to its sorted place with a slide is the next phase.
     const next: InvoiceStatus = target.status === "Paid" ? "Overdue" : "Paid";
-    mutateRow(target.number, {
-      status: next,
-      payable: next === "Paid" ? 0 : target.totalGross,
-    });
-    setLiveChange((c) => ({ version: (c?.version ?? 0) + 1, reason: "external", ids: [target.number], view: liveView }));
-    setReloadNonce((n) => n + 1);
+    mutateRow(target.number, { status: next, payable: next === "Paid" ? 0 : target.totalGross });
+    playChange([target.number]);
+  };
+  const changeDateElsewhere = () => {
+    const target = rows[Math.min(4, rows.length - 1)];
+    if (!target) return;
+    const shift = (q.sorting[0]?.desc === false ? -3 : 3) * 86_400_000;
+    mutateRow(target.number, { date: new Date(new Date(target.date).getTime() + shift).toISOString().slice(0, 10) });
+    playChange([target.number]);
+  };
+  const leaveFilterElsewhere = () => {
+    const filtered = q.filters.status as InvoiceStatus | undefined;
+    if (!filtered) {
+      // Narrow the list first, then the next press makes a row leave it.
+      q.setFilter("status", rows[0]?.status ?? "Draft");
+      return;
+    }
+    const targets = rows.slice(1, 3);
+    if (!targets.length) return;
+    const other = STATUS_OPTIONS.find((s) => s !== filtered) ?? "Paid";
+    for (const t of targets) mutateRow(t.number, { status: other });
+    playChange(targets.map((t) => t.number));
   };
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
@@ -2413,8 +2434,14 @@ function ServerDataTableDemo() {
         primaryAction={<Button size="sm">New invoice</Button>}
         secondaryActions={
           <>
-            <Button variant="secondary" size="sm" onClick={changeElsewhere} title="Edit the third row as another person would, then refetch: the changed cells glow">
-              <Radio /> Change elsewhere
+            <Button variant="secondary" size="sm" onClick={changeSumElsewhere} title="Another person changes the third row's status and payable: the cells crossfade and glow">
+              <Radio /> Sum elsewhere
+            </Button>
+            <Button variant="secondary" size="sm" onClick={changeDateElsewhere} title="Another person moves the fifth row's date: it re-sorts and slides to its new place">
+              <Radio /> Date elsewhere
+            </Button>
+            <Button variant="secondary" size="sm" onClick={leaveFilterElsewhere} title={q.filters.status ? "Another person changes two rows' status so they no longer match the filter: they glow, collapse, and the next page's rows fade in" : "First press narrows the list to one status; the next makes rows leave it"}>
+              <Radio /> {q.filters.status ? "Leave filter" : "Filter, then leave"}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
               <RefreshCw /> Reload

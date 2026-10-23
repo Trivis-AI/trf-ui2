@@ -934,10 +934,32 @@
   60% { background-color: var(--change); }
   100% { background-color: transparent; }
 }
+@theme {
+  --animate-live-exit: live-exit-glow 0.6s ease-out both;
+  --animate-live-enter: live-enter 0.3s ease-out both;
+}
+@keyframes live-exit-glow {
+  0% { background-color: transparent; }
+  25% { background-color: var(--change); }
+  100% { background-color: var(--change); }
+}
+@keyframes live-enter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
 [data-live="cell"],
 [data-live="row"] > td,
 [data-live="field"] {
   animation: var(--animate-live-glow);
+}
+/* A row that left the view: an inert copy that glows whole, then collapses
+   (the collapse itself is scripted, see live-change.ts). */
+[data-live="exit"] > td {
+  animation: var(--animate-live-exit);
+}
+/* A row that paged in to fill a gap: it did not change, so no tint. */
+[data-live="enter"] {
+  animation: var(--animate-live-enter);
 }
 @media (prefers-reduced-motion: reduce) {
   [data-live="cell"],
@@ -945,6 +967,9 @@
   [data-live="field"] {
     animation: none;
     background-color: var(--change);
+  }
+  [data-live="enter"] {
+    animation: none;
   }
 }
 

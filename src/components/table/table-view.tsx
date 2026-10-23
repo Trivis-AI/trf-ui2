@@ -135,6 +135,8 @@ export interface TableViewProps<TData> {
    * now and glow what differs when the new ones arrive. See ./live-change.
    */
   liveChange?: LiveChange;
+  /** Rows that left the view after a live change and finished exiting; drop them from the selection. */
+  onLiveRowsExit?: (ids: string[]) => void;
   /** Cold load, no rows yet: render skeleton rows instead of the body. */
   loading?: boolean;
   /** Background refetch with rows on screen: show the header progress line, keep rows. */
@@ -370,6 +372,7 @@ function DraggableHeader<TData>({
 export function TableView<TData>({
   table,
   liveChange,
+  onLiveRowsExit,
   loading = false,
   fetching = false,
   onRowClick,
@@ -447,7 +450,7 @@ export function TableView<TData>({
 
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
-  const liveGlow = useLiveGlow(table, rows, liveChange, fetching);
+  const { glow: liveGlow, enters: liveEnters } = useLiveGlow(table, rows, liveChange, fetching, { wrapperRef, onRowsExit: onLiveRowsExit });
   const leafColumns = table.getVisibleLeafColumns();
   const colCount = leafColumns.length + (enableRowSelection ? 1 : 0);
   const columnOrder = table.getState().columnOrder;
@@ -579,7 +582,8 @@ export function TableView<TData>({
               <React.Fragment key={row.id}>
                 <TableRow
                   data-state={row.getIsSelected() ? "selected" : undefined}
-                  data-live={liveGlow.get(row.id) === "row" ? "row" : undefined}
+                  data-row-id={row.id}
+                  data-live={liveGlow.get(row.id) === "row" ? "row" : liveEnters.has(row.id) ? "enter" : undefined}
                   onClick={
                     clickable
                       ? () => {
@@ -607,12 +611,16 @@ export function TableView<TData>({
                       />
                     </TableCell>
                   )}
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell) => {
+                    const g = liveGlow.get(row.id);
+                    const liveCell = g instanceof Set && g.has(cell.column.id);
+                    return (
                     <TableCell
                       key={cell.id}
                       data-pinned={cell.column.columnDef.meta?.sticky === "right" ? "" : undefined}
-                      data-live={(() => { const g = liveGlow.get(row.id); return g instanceof Set && g.has(cell.column.id) ? "cell" : undefined; })()}
+                      data-live={liveCell ? "cell" : undefined}
                       className={cn(
+                        liveCell && "relative",
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
                         cell.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
@@ -621,7 +629,8 @@ export function TableView<TData>({
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  ))}
+                    );
+                  })}
                 </TableRow>
                 {subRow != null && (
                   <TableRow className="hover:bg-transparent">

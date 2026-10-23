@@ -268,6 +268,12 @@ export function ServerDataTable<TData>({
       loading={loading}
       fetching={fetching}
       liveChange={liveChange}
+      onLiveRowsExit={(ids) => {
+        if (!ids.some((id) => selection[id])) return;
+        const next = { ...selection };
+        for (const id of ids) delete next[id];
+        handleSelectionChange(next);
+      }}
       onRowClick={onRowClick}
       expandOnRowClick={expandOnRowClick}
       rowClassName={rowClassName}
