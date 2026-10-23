@@ -12,7 +12,7 @@ import {
   Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
-  AppShell, Badge, Button, cn, type ColumnDef, DataTable,
+  AppShell, Badge, Button, cn, type ColumnDef, DataTable, useScrollbarActivity,
   BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
@@ -922,6 +922,40 @@ function ActionPillDemo() {
         >
           Unpaid only
         </ActionPill>
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------- section: Scrollbars */
+
+const SCROLLBAR_LINES = Array.from(
+  { length: 40 },
+  (_, i) => `Line ${i + 1}. The thumb shows while this box is hovered or scrolling.`,
+);
+
+function ScrollbarsDemo() {
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-4">
+      <Text size="xs" tone="muted">
+        Every scrolling box gets the same thin bar from one rule in tokens.css: nothing at rest,
+        the thumb while the pointer is over the box or while it scrolls (wheel or keys), and only
+        where the content overflows. Nothing to add per component.
+      </Text>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="h-48 overflow-y-auto rounded-md border border-border bg-card p-3">
+          {SCROLLBAR_LINES.map((line) => (
+            <Text key={line} size="sm">{line}</Text>
+          ))}
+        </div>
+        <div className="h-48 overflow-y-auto rounded-md border border-border bg-card p-3">
+          <Text size="sm">Nothing to scroll here, so no bar at all.</Text>
+        </div>
+      </div>
+      <div className="overflow-x-auto rounded-md border border-border bg-card p-3">
+        <div className="w-[1400px]">
+          <Text size="sm">Horizontal boxes behave the same: hover or scroll sideways to see the thumb.</Text>
+        </div>
       </div>
     </div>
   );
@@ -3252,6 +3286,7 @@ const GROUPS: GroupDef[] = [
       { id: "palette-picker", label: "Palette picker", render: () => <PalettePickerDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "dashboard-primitives", label: "Dashboard primitives", render: () => <DashboardPrimitivesDemo /> },
+      { id: "scrollbars", label: "Scrollbars", render: () => <ScrollbarsDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
       { id: "attachment-dropzone", label: "Attachment dropzone", render: () => <AttachmentDropzoneDemo /> },
       {
@@ -3503,6 +3538,8 @@ export function App() {
   const [query, setQuery] = useState("");
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
+  // The demo has no AppShell at its root, so it installs the scrollbar activity mark itself.
+  useScrollbarActivity();
   useEffect(() => {
     const el = document.documentElement;
     [...el.classList].filter((c) => c.startsWith("theme-")).forEach((c) => el.classList.remove(c));

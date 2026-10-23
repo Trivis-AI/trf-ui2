@@ -110,6 +110,17 @@ A `.dark` class on a parent (the app toggles it on `<html>`) activates the dark 
 Components do **not** need `dark:` overrides — the tokens adapt automatically. Only reach for
 `dark:` when a token genuinely can't express the difference.
 
+## Scrollbars
+
+One global rule in `tokens.css` ("Scrollbars") styles every scrolling box: a thin bar whose
+thumb is transparent at rest and takes a foreground tint while the pointer is over the box or
+while it scrolls (`data-scrolling`, set by `useScrollbarActivity`; `AppShell` installs it, a page
+without the shell calls it once near its root). Whether a bar exists at all is still
+`overflow: auto`. The OS decides classic (gutter reserved) or overlay; the rule only changes what
+is drawn, and browsers without `scrollbar-width` keep the system bar. Never style scrollbars per
+component. A box that must hide its bar entirely uses `[scrollbar-width:none]`. Demo section
+"Scrollbars" in the kitchen sink.
+
 ## Rules
 
 1. **No raw hex / rgb / hsl in component code.** Always a token.

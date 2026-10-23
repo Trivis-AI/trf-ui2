@@ -15,7 +15,7 @@
   ],
   "docs": {
     "README-START-HERE.md": "Entry point: status legend, reading order, task-based map.",
-    "03-design-tokens.md": "Colors, radius, fonts, dark mode. The token contract. Use tokens, never raw values.",
+    "03-design-tokens.md": "Colors, radius, fonts, dark mode, scrollbars (thin, thumb only on hover or scroll, one global rule). The token contract. Use tokens, never raw values.",
     "05-iconography.md": "Lucide is the single icon library. Sizes and rules.",
     "07-component-architecture.md": "Layer model (tokens -> primitives -> app code), where things live, new-component process.",
     "13-ai-coding-guidelines.md": "Non-negotiable rules for any AI writing UI in or against this system.",

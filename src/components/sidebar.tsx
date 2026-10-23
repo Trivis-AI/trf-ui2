@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen, Menu } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useScrollbarActivity } from "../hooks/useScrollbarActivity";
 
 /*
  * Composable sidebar (shadcn-shaped), presentational only — no routing/auth/data inside.
@@ -476,6 +477,8 @@ export function AppShell({
   onOpenGroupsChange,
   className,
 }: AppShellProps) {
+  // Thin scrollbars show their thumb while a box scrolls (tokens.css, "Scrollbars").
+  useScrollbarActivity();
   return (
     <SidebarProvider
       defaultCollapsed={defaultCollapsed}

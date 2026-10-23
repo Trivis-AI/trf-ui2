@@ -792,6 +792,30 @@
 }
 
 /*
+ * Scrollbars: thin, and drawn only while the scrolling box is in use. The OS decides whether
+ * a bar is classic (always present, reserves a gutter: macOS with a mouse, Windows, Linux) or
+ * overlay (fades out: macOS with a trackpad). CSS cannot turn a classic bar into an overlay,
+ * but it can draw nothing on it: the thumb is transparent at rest and takes a foreground tint
+ * while the pointer is over the box, or while the box scrolls (`data-scrolling`, set by
+ * useScrollbarActivity for wheel and keyboard scrolling with the pointer elsewhere; AppShell
+ * installs it). `overflow: auto` still decides whether a bar exists at all. ONE global rule,
+ * never per component; a box that must hide its bar entirely keeps `[scrollbar-width:none]`
+ * (Attachment does). Browsers without `scrollbar-width` (Safari before 18.2) keep the system bar.
+ */
+@layer base {
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+    *:hover,
+    [data-scrolling] {
+      scrollbar-color: color-mix(in oklch, var(--foreground) 28%, transparent) transparent;
+    }
+  }
+}
+
+/*
  * scroll-fade-x: edge fade for horizontally-scrolling containers (AttachmentGroup) that
  * tracks scroll position via a scroll-driven animation — crisp at rest, fades only the
  * edge that has more content to reveal. A static mask-image would dim the first item's
