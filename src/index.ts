@@ -241,12 +241,19 @@ export type { PalettePickerProps, PaletteSwatchesProps, PaletteOption } from "./
 export { Calendar } from "./components/ui/calendar";
 export type { CalendarProps } from "./components/ui/calendar";
 
-export { DatePicker } from "./components/date-picker";
+export {
+  DatePicker,
+  DATE_RANGE_PRESET_IDS,
+  isDateRangePresetId,
+  dateRangePresetBounds,
+} from "./components/date-picker";
 export type {
   DatePickerProps,
   SingleDatePickerProps,
   RangeDatePickerProps,
   DateRange,
+  DateRangePreset,
+  DateRangePresetId,
   Matcher,
 } from "./components/date-picker";
 

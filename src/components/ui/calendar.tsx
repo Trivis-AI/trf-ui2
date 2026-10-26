@@ -67,8 +67,11 @@ export function Calendar({
         hidden: "invisible",
         range_start:
           "rounded-l-md bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground",
+        // A middle day is `selected` too, and `selected`'s button colours tie with these on
+        // specificity, so CSS order picked primary-foreground text on the accent band: white on
+        // pale grey in light, near-black on slate in dark. Important settles it.
         range_middle:
-          "rounded-none bg-accent [&>button]:bg-transparent [&>button]:text-accent-foreground [&>button:hover]:bg-transparent",
+          "rounded-none bg-accent [&>button]:bg-transparent! [&>button]:text-accent-foreground!",
         range_end:
           "rounded-r-md bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground",
         ...classNames,

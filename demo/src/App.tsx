@@ -16,7 +16,7 @@ import {
   BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, PalettePicker, PaletteSwatches, TableCard,
+  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, type DateRangePreset, RadioCard, PalettePicker, PaletteSwatches, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
@@ -1407,10 +1407,32 @@ function DateTimeLocaleDemo() {
   );
 }
 
+// Built-in ids date themselves; anything else brings its own range.
+const DEMO_PERIOD_PRESETS: DateRangePreset[] = [
+  { value: "current_month", label: "Current month" },
+  { value: "last_month", label: "Last month" },
+  { value: "current_quarter", label: "Current quarter" },
+  { value: "last_quarter", label: "Last quarter" },
+  { value: "current_year", label: "Current year" },
+  { value: "last_year", label: "Last year" },
+  {
+    value: "last_30_days",
+    label: "Last 30 days",
+    range: (today) => ({
+      from: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
+      to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+    }),
+  },
+];
+
 function DatePickerDemo() {
   const [date, setDate] = useState<Date>();
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date(2026, 5, 9));
   const [range, setRange] = useState<DateRange>();
+  // A list filter stores the preset itself, so a saved "current month" rolls over.
+  const [filterPeriod, setFilterPeriod] = useState<{ range?: DateRange; preset?: string }>({
+    preset: "current_month",
+  });
   const [period, setPeriod] = useState<Date | undefined>(new Date(2026, 5, 1));
   const [paid, setPaid] = useState<Date>();
   const [fmtDate, setFmtDate] = useState<Date | undefined>(new Date(2026, 5, 9));
@@ -1429,6 +1451,29 @@ function DatePickerDemo() {
       </Field>
       <Field label="Report period" htmlFor="dp-range" className="sm:col-span-2" description="Range mode (two months).">
         <DatePicker mode="range" id="dp-range" value={range} onChange={setRange} placeholder="Pick a range…" />
+      </Field>
+      <Field
+        label="Period"
+        htmlFor="dp-presets"
+        className="sm:col-span-2"
+        description={`presets + preset, clearable. Stored: ${
+          filterPeriod.preset
+            ? `preset "${filterPeriod.preset}"`
+            : filterPeriod.range?.from
+              ? "a plain range"
+              : "nothing (any period)"
+        }`}
+      >
+        <DatePicker
+          mode="range"
+          id="dp-presets"
+          value={filterPeriod.range}
+          preset={filterPeriod.preset}
+          onChange={(range, preset) => setFilterPeriod({ range, preset })}
+          presets={DEMO_PERIOD_PRESETS}
+          placeholder="Any period"
+          clearable
+        />
       </Field>
       <Field label="Birth date" htmlFor="dp-dropdown" description="captionLayout=dropdown — month + year jumping.">
         <DatePicker id="dp-dropdown" value={invoiceDate} onChange={setInvoiceDate} captionLayout="dropdown" />

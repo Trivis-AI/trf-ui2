@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Calendar as CalendarIcon, X } from "lucide-react";
+import { Calendar as CalendarIcon, Check, X } from "lucide-react";
 import { dateMatchModifiers } from "react-day-picker";
 import type { DateRange, Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
@@ -62,10 +62,80 @@ export interface SingleDatePickerProps extends DatePickerBaseProps {
   keepDayOnNavigate?: boolean;
 }
 
+/** Named ranges the picker can date by itself; see {@link dateRangePresetBounds}. */
+export const DATE_RANGE_PRESET_IDS = [
+  "current_month",
+  "last_month",
+  "current_quarter",
+  "last_quarter",
+  "current_year",
+  "last_year",
+] as const;
+export type DateRangePresetId = (typeof DATE_RANGE_PRESET_IDS)[number];
+
+export function isDateRangePresetId(v: string | null | undefined): v is DateRangePresetId {
+  return !!v && (DATE_RANGE_PRESET_IDS as readonly string[]).includes(v);
+}
+
+/**
+ * The first and last day of a built-in preset, relative to `today` (local calendar). A list that
+ * stores the preset rather than its dates calls this each time, so a saved "current month" rolls
+ * over with the calendar.
+ */
+export function dateRangePresetBounds(
+  preset: DateRangePresetId,
+  today = new Date()
+): { from: Date; to: Date } {
+  const y = today.getFullYear();
+  const m = today.getMonth();
+  const quarter = m - (m % 3);
+  switch (preset) {
+    case "current_month":
+      return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0) };
+    case "last_month":
+      return { from: new Date(y, m - 1, 1), to: new Date(y, m, 0) };
+    case "current_quarter":
+      return { from: new Date(y, quarter, 1), to: new Date(y, quarter + 3, 0) };
+    case "last_quarter":
+      return { from: new Date(y, quarter - 3, 1), to: new Date(y, quarter, 0) };
+    case "current_year":
+      return { from: new Date(y, 0, 1), to: new Date(y, 11, 31) };
+    case "last_year":
+      return { from: new Date(y - 1, 0, 1), to: new Date(y - 1, 11, 31) };
+  }
+}
+
+/**
+ * A named range listed beside the calendar. A built-in id dates itself; any other id brings its
+ * own `range`. The label is the consumer's, in the app's language.
+ */
+export type DateRangePreset =
+  | { value: DateRangePresetId; label: string; range?: undefined }
+  | { value: string; label: string; range: (today: Date) => { from: Date; to: Date } };
+
+const presetBounds = (preset: DateRangePreset, today: Date) =>
+  preset.range ? preset.range(today) : dateRangePresetBounds(preset.value, today);
+
 export interface RangeDatePickerProps extends DatePickerBaseProps {
   mode: "range";
   value?: DateRange;
-  onChange?: (range: DateRange | undefined) => void;
+  /**
+   * `preset` is the picked preset's id, and `undefined` when days were picked by hand or the field
+   * was cleared, so a filter can store the preset itself instead of its dates.
+   */
+  onChange?: (range: DateRange | undefined, preset?: string) => void;
+  /**
+   * Named ranges listed beside the calendar ("Current month", "Last month"). Picking one emits its
+   * dates with its id and closes the popover; picking a day afterwards turns it into a plain range
+   * that starts from the preset's dates. Opt-in.
+   */
+  presets?: DateRangePreset[];
+  /**
+   * The active preset's id, controlled. While it names one of `presets`, the trigger shows that
+   * preset's label, the list marks it, and the calendar shows its dates as of today; `value` is
+   * not consulted.
+   */
+  preset?: string;
 }
 
 export type DatePickerProps = SingleDatePickerProps | RangeDatePickerProps;
@@ -105,16 +175,22 @@ export function DatePicker(props: DatePickerProps) {
   const resolvedEnd = endMonth ?? (usesDropdown ? new Date(now.getFullYear() + 10, 11) : undefined);
   const navProps = { captionLayout, startMonth: resolvedStart, endMonth: resolvedEnd } as const;
 
+  // An active preset is dated from today on every render, so it wins over `value`.
+  const activePreset =
+    props.mode === "range" && props.preset ? props.presets?.find((p) => p.value === props.preset) : undefined;
+  const range = props.mode === "range" ? (activePreset ? presetBounds(activePreset, now) : props.value) : undefined;
+
   // The calendar opens on the month of what is already selected, not on today:
   // react-day-picker starts at `today` unless it is told otherwise, so editing a
   // date on an invoice from March meant paging back from the current month every
   // time. Re-read on each open — the popover unmounts its content when closed.
-  const selectedMonth = props.mode === "range" ? props.value?.from : props.value;
+  const selectedMonth = props.mode === "range" ? range?.from : props.value;
 
   let label: string | undefined;
+  let dates: string | undefined;
   if (props.mode === "range") {
-    const r = props.value;
-    if (r?.from) label = r.to ? `${formatDate(r.from)} – ${formatDate(r.to)}` : formatDate(r.from);
+    if (range?.from) dates = range.to ? `${formatDate(range.from)} – ${formatDate(range.to)}` : formatDate(range.from);
+    label = activePreset?.label ?? dates;
   } else if (props.value) {
     label = formatDate(props.value);
   }
@@ -145,7 +221,7 @@ export function DatePicker(props: DatePickerProps) {
     };
   }
 
-  const hasValue = props.mode === "range" ? !!props.value?.from : !!props.value;
+  const hasValue = props.mode === "range" ? !!range?.from : !!props.value;
   const showClear = !!clearable && hasValue && !disabled;
   const clear = () => {
     if (props.mode === "range") props.onChange?.(undefined);
@@ -160,6 +236,8 @@ export function DatePicker(props: DatePickerProps) {
             id={id}
             type="button"
             disabled={disabled}
+            // A preset's label hides which dates it means today; the tooltip says.
+            title={activePreset ? dates : undefined}
             className={cn(
               "flex h-9 w-full items-center gap-2 py-2 text-sm transition-colors",
               variant === "default" && [
@@ -197,16 +275,49 @@ export function DatePicker(props: DatePickerProps) {
       </div>
       <PopoverContent align="start" className="w-auto p-0">
         {props.mode === "range" ? (
-          <Calendar
-            mode="range"
-            numberOfMonths={2}
-            autoFocus
-            selected={props.value}
-            defaultMonth={selectedMonth}
-            onSelect={props.onChange}
-            disabled={disabledDates}
-            {...navProps}
-          />
+          <div className="flex flex-col sm:flex-row">
+            {props.presets?.length ? (
+              // On a phone the list wraps above the calendar; w-0 + min-w-full keeps it from
+              // widening the popover past the calendar (and the screen).
+              <div className="flex w-0 min-w-full flex-wrap gap-0.5 border-b border-border p-2 sm:w-auto sm:min-w-0 sm:shrink-0 sm:flex-col sm:flex-nowrap sm:border-b-0 sm:border-r">
+                {props.presets.map((preset) => {
+                  const active = preset === activePreset;
+                  return (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => {
+                        props.onChange?.(presetBounds(preset, new Date()), preset.value);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "relative flex items-center whitespace-nowrap rounded-sm py-1.5 pl-2 pr-8 text-left text-sm outline-none transition-colors sm:w-full",
+                        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground"
+                      )}
+                    >
+                      {preset.label}
+                      {active ? <Check className="absolute right-2 size-4" /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+            <Calendar
+              mode="range"
+              numberOfMonths={2}
+              // Side by side, the first month's trailing days would repeat (and show as selected)
+              // in the second month's grid; a month-long range made that the usual case.
+              showOutsideDays={false}
+              autoFocus
+              selected={range}
+              defaultMonth={selectedMonth}
+              // Days picked by hand are a plain range, even when they started from a preset.
+              onSelect={(next) => props.onChange?.(next, undefined)}
+              disabled={disabledDates}
+              {...navProps}
+            />
+          </div>
         ) : (
           <Calendar
             mode="single"
