@@ -488,9 +488,12 @@ export function TableView<TData>({
       )
     : undefined;
 
+  // The selection column is 40px wide with no cell padding, the box centred in it,
+  // so it reads the same whether the table is roomy or squeezed to min-content.
+  const SELECT_COL = "w-10 min-w-10 px-0 text-center";
   const selectionHead = enableRowSelection ? (
     <TableHead
-      className={cn("w-10", enableSelectAll && "cursor-pointer", headStickyClass)}
+      className={cn(SELECT_COL, enableSelectAll && "cursor-pointer", headStickyClass)}
       onClick={enableSelectAll ? () => table.toggleAllRowsSelected() : undefined}
     >
       {enableSelectAll ? (
@@ -502,6 +505,7 @@ export function TableView<TData>({
                 ? "indeterminate"
                 : false
           }
+          className="align-middle"
           onClick={(e) => e.stopPropagation()}
           onCheckedChange={(v) => table.toggleAllRowsSelected(!!v)}
           aria-label="Select all rows"
@@ -553,8 +557,8 @@ export function TableView<TData>({
           Array.from({ length: skeletonRows }).map((_, r) => (
             <TableRow key={`skeleton-${r}`}>
               {enableRowSelection && (
-                <TableCell className="w-10">
-                  <Skeleton className="size-4" />
+                <TableCell className={SELECT_COL}>
+                  <Skeleton className="mx-auto size-4" />
                 </TableCell>
               )}
               {leafColumns.map((col) => (
@@ -596,7 +600,7 @@ export function TableView<TData>({
                 >
                   {enableRowSelection && (
                     <TableCell
-                      className={cn("w-10", row.getCanSelect() && "cursor-pointer")}
+                      className={cn(SELECT_COL, row.getCanSelect() && "cursor-pointer")}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (row.getCanSelect()) row.toggleSelected();
@@ -605,6 +609,7 @@ export function TableView<TData>({
                       <Checkbox
                         checked={row.getIsSelected()}
                         disabled={!row.getCanSelect()}
+                        className="align-middle"
                         onClick={(e) => e.stopPropagation()}
                         onCheckedChange={(v) => row.toggleSelected(!!v)}
                         aria-label="Select row"

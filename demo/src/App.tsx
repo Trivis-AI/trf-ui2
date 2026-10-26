@@ -3156,6 +3156,7 @@ const GROUPS: GroupDef[] = [
         id: "choices", label: "Choice controls", render: () => (
           <>
             <label className="flex items-center gap-2 text-sm"><Checkbox defaultChecked /> Send a copy by email</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked="indeterminate" aria-label="Partly selected" /> Partly selected</label>
             <label className="flex items-center gap-2 text-sm"><Switch defaultChecked /> Auto-confirm</label>
             <RadioGroup defaultValue="net14" className="gap-2">
               <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="net14" /> Net 14</label>
