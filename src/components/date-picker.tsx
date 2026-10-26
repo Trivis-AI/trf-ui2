@@ -70,6 +70,7 @@ export const DATE_RANGE_PRESET_IDS = [
   "last_quarter",
   "current_year",
   "last_year",
+  "last_30_days",
 ] as const;
 export type DateRangePresetId = (typeof DATE_RANGE_PRESET_IDS)[number];
 
@@ -88,6 +89,7 @@ export function dateRangePresetBounds(
 ): { from: Date; to: Date } {
   const y = today.getFullYear();
   const m = today.getMonth();
+  const d = today.getDate();
   const quarter = m - (m % 3);
   switch (preset) {
     case "current_month":
@@ -102,6 +104,9 @@ export function dateRangePresetBounds(
       return { from: new Date(y, 0, 1), to: new Date(y, 11, 31) };
     case "last_year":
       return { from: new Date(y - 1, 0, 1), to: new Date(y - 1, 11, 31) };
+    case "last_30_days":
+      // Today and the 29 days before it.
+      return { from: new Date(y, m, d - 29), to: new Date(y, m, d) };
   }
 }
 

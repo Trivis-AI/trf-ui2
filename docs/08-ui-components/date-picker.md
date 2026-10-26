@@ -161,17 +161,18 @@ const range = period
 
 Built-in ids, dated by the picker itself and by `dateRangePresetBounds(id, today?)`:
 `current_month`, `last_month`, `current_quarter`, `last_quarter` (calendar quarters),
-`current_year`, `last_year` (calendar years). `DATE_RANGE_PRESET_IDS` lists them and
+`current_year`, `last_year` (calendar years), `last_30_days` (today and the 29 days before it,
+so it moves daily). `DATE_RANGE_PRESET_IDS` lists them and
 `isDateRangePresetId(v)` narrows a stored string, such as a URL filter param.
 
 Any other id brings its own `range`, worked out from today:
 
 ```tsx
 {
-  value: "last_30_days",
-  label: "Last 30 days",
+  value: "year_to_date",
+  label: "Year to date",
   range: (today) => ({
-    from: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
+    from: new Date(today.getFullYear(), 0, 1),
     to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
   }),
 }

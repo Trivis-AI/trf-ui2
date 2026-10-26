@@ -1415,11 +1415,12 @@ const DEMO_PERIOD_PRESETS: DateRangePreset[] = [
   { value: "last_quarter", label: "Last quarter" },
   { value: "current_year", label: "Current year" },
   { value: "last_year", label: "Last year" },
+  { value: "last_30_days", label: "Last 30 days" },
   {
-    value: "last_30_days",
-    label: "Last 30 days",
+    value: "year_to_date",
+    label: "Year to date",
     range: (today) => ({
-      from: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 29),
+      from: new Date(today.getFullYear(), 0, 1),
       to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
     }),
   },
