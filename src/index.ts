@@ -46,6 +46,13 @@ export {
   SidebarMobileTrigger,
   SidebarInset,
   useSidebar,
+  // Rail geometry (CSS px): default, bounds and snap of the resizable sidebar, the icon rail.
+  SIDEBAR_DEFAULT_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_ICON_WIDTH,
+  SIDEBAR_SNAP_WIDTH,
+  clampSidebarWidth,
 } from "./components/sidebar";
 export type {
   AppShellProps,
@@ -234,12 +241,19 @@ export type { PalettePickerProps, PaletteSwatchesProps, PaletteOption } from "./
 export { Calendar } from "./components/ui/calendar";
 export type { CalendarProps } from "./components/ui/calendar";
 
-export { DatePicker } from "./components/date-picker";
+export {
+  DatePicker,
+  DATE_RANGE_PRESET_IDS,
+  isDateRangePresetId,
+  dateRangePresetBounds,
+} from "./components/date-picker";
 export type {
   DatePickerProps,
   SingleDatePickerProps,
   RangeDatePickerProps,
   DateRange,
+  DateRangePreset,
+  DateRangePresetId,
   Matcher,
 } from "./components/date-picker";
 
@@ -328,6 +342,12 @@ export { useTabAlert } from "./hooks/useTabAlert";
 export type { TabAlertOptions } from "./hooks/useTabAlert";
 export { useDesktopAlert } from "./hooks/useDesktopAlert";
 export type { DesktopAlertOptions, DesktopAlertState } from "./hooks/useDesktopAlert";
+// Glow a detail-page value that changed because of somebody else's write; the
+// table counterpart is ServerDataTable's `liveChange` prop.
+export { useChangeHighlight } from "./hooks/useChangeHighlight";
+// Marks a scrolling box while it scrolls so the thin scrollbar in tokens.css shows its
+// thumb; AppShell installs it, pages without the shell call it once near their root.
+export { useScrollbarActivity, installScrollbarActivity } from "./hooks/useScrollbarActivity";
 
 export { AttachmentDropzone } from "./components/attachment-dropzone";
 export type { AttachmentDropzoneProps, AttachmentDropzoneFile } from "./components/attachment-dropzone";

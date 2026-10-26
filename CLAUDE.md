@@ -24,15 +24,16 @@ git pull
 | tag `v*` on `main`         | `:prod`      | `ui.trf.is`            | staging  |
 | push `trivis` branch       | `:trivis`    | `ui.trivis.ee`         | prod     |
 
-So the flow is: **develop on `main` → tag to test on staging → promote to prod by
-merging into `trivis`.**
+So the flow is: **develop in a task worktree and land on `main` → tag to test on staging →
+promote to prod by fast-forwarding `trivis`.** Rules: `../documentation/PARALLEL-WORK.md`.
 
 ### To test a change on staging (trf.is)
 
 ```bash
-# commit your work to main, then:
+# from the worktree (or main), with the work committed:
+git fetch origin && git rebase origin/main
+git push origin HEAD:main
 git tag v7.0.1            # bump from the latest v* tag
-git push origin main
 git push origin v7.0.1
 ```
 
@@ -49,13 +50,15 @@ Live at https://ui.trf.is.
 
 ### To promote to prod (trivis.ee)
 
-Once staging looks good, merge `main` into `trivis` and push it:
+Once staging looks good, move `trivis` to `main` and push it, from any checkout, no branch switching:
 
 ```bash
-git checkout trivis
-git merge main            # take main's versions of the workflow files (see caveat)
-git push origin trivis
+git fetch origin
+git push origin origin/main:trivis    # fast-forward
 ```
+
+If that is rejected, `trivis` has commits that are not on `main`: merge in a throwaway worktree
+(`../documentation/PARALLEL-WORK.md`, rule 5), taking main's versions of the workflow files (see caveat).
 
 This triggers `.github/workflows/trivis-build.yaml` → `:trivis` → `webhook.trivis.ee`
 → `ui.trivis.ee`.

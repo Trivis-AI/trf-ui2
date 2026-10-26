@@ -387,6 +387,49 @@ column never diverges from the read-only version of the same column. `ServerData
 `stickyHeader` (default `false`), `emptyMessage`, `skeletonRows`, `className`. You own the data:
 apply the edit in `onCellEdit`.
 
+## Live changes (glow what changed elsewhere)
+
+A row that somebody else changed (the assistant acting for the person, a colleague, another
+tab, a plugin) glows the cells whose values differ after the page refetches. The page owns the
+signal and the refetch; the table only diffs and glows.
+
+```tsx
+const [liveChange, setLiveChange] = useState<LiveChange>();
+useLiveChanges({                              // from @trf/app-shell
+  entityTypes: ["purchase_invoice"],
+  onChange: (batch) => {
+    setLiveChange((c) => ({ version: (c?.version ?? 0) + 1, reason: batch.reason, ids: batch.ids, view }));
+    void queryClient.invalidateQueries({ queryKey: ["purchase-invoices"] }, { cancelRefetch: false });
+  },
+});
+<ServerDataTable liveChange={liveChange} fetching={query.isFetching && !query.isLoading} ... />
+```
+
+- `version` grows with every batch; the table snapshots the rows on screen when it changes and
+  diffs them against the next rows that arrive (or the end of the refetch, if the rows came back
+  identical).
+- `reason`: `"external"` glows the rows in `ids` (cells that changed; a whole new row glows as
+  one); `"resync"` tints every row that differs after a gap in the signal; `"local"` and
+  `"navigation"` glow nothing and only set a new baseline.
+- `view` is the identity of what is shown (organisation, filters, sort, page, dates). Rows that
+  arrive under another view are a new baseline, never a glow, so paging during a refetch cannot
+  light up unrelated rows. Leave the token out of it: a renewal refetches the same view.
+- The tint is the `change` token; the animation is `data-live="cell" | "row"` styled in
+  `tokens.css` (1.3 s, a static tint under `prefers-reduced-motion`).
+- Detail pages use `useChangeHighlight(value, trigger)`: bump `trigger` on every refresh caused
+  elsewhere and spread `props` on the element around the field; it glows only when the value
+  differs across that refresh.
+- What a batch looks like once it settles: a changed cell crossfades from its old content (an
+  inert copy captured when the batch arrived) and glows; a new row glows whole; a row that no
+  longer belongs to the view is kept as an inert copy at its place, glows, then collapses while
+  the rows below slide up (rows leaving together start 40 ms apart); rows that paged in to fill
+  the gap fade in without a tint; a row that re-sorted slides to its new place over the rows it
+  displaced, which slide one slot. Exited rows are dropped from the selection
+  (`onLiveRowsExit`). Counts and the pager update with the data, not after the wave.
+- Reduced motion captures nothing: cells and fields get a static tint, exits simply disappear.
+- Demo: the kitchen sink's ServerDataTable section has "Sum elsewhere", "Date elsewhere" and
+  "Filter, then leave" buttons, one per animation.
+
 ## Rules
 
 - Keep `DataTable` for small in-memory sets; use `ServerDataTable` when the server

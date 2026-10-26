@@ -44,12 +44,27 @@ logout) as children/slots.
   plus normal button props (`onClick`).
 - **`SidebarMenuSub`** — `groupId` ties it to its toggle; animates open/closed.
 - **`SidebarProvider` / `AppShell`** — `defaultCollapsed`, `defaultOpenGroups`.
-- **`useSidebar()`** — `{ collapsed, setCollapsed, toggleCollapsed, openGroups, toggleGroup,
-  mobileOpen, setMobileOpen }` for custom header/footer widgets (e.g. a fading wordmark).
+- **`useSidebar()`**: `{ collapsed, setCollapsed, toggleCollapsed, width, setWidth, resetWidth,
+  resizing, openGroups, toggleGroup, mobileOpen, setMobileOpen }` for custom header/footer
+  widgets (e.g. a fading wordmark). `width` is the expanded width in CSS px.
+- **Geometry constants** (CSS px, exported): `SIDEBAR_DEFAULT_WIDTH` 256, `SIDEBAR_MIN_WIDTH` 200,
+  `SIDEBAR_MAX_WIDTH` 400, `SIDEBAR_ICON_WIDTH` 56, `SIDEBAR_SNAP_WIDTH` 150, and
+  `clampSidebarWidth(px)`. A layout that reserves room beside the rail reads these instead of
+  repeating the numbers.
 
 ## The behavior (all CSS, no animation lib)
 
-- **Collapse to icon rail** (16rem → 3.5rem), persisted to `localStorage`.
+- **Resizable**: drag the rail's right edge (an 8px grip inside the border, a ring-toned 1px line
+  while hovered or dragging; `cursor: col-resize`). The width follows the hand between the minimum
+  and the maximum. Narrower than the snap width the rail collapses to icons; dragging the icon rail
+  out past the snap width expands it again and the width follows from there. Double-click on the
+  edge resets the default. The width transition is off during the drag and under
+  `prefers-reduced-motion`. No keyboard resize; the collapse toggle covers that.
+- **Collapse to icon rail** (256px → 56px). Collapsed flag and width persist together in one cookie,
+  `trf-sidebar=<0|1>.<width>`, on the apex domain (`path=/`, one year, `samesite=lax`,
+  `domain=.<last two labels>`; a host cookie on localhost or an IP), the same way `@trf/app-shell`
+  stores the theme and the AI panel state, so every app shares the one memory. The old
+  `localStorage` flag is read once as a fallback and never written again.
 - **Staged**: collapsing closes the open groups first, *then* narrows; expanding widens first,
   then restores the groups.
 - **Icons never move**: the icon sits at a fixed 20px left offset = `(56−16)/2`, so it's centered

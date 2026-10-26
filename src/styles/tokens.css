@@ -80,6 +80,11 @@
   --warning: oklch(0.78 0.15 75);
   --warning-foreground: oklch(0.28 0.05 75);
 
+  /* A value that just changed elsewhere (the assistant, a colleague, another
+     tab): the tint a table cell or a form field glows with for a second. Warm
+     and light so it reads as "look here", never as an error or a selection. */
+  --change: oklch(0.93 0.09 85);
+
   /* Inline and block code inside prose. A hue of its own so code reads as code
      at a glance: foreground made it identical to body text, and muted made it
      fainter than the text around it. Violet (290) is clear of --destructive
@@ -194,6 +199,8 @@
 
   --warning: oklch(0.8 0.15 75);
   --warning-foreground: oklch(0.26 0.05 75);
+
+  --change: oklch(0.42 0.08 85);
 
   /* Lifted for the dark surface, same hue. */
   --code: oklch(0.82 0.13 290);
@@ -711,6 +718,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-change: var(--change);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -780,6 +788,30 @@
   summary,
   select:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/*
+ * Scrollbars: thin, and drawn only while the scrolling box is in use. The OS decides whether
+ * a bar is classic (always present, reserves a gutter: macOS with a mouse, Windows, Linux) or
+ * overlay (fades out: macOS with a trackpad). CSS cannot turn a classic bar into an overlay,
+ * but it can draw nothing on it: the thumb is transparent at rest and takes a foreground tint
+ * while the pointer is over the box, or while the box scrolls (`data-scrolling`, set by
+ * useScrollbarActivity for wheel and keyboard scrolling with the pointer elsewhere; AppShell
+ * installs it). `overflow: auto` still decides whether a bar exists at all. ONE global rule,
+ * never per component; a box that must hide its bar entirely keeps `[scrollbar-width:none]`
+ * (Attachment does). Browsers without `scrollbar-width` (Safari before 18.2) keep the system bar.
+ */
+@layer base {
+  @supports (scrollbar-width: thin) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+    *:hover,
+    [data-scrolling] {
+      scrollbar-color: color-mix(in oklch, var(--foreground) 28%, transparent) transparent;
+    }
   }
 }
 
@@ -907,6 +939,61 @@
   }
   100% {
     transform: translateX(400%);
+  }
+}
+
+/*
+ * Live change glow. A table cell, a whole new row, or a form field whose value
+ * changed elsewhere carries data-live="cell" | "row" for LIVE_GLOW_MS (see
+ * components/table/live-change.ts and hooks/useChangeHighlight.ts): the tint
+ * comes in fast, holds, and fades. With reduced motion it is a plain tint for
+ * the same time, no animation.
+ */
+@theme {
+  --animate-live-glow: live-glow 1.3s ease-out both;
+}
+@keyframes live-glow {
+  0% { background-color: transparent; }
+  12% { background-color: var(--change); }
+  60% { background-color: var(--change); }
+  100% { background-color: transparent; }
+}
+@theme {
+  --animate-live-exit: live-exit-glow 0.6s ease-out both;
+  --animate-live-enter: live-enter 0.3s ease-out both;
+}
+@keyframes live-exit-glow {
+  0% { background-color: transparent; }
+  25% { background-color: var(--change); }
+  100% { background-color: var(--change); }
+}
+@keyframes live-enter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+[data-live="cell"],
+[data-live="row"] > td,
+[data-live="field"] {
+  animation: var(--animate-live-glow);
+}
+/* A row that left the view: an inert copy that glows whole, then collapses
+   (the collapse itself is scripted, see live-change.ts). */
+[data-live="exit"] > td {
+  animation: var(--animate-live-exit);
+}
+/* A row that paged in to fill a gap: it did not change, so no tint. */
+[data-live="enter"] {
+  animation: var(--animate-live-enter);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-live="cell"],
+  [data-live="row"] > td,
+  [data-live="field"] {
+    animation: none;
+    background-color: var(--change);
+  }
+  [data-live="enter"] {
+    animation: none;
   }
 }
 

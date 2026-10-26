@@ -70,7 +70,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-3 text-left align-middle text-sm font-normal text-muted-foreground whitespace-nowrap [background-image:linear-gradient(var(--table-head),var(--table-head))] shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has([role=checkbox])]:pr-0",
+      "h-10 px-3 text-left align-middle text-sm font-normal text-muted-foreground whitespace-nowrap [background-image:linear-gradient(var(--table-head),var(--table-head))] shadow-[inset_-1px_0_0_var(--border)] last:shadow-none",
       className
     )}
     {...props}
@@ -105,7 +105,7 @@ function TableCell({ className, editable, invalid, ...props }: TableCellProps) {
   return (
     <td
       className={cn(
-        "px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none [&:has([role=checkbox])]:pr-0",
+        "px-3 py-2 align-middle shadow-[inset_-1px_0_0_var(--border)] last:shadow-none [&:has(+[data-pinned])]:shadow-none",
         editable && [
           "group p-0 transition-colors",
           "hover:bg-field hover:ring-1 hover:ring-inset hover:ring-input",

@@ -11,6 +11,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { TableView, type ColumnFilterMark } from "./table-view";
+import type { LiveChange } from "./live-change";
 import type { TableViewMode } from "./card-view";
 import { InlineEditCell } from "./inline-edit-cell";
 
@@ -83,6 +84,11 @@ export interface ServerDataTableProps<TData> {
   loading?: boolean;
   /** Refetch with rows on screen: header progress line, rows stay. */
   fetching?: boolean;
+  /**
+   * A refetch is coming because something changed elsewhere; the table glows
+   * the cells that differ once the new rows land. See `LiveChange`.
+   */
+  liveChange?: LiveChange;
 
   // Interaction / presentation.
   onRowClick?: (row: TData) => void;
@@ -141,6 +147,7 @@ export function ServerDataTable<TData>({
   renderSubRow,
   loading = false,
   fetching = false,
+  liveChange,
   onRowClick,
   expandOnRowClick = false,
   rowClassName,
@@ -260,6 +267,13 @@ export function ServerDataTable<TData>({
       table={table}
       loading={loading}
       fetching={fetching}
+      liveChange={liveChange}
+      onLiveRowsExit={(ids) => {
+        if (!ids.some((id) => selection[id])) return;
+        const next = { ...selection };
+        for (const id of ids) delete next[id];
+        handleSelectionChange(next);
+      }}
       onRowClick={onRowClick}
       expandOnRowClick={expandOnRowClick}
       rowClassName={rowClassName}

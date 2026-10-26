@@ -11,3 +11,9 @@ You are working **inside the TRF design system**. Before writing or changing any
 6. Keep it KISS and fast — no extra build steps, no needless dependencies.
 
 Preview your work: `npm run dev` (kitchen-sink demo). Typecheck: `npm run typecheck`.
+
+## Working in parallel (adopted 2026-10-20)
+Feature work happens in a task worktree, not in this primary checkout: `claude -w t<task>-<slug>` or
+`../documentation/tools/wt.sh new <repo> <name>`. Land from the worktree: `git fetch origin && git rebase
+origin/main && <build> && git push origin HEAD:main`, tag from there, prod via `git push origin
+origin/main:trivis`. Never force-push main or trivis. Rules and setup: `../documentation/PARALLEL-WORK.md`.

@@ -26,6 +26,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronsUpDown, ChevronUp, Filter, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { CardView, type CardSlot, type TableViewMode } from "./card-view";
+import { useLiveGlow, type LiveChange } from "./live-change";
 import { Checkbox } from "../ui/checkbox";
 import { Skeleton } from "../ui/skeleton";
 import {
@@ -129,6 +130,13 @@ export interface ColumnFilterMark {
 export interface TableViewProps<TData> {
   /** A built TanStack table instance (client or manual models). */
   table: TanStackTable<TData>;
+  /**
+   * A refetch is coming because of a change made elsewhere: snapshot the rows
+   * now and glow what differs when the new ones arrive. See ./live-change.
+   */
+  liveChange?: LiveChange;
+  /** Rows that left the view after a live change and finished exiting; drop them from the selection. */
+  onLiveRowsExit?: (ids: string[]) => void;
   /** Cold load, no rows yet: render skeleton rows instead of the body. */
   loading?: boolean;
   /** Background refetch with rows on screen: show the header progress line, keep rows. */
@@ -363,6 +371,8 @@ function DraggableHeader<TData>({
 
 export function TableView<TData>({
   table,
+  liveChange,
+  onLiveRowsExit,
   loading = false,
   fetching = false,
   onRowClick,
@@ -440,6 +450,7 @@ export function TableView<TData>({
 
   const headerGroups = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
+  const { glow: liveGlow, enters: liveEnters } = useLiveGlow(table, rows, liveChange, fetching, { wrapperRef, onRowsExit: onLiveRowsExit });
   const leafColumns = table.getVisibleLeafColumns();
   const colCount = leafColumns.length + (enableRowSelection ? 1 : 0);
   const columnOrder = table.getState().columnOrder;
@@ -477,9 +488,12 @@ export function TableView<TData>({
       )
     : undefined;
 
+  // The selection column is 40px wide with no cell padding, the box centred in it,
+  // so it reads the same whether the table is roomy or squeezed to min-content.
+  const SELECT_COL = "w-10 min-w-10 px-0 text-center";
   const selectionHead = enableRowSelection ? (
     <TableHead
-      className={cn("w-10", enableSelectAll && "cursor-pointer", headStickyClass)}
+      className={cn(SELECT_COL, enableSelectAll && "cursor-pointer", headStickyClass)}
       onClick={enableSelectAll ? () => table.toggleAllRowsSelected() : undefined}
     >
       {enableSelectAll ? (
@@ -491,6 +505,7 @@ export function TableView<TData>({
                 ? "indeterminate"
                 : false
           }
+          className="align-middle"
           onClick={(e) => e.stopPropagation()}
           onCheckedChange={(v) => table.toggleAllRowsSelected(!!v)}
           aria-label="Select all rows"
@@ -542,8 +557,8 @@ export function TableView<TData>({
           Array.from({ length: skeletonRows }).map((_, r) => (
             <TableRow key={`skeleton-${r}`}>
               {enableRowSelection && (
-                <TableCell className="w-10">
-                  <Skeleton className="size-4" />
+                <TableCell className={SELECT_COL}>
+                  <Skeleton className="mx-auto size-4" />
                 </TableCell>
               )}
               {leafColumns.map((col) => (
@@ -571,6 +586,8 @@ export function TableView<TData>({
               <React.Fragment key={row.id}>
                 <TableRow
                   data-state={row.getIsSelected() ? "selected" : undefined}
+                  data-row-id={row.id}
+                  data-live={liveGlow.get(row.id) === "row" ? "row" : liveEnters.has(row.id) ? "enter" : undefined}
                   onClick={
                     clickable
                       ? () => {
@@ -583,7 +600,7 @@ export function TableView<TData>({
                 >
                   {enableRowSelection && (
                     <TableCell
-                      className={cn("w-10", row.getCanSelect() && "cursor-pointer")}
+                      className={cn(SELECT_COL, row.getCanSelect() && "cursor-pointer")}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (row.getCanSelect()) row.toggleSelected();
@@ -592,17 +609,23 @@ export function TableView<TData>({
                       <Checkbox
                         checked={row.getIsSelected()}
                         disabled={!row.getCanSelect()}
+                        className="align-middle"
                         onClick={(e) => e.stopPropagation()}
                         onCheckedChange={(v) => row.toggleSelected(!!v)}
                         aria-label="Select row"
                       />
                     </TableCell>
                   )}
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell) => {
+                    const g = liveGlow.get(row.id);
+                    const liveCell = g instanceof Set && g.has(cell.column.id);
+                    return (
                     <TableCell
                       key={cell.id}
                       data-pinned={cell.column.columnDef.meta?.sticky === "right" ? "" : undefined}
+                      data-live={liveCell ? "cell" : undefined}
                       className={cn(
+                        liveCell && "relative",
                         alignClass(cell.column.columnDef.meta?.align),
                         cell.column.columnDef.meta?.width === "min" && WIDTH_MIN,
                         cell.column.columnDef.meta?.width === "fill" && WIDTH_FILL,
@@ -611,7 +634,8 @@ export function TableView<TData>({
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  ))}
+                    );
+                  })}
                 </TableRow>
                 {subRow != null && (
                   <TableRow className="hover:bg-transparent">

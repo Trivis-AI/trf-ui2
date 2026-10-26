@@ -19,6 +19,9 @@ import { ChatMessage, Stack } from "@trf/ui2";
 `role`: `user` (primary-filled, right-aligned) | `assistant` (card surface, left-aligned).
 Default `assistant`. Bubbles self-align, so render them inside a vertical flex container
 (`Stack` / `flex flex-col`). Content wraps and preserves newlines (`whitespace-pre-wrap`).
+`fill`: the bubble stretches across its column instead of stopping at 80% of it. For narrow
+columns, such as the AI side panel (320 to 560 px), where the cap only wastes space; the big
+chat keeps the cap. Pass it on assistant bubbles; a user bubble stays its own width.
 Compose richer content (a `TypingIndicator`, an `Alert`, reply inputs, approve/reject `Button`s)
 as children.
 

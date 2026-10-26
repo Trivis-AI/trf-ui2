@@ -4,7 +4,7 @@ import {
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
   FileText, ImageIcon, X, Download, Eye, Check,
-  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package,
+  Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package, Radio,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -12,11 +12,11 @@ import {
   Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
-  AppShell, Badge, Button, cn, type ColumnDef, DataTable,
+  AppShell, Badge, Button, cn, type ColumnDef, DataTable, useScrollbarActivity,
   BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
   SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
-  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, RadioCard, PalettePicker, PaletteSwatches, TableCard,
+  Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, type DateRangePreset, RadioCard, PalettePicker, PaletteSwatches, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
@@ -49,9 +49,10 @@ import {
   RecordPaymentDialog,
 } from "@trf/ui2";
 import {
-  queryTable, STATUS_OPTIONS, METHOD_OPTIONS, TOTAL_ROWS,
+  queryTable, mutateRow, STATUS_OPTIONS, METHOD_OPTIONS, TOTAL_ROWS,
   type InvoiceRow, type InvoiceStatus, type PaymentMethod,
 } from "./mock/server";
+import type { LiveChange } from "@trf/ui2";
 import { useMockQuery } from "./mock/use-mock-query";
 
 /* ------------------------------------------------------------------ helpers */
@@ -926,6 +927,40 @@ function ActionPillDemo() {
   );
 }
 
+/* ----------------------------------------------- section: Scrollbars */
+
+const SCROLLBAR_LINES = Array.from(
+  { length: 40 },
+  (_, i) => `Line ${i + 1}. The thumb shows while this box is hovered or scrolling.`,
+);
+
+function ScrollbarsDemo() {
+  return (
+    <div className="flex w-full max-w-xl flex-col gap-4">
+      <Text size="xs" tone="muted">
+        Every scrolling box gets the same thin bar from one rule in tokens.css: nothing at rest,
+        the thumb while the pointer is over the box or while it scrolls (wheel or keys), and only
+        where the content overflows. Nothing to add per component.
+      </Text>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="h-48 overflow-y-auto rounded-md border border-border bg-card p-3">
+          {SCROLLBAR_LINES.map((line) => (
+            <Text key={line} size="sm">{line}</Text>
+          ))}
+        </div>
+        <div className="h-48 overflow-y-auto rounded-md border border-border bg-card p-3">
+          <Text size="sm">Nothing to scroll here, so no bar at all.</Text>
+        </div>
+      </div>
+      <div className="overflow-x-auto rounded-md border border-border bg-card p-3">
+        <div className="w-[1400px]">
+          <Text size="sm">Horizontal boxes behave the same: hover or scroll sideways to see the thumb.</Text>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ----------------------------------------------- section: Attachment */
 
 const ATTACHMENT_IMG =
@@ -1372,10 +1407,33 @@ function DateTimeLocaleDemo() {
   );
 }
 
+// Built-in ids date themselves; anything else brings its own range.
+const DEMO_PERIOD_PRESETS: DateRangePreset[] = [
+  { value: "current_month", label: "Current month" },
+  { value: "last_month", label: "Last month" },
+  { value: "current_quarter", label: "Current quarter" },
+  { value: "last_quarter", label: "Last quarter" },
+  { value: "current_year", label: "Current year" },
+  { value: "last_year", label: "Last year" },
+  { value: "last_30_days", label: "Last 30 days" },
+  {
+    value: "year_to_date",
+    label: "Year to date",
+    range: (today) => ({
+      from: new Date(today.getFullYear(), 0, 1),
+      to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+    }),
+  },
+];
+
 function DatePickerDemo() {
   const [date, setDate] = useState<Date>();
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date(2026, 5, 9));
   const [range, setRange] = useState<DateRange>();
+  // A list filter stores the preset itself, so a saved "current month" rolls over.
+  const [filterPeriod, setFilterPeriod] = useState<{ range?: DateRange; preset?: string }>({
+    preset: "current_month",
+  });
   const [period, setPeriod] = useState<Date | undefined>(new Date(2026, 5, 1));
   const [paid, setPaid] = useState<Date>();
   const [fmtDate, setFmtDate] = useState<Date | undefined>(new Date(2026, 5, 9));
@@ -1394,6 +1452,29 @@ function DatePickerDemo() {
       </Field>
       <Field label="Report period" htmlFor="dp-range" className="sm:col-span-2" description="Range mode (two months).">
         <DatePicker mode="range" id="dp-range" value={range} onChange={setRange} placeholder="Pick a range…" />
+      </Field>
+      <Field
+        label="Period"
+        htmlFor="dp-presets"
+        className="sm:col-span-2"
+        description={`presets + preset, clearable. Stored: ${
+          filterPeriod.preset
+            ? `preset "${filterPeriod.preset}"`
+            : filterPeriod.range?.from
+              ? "a plain range"
+              : "nothing (any period)"
+        }`}
+      >
+        <DatePicker
+          mode="range"
+          id="dp-presets"
+          value={filterPeriod.range}
+          preset={filterPeriod.preset}
+          onChange={(range, preset) => setFilterPeriod({ range, preset })}
+          presets={DEMO_PERIOD_PRESETS}
+          placeholder="Any period"
+          clearable
+        />
       </Field>
       <Field label="Birth date" htmlFor="dp-dropdown" description="captionLayout=dropdown — month + year jumping.">
         <DatePicker id="dp-dropdown" value={invoiceDate} onChange={setInvoiceDate} captionLayout="dropdown" />
@@ -2241,6 +2322,48 @@ function ServerDataTableDemo() {
 
   const [reloadNonce, setReloadNonce] = useState(0);
   const [opened, setOpened] = useState<string>();
+
+  // Live changes: a write from elsewhere arrives as an event naming the row;
+  // the page refetches and the table glows the cells that differ. Here the
+  // "elsewhere" is a button that edits the mock data and plays the event. The
+  // view identity leaves the reload nonce out: it is the same list.
+  const [liveChange, setLiveChange] = useState<LiveChange>();
+  const liveView = JSON.stringify(q.queryKey);
+  // Three kinds of change from elsewhere, each exercising one animation: a
+  // sum changes in place (cells crossfade and glow), a date changes (the row
+  // re-sorts and slides to its new place), a status leaves the active filter
+  // (the row glows, collapses, and the next page's first row fades in).
+  const playChange = (ids: string[]) => {
+    setLiveChange((c) => ({ version: (c?.version ?? 0) + 1, reason: "external", ids, view: liveView }));
+    setReloadNonce((n) => n + 1);
+  };
+  const changeSumElsewhere = () => {
+    const target = rows[Math.min(2, rows.length - 1)];
+    if (!target) return;
+    const next: InvoiceStatus = target.status === "Paid" ? "Overdue" : "Paid";
+    mutateRow(target.number, { status: next, payable: next === "Paid" ? 0 : target.totalGross });
+    playChange([target.number]);
+  };
+  const changeDateElsewhere = () => {
+    const target = rows[Math.min(4, rows.length - 1)];
+    if (!target) return;
+    const shift = (q.sorting[0]?.desc === false ? -3 : 3) * 86_400_000;
+    mutateRow(target.number, { date: new Date(new Date(target.date).getTime() + shift).toISOString().slice(0, 10) });
+    playChange([target.number]);
+  };
+  const leaveFilterElsewhere = () => {
+    const filtered = q.filters.status as InvoiceStatus | undefined;
+    if (!filtered) {
+      // Narrow the list first, then the next press makes a row leave it.
+      q.setFilter("status", rows[0]?.status ?? "Draft");
+      return;
+    }
+    const targets = rows.slice(1, 3);
+    if (!targets.length) return;
+    const other = STATUS_OPTIONS.find((s) => s !== filtered) ?? "Paid";
+    for (const t of targets) mutateRow(t.number, { status: other });
+    playChange(targets.map((t) => t.number));
+  };
   const [dataOrder, setDataOrder] = useState<string[]>(SDT_DATA_COLUMNS.map((c) => c.id));
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -2390,9 +2513,20 @@ function ServerDataTableDemo() {
         description="5000 rows from an in-memory mock: server-side search, filter, sort, and pagination with a flicker-free loading model."
         primaryAction={<Button size="sm">New invoice</Button>}
         secondaryActions={
-          <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
-            <RefreshCw /> Reload
-          </Button>
+          <>
+            <Button variant="secondary" size="sm" onClick={changeSumElsewhere} title="Another person changes the third row's status and payable: the cells crossfade and glow">
+              <Radio /> Sum elsewhere
+            </Button>
+            <Button variant="secondary" size="sm" onClick={changeDateElsewhere} title="Another person moves the fifth row's date: it re-sorts and slides to its new place">
+              <Radio /> Date elsewhere
+            </Button>
+            <Button variant="secondary" size="sm" onClick={leaveFilterElsewhere} title={q.filters.status ? "Another person changes two rows' status so they no longer match the filter: they glow, collapse, and the next page's rows fade in" : "First press narrows the list to one status; the next makes rows leave it"}>
+              <Radio /> {q.filters.status ? "Leave filter" : "Filter, then leave"}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => setReloadNonce((n) => n + 1)}>
+              <RefreshCw /> Reload
+            </Button>
+          </>
         }
         search={{
           value: q.searchInput,
@@ -2501,6 +2635,7 @@ function ServerDataTableDemo() {
           readOnly={inlineReadOnly}
           loading={result.isLoading}
           fetching={result.isFetching && !result.isLoading}
+          liveChange={liveChange}
           onRowClick={(row) => setOpened(row.number)}
           skeletonRows={10}
           emptyMessage="No invoices match your filters."
@@ -2867,6 +3002,13 @@ function SidebarDemo() {
               Collapse the rail (bottom-left): sub-items close first, then it narrows to icons —
               which stay centered and never move. Open a group to see the grid accordion.
             </Text>
+            <Text tone="muted" className="mt-3">
+              Drag the rail's right edge to resize it (200 to 400 px). Narrower than 150 px it snaps
+              to the icon rail; dragging the icon rail out expands it again; double-click the edge
+              resets 256 px. Collapsed state and width live in one cookie on the apex domain
+              (<code>trf-sidebar</code>), so every app shares them; this demo box and the page's own
+              menu share it too.
+            </Text>
           </main>
         </div>
       </SidebarProvider>
@@ -3014,6 +3156,7 @@ const GROUPS: GroupDef[] = [
         id: "choices", label: "Choice controls", render: () => (
           <>
             <label className="flex items-center gap-2 text-sm"><Checkbox defaultChecked /> Send a copy by email</label>
+            <label className="flex items-center gap-2 text-sm"><Checkbox checked="indeterminate" aria-label="Partly selected" /> Partly selected</label>
             <label className="flex items-center gap-2 text-sm"><Switch defaultChecked /> Auto-confirm</label>
             <RadioGroup defaultValue="net14" className="gap-2">
               <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="net14" /> Net 14</label>
@@ -3197,6 +3340,7 @@ const GROUPS: GroupDef[] = [
       { id: "palette-picker", label: "Palette picker", render: () => <PalettePickerDemo /> },
       { id: "stepcard", label: "Step card", render: () => <StepCardDemo /> },
       { id: "dashboard-primitives", label: "Dashboard primitives", render: () => <DashboardPrimitivesDemo /> },
+      { id: "scrollbars", label: "Scrollbars", render: () => <ScrollbarsDemo /> },
       { id: "attachment", label: "Attachment", render: () => <AttachmentDemo /> },
       { id: "attachment-dropzone", label: "Attachment dropzone", render: () => <AttachmentDropzoneDemo /> },
       {
@@ -3448,6 +3592,8 @@ export function App() {
   const [query, setQuery] = useState("");
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
+  // The demo has no AppShell at its root, so it installs the scrollbar activity mark itself.
+  useScrollbarActivity();
   useEffect(() => {
     const el = document.documentElement;
     [...el.classList].filter((c) => c.startsWith("theme-")).forEach((c) => el.classList.remove(c));

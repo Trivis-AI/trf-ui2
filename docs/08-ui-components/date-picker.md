@@ -48,7 +48,7 @@ const [period, setPeriod] = useState<DateRange>();
 | --- | --- | --- |
 | `mode?` | `"single"` \| `"range"` | Default `"single"`. |
 | `value?` | `Date` (single) / `DateRange` (range) | Controlled selection. |
-| `onChange?` | `(date \| undefined)` / `(range \| undefined)` | Fires on select. Single mode closes the popover. |
+| `onChange?` | `(date \| undefined)` / `(range \| undefined, preset?)` | Fires on select. Single mode closes the popover. In range mode `preset` is the picked preset's id, `undefined` for days picked by hand or a clear. |
 | `placeholder?` | `string` | Trigger text when empty. |
 | `formatDate?` | `(date: Date) => string` | Trigger label formatter. Defaults to the shared locale-numeric date (`09.06.2026` for et-EE, see `datetime.md`). |
 | `captionLayout?` | `"label"` \| `"dropdown"` \| `"dropdown-months"` \| `"dropdown-years"` | Header nav. Default `"label"` (month title + arrows). `"dropdown"` adds month **and** year dropdowns for fast jumping. |
@@ -56,6 +56,8 @@ const [period, setPeriod] = useState<DateRange>();
 | `disabledDates?` | `Matcher \| Matcher[]` | react-day-picker matcher for non-selectable dates (greyed out). E.g. `{ after: new Date() }` to forbid future dates. Distinct from the boolean `disabled` (which disables the whole trigger). |
 | `keepDayOnNavigate?` | `boolean` | **Single mode, opt-in.** Carry the selected day to the new month when navigating, re-emitting it in one action (Jun 10 → pick April → Apr 10). See below. |
 | `clearable?` | `boolean` | **Opt-in.** Show a clear (✕) button in the trigger when a value is set; clicking it resets the field to empty (emits `undefined`). For optional/filter dates where unsetting is valid. |
+| `presets?` | `DateRangePreset[]` | **Range mode, opt-in.** Named ranges listed beside the calendar ("Current month", "Last month"). See [Presets](#presets-named-ranges). |
+| `preset?` | `string` | **Range mode.** The active preset's id, controlled. While set, the trigger shows its label and the calendar its dates as of today; `value` is not consulted. |
 | `variant?` | `"default"` \| `"cell"` | `"cell"` draws nothing of its own and fills the cell, for a date that is a cell of an editable table inside `<TableCell editable>`; the cell shows hover, focus and the open state. See [Table, editable cells](table.md#editable-cells). |
 | `id` / `disabled` / `className` | | Trigger mirrors the Combobox / Select trigger styling. |
 
@@ -105,6 +107,79 @@ that month, so it's a single action rather than "navigate, then click the day ag
 
 `DateRange` is `{ from: Date | undefined; to?: Date | undefined }` (re-exported from
 `react-day-picker`).
+
+### Presets (named ranges)
+
+A list filter that offers "Current month" / "Last month" does it inside the range picker, not
+with a separate Period select next to From / To. Pass `presets` and the popover lists them
+beside the calendar:
+
+```tsx
+import { DatePicker, dateRangePresetBounds, isDateRangePresetId, type DateRangePreset } from "@trf/ui2";
+
+const presets: DateRangePreset[] = [
+  { value: "current_month", label: t.translate("<trn-current-month>", "Current month") },
+  { value: "last_month", label: t.translate("<trn-last-month>", "Last month") },
+];
+
+// Store the preset itself, not its dates, so a saved "current month" view rolls over with the
+// calendar. The query works the dates out from today each time. isoToDate / dateToIso are the
+// app's own YYYY-MM-DD adapters (frontinvoices src/utils/date.ts).
+const period = isDateRangePresetId(q.filters.period) ? q.filters.period : undefined;
+const range = period
+  ? dateRangePresetBounds(period)
+  : { from: isoToDate(q.filters.date_from), to: isoToDate(q.filters.date_to) };
+
+<Field label={t.translate("<trn-period>", "Period")} htmlFor="period" className="w-60">
+  <DatePicker
+    mode="range"
+    id="period"
+    presets={presets}
+    preset={period}
+    value={range}
+    onChange={(r, preset) =>
+      q.setFilters(
+        preset
+          ? { period: preset, date_from: "", date_to: "" }
+          : { period: "", date_from: dateToIso(r?.from), date_to: dateToIso(r?.to) }
+      )
+    }
+    placeholder={t.translate("<trn-any-period>", "Any period")}
+    clearable
+  />
+</Field>
+```
+
+- **Picking a preset** emits its dates as of today together with its id, and closes the popover.
+- **Picking a day** afterwards turns it into a plain range that starts from the preset's dates
+  (`preset` is `undefined`), so "Last month" then a click on the 20th is the 1st to the 20th.
+- **While `preset` is set** the trigger shows the preset's label (the tooltip gives its dates), the
+  list marks it, and the calendar shows its dates as of today. An id that is not in `presets` is
+  ignored and `value` shows instead.
+- **"Any period"** is the empty state: the placeholder, and `clearable` for the ✕.
+- Labels are the consumer's, so they come translated. ui2 adds no strings.
+
+Built-in ids, dated by the picker itself and by `dateRangePresetBounds(id, today?)`:
+`current_month`, `last_month`, `current_quarter`, `last_quarter` (calendar quarters),
+`current_year`, `last_year` (calendar years), `last_30_days` (today and the 29 days before it,
+so it moves daily). `DATE_RANGE_PRESET_IDS` lists them and
+`isDateRangePresetId(v)` narrows a stored string, such as a URL filter param.
+
+Any other id brings its own `range`, worked out from today:
+
+```tsx
+{
+  value: "year_to_date",
+  label: "Year to date",
+  range: (today) => ({
+    from: new Date(today.getFullYear(), 0, 1),
+    to: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+  }),
+}
+```
+
+On a phone the list wraps above the calendar. The two-month range view hides outside days, so
+the first month's last days do not repeat, selected, at the top of the second month.
 
 ## MonthPicker (pick a whole month)
 
