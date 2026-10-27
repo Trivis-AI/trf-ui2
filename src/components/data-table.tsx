@@ -12,6 +12,7 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Input } from "./ui/input";
 import { TableView, type ColumnFilterMark } from "./table/table-view";
 
@@ -83,7 +84,7 @@ export function DataTable<TData>({
   enableColumnReorder = false,
   pageSize,
   onCellEdit,
-  emptyMessage = "No results.",
+  emptyMessage = tr("<trn-no-results>", "No results."),
   stickyHeader = false,
   activeFilters,
   className,
@@ -131,7 +132,7 @@ export function DataTable<TData>({
         <Input
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search…"
+          placeholder={tr("<trn-search>", "Search…")}
           className="max-w-xs"
         />
       )}
@@ -148,9 +149,11 @@ export function DataTable<TData>({
       {pageSize && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+            {tr("<trn-ui-page-of-total>", "Page {page} of {total}")
+              .replace("{page}", String(table.getState().pagination.pageIndex + 1))
+              .replace("{total}", String(table.getPageCount() || 1))}
             {" · "}
-            {table.getFilteredRowModel().rows.length} rows
+            {tr("<trn-ui-n-rows>", "{n} rows").replace("{n}", String(table.getFilteredRowModel().rows.length))}
           </span>
           <div className="flex gap-2">
             <button
@@ -159,7 +162,7 @@ export function DataTable<TData>({
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Previous
+              {tr("<trn-previous>", "Previous")}
             </button>
             <button
               type="button"
@@ -167,7 +170,7 @@ export function DataTable<TData>({
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Next
+              {tr("<trn-next>", "Next")}
             </button>
           </div>
         </div>

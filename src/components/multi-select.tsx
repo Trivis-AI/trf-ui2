@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
@@ -58,12 +59,12 @@ export function MultiSelect({
   options,
   value,
   onChange,
-  emptyLabel = "None",
-  allLabel = "All",
+  emptyLabel = tr("<trn-ui-none>", "None"),
+  allLabel = tr("<trn-all>", "All"),
   searchable,
-  searchPlaceholder = "Search…",
-  selectAllLabel = "Select all",
-  clearLabel = "Clear",
+  searchPlaceholder = tr("<trn-search>", "Search…"),
+  selectAllLabel = tr("<trn-ui-select-all>", "Select all"),
+  clearLabel = tr("<trn-clear>", "Clear"),
   id,
   disabled,
   className,
@@ -159,7 +160,7 @@ export function MultiSelect({
           {visible.length === 0 && (
             <div className="px-2 py-3 text-center text-sm text-muted-foreground">
               {/* Deliberately terse: the search box above is the context. */}
-              No matches
+              {tr("<trn-ui-no-matches>", "No matches")}
             </div>
           )}
           {visible.map((option) => {

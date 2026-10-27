@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Spinner, type SpinnerSize } from "./ui/spinner";
 
 export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -9,7 +10,7 @@ export interface LoadingStateProps extends React.HTMLAttributes<HTMLDivElement> 
 
 /** Centered spinner with an optional label, for full-area loading. */
 export function LoadingState({
-  label = "Loading…",
+  label = tr("<trn-loading>", "Loading…"),
   size = "md",
   className,
   ...props

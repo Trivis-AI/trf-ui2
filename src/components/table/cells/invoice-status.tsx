@@ -1,4 +1,5 @@
 import { cn } from "../../../lib/utils";
+import { tr } from "../../../lib/i18n";
 import { type StatusTone } from "../../ui/status-badge";
 import { StatusCell } from "./status-cell";
 
@@ -86,28 +87,30 @@ export function deriveInvoiceStatus(
 ): { key: string; label: string; tone: StatusTone; note?: string } {
   const { status, paymentStatus, dueDate, creditStatus, creditedAmount, isCreditNote, now } = input;
 
-  if (status === "draft") return { key: "draft", label: "Draft", tone: "neutral" };
-  if (status === "cancelled") return { key: "cancelled", label: "Cancelled", tone: "error" };
+  if (status === "draft") return { key: "draft", label: tr("<trn-draft>", "Draft"), tone: "neutral" };
+  if (status === "cancelled") return { key: "cancelled", label: tr("<trn-cancelled>", "Cancelled"), tone: "error" };
 
   if (isCreditNote) {
     // A credit note is not paid; it is netted against its original or refunded.
     // It is still open only while money is owed back.
     const owed = paymentStatus === "unpaid" || paymentStatus === "partial";
     return owed
-      ? { key: "credit_note", label: "Credit note", tone: "info", note: "Refund due" }
-      : { key: "credit_note", label: "Credit note", tone: "info" };
+      ? { key: "credit_note", label: tr("<trn-credit-note>", "Credit note"), tone: "info", note: tr("<trn-ui-refund-due>", "Refund due") }
+      : { key: "credit_note", label: tr("<trn-credit-note>", "Credit note"), tone: "info" };
   }
 
   // "credited" as a document status is the pre-migration form of the same fact.
   if (creditStatus === "credited" || status === "credited") {
-    return { key: "credited", label: "Credited", tone: "neutral" };
+    return { key: "credited", label: tr("<trn-credited>", "Credited"), tone: "neutral" };
   }
 
   const partlyCredited = creditStatus === "partial";
   const creditNote = partlyCredited
     ? (() => {
         const amt = amount2(creditedAmount);
-        return amt ? `Credited ${amt}` : "Partly credited";
+        return amt
+          ? tr("<trn-ui-credited-amount>", "Credited {amount}").replace("{amount}", amt)
+          : tr("<trn-ui-partly-credited>", "Partly credited");
       })()
     : undefined;
   const withCredit = (s: { key: string; label: string; tone: StatusTone }) =>
@@ -115,16 +118,16 @@ export function deriveInvoiceStatus(
 
   // Confirmed / active: resolve by payment status.
   if (status === "confirmed" || status === "active") {
-    if (paymentStatus === "paid") return withCredit({ key: "paid", label: "Paid", tone: "success" });
+    if (paymentStatus === "paid") return withCredit({ key: "paid", label: tr("<trn-paid>", "Paid"), tone: "success" });
     if (paymentStatus === "partial") {
-      return withCredit({ key: "partial", label: "Partial", tone: "warning" });
+      return withCredit({ key: "partial", label: tr("<trn-ui-status-partial>", "Partial"), tone: "warning" });
     }
     // Unpaid or missing payment status: overdue if the due date has passed.
     const due = toDate(dueDate);
     if (due && startOfDay(due) < startOfDay(now ?? new Date())) {
-      return withCredit({ key: "overdue", label: "Overdue", tone: "error" });
+      return withCredit({ key: "overdue", label: tr("<trn-ui-status-overdue>", "Overdue"), tone: "error" });
     }
-    return withCredit({ key: "awaiting", label: "Unpaid", tone: "info" });
+    return withCredit({ key: "awaiting", label: tr("<trn-ui-status-unpaid>", "Unpaid"), tone: "info" });
   }
 
   // Unknown status: surface it verbatim rather than swallowing it.
@@ -139,16 +142,19 @@ export function deriveInvoiceStatus(
  * NOTE: "Overdue" is intentionally NOT a filter option. The backend has no due-date
  * filter yet, so there is no way to query for overdue rows specifically; "Unpaid"
  * returns overdue rows too (they are confirmed + unpaid).
+ *
+ * Each label is a getter, so it is translated when read (while rendering), not when
+ * this module loads.
  */
 export const INVOICE_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
-  { value: "not_paid", label: "Not paid" },
-  { value: "owing", label: "Unpaid or partial" },
-  { value: "draft", label: "Draft" },
-  { value: "unpaid", label: "Unpaid" },
-  { value: "partial", label: "Partial" },
-  { value: "paid", label: "Paid" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "credited", label: "Credited" },
+  { value: "not_paid", get label() { return tr("<trn-ui-status-not-paid>", "Not paid"); } },
+  { value: "owing", get label() { return tr("<trn-ui-status-unpaid-or-partial>", "Unpaid or partial"); } },
+  { value: "draft", get label() { return tr("<trn-draft>", "Draft"); } },
+  { value: "unpaid", get label() { return tr("<trn-ui-status-unpaid>", "Unpaid"); } },
+  { value: "partial", get label() { return tr("<trn-ui-status-partial>", "Partial"); } },
+  { value: "paid", get label() { return tr("<trn-paid>", "Paid"); } },
+  { value: "cancelled", get label() { return tr("<trn-cancelled>", "Cancelled"); } },
+  { value: "credited", get label() { return tr("<trn-credited>", "Credited"); } },
 ];
 
 /**
@@ -215,7 +221,9 @@ export function InvoiceStatusCell({ className, ...input }: InvoiceStatusCellProp
       tone={s.tone}
       label={s.label}
       subText={s.note && <span className="whitespace-nowrap normal-case">{s.note}</span>}
-      className={cn("capitalize", className)}
+      // Known statuses show their translated label as written, in sentence case; only an
+      // unknown status, passed through verbatim from the backend, is capitalised.
+      className={cn(s.label === input.status && "capitalize", className)}
     />
   );
 }

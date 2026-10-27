@@ -2,6 +2,7 @@ import * as React from "react";
 import { CalendarClock, Clock } from "lucide-react";
 import type { Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { formatDateTime as formatDateTimeShared, useDateTimePrefs } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
@@ -45,7 +46,7 @@ const defaultFormat = (date: Date) => formatDateTimeShared(date);
 export function DateTimePicker({
   value,
   onChange,
-  placeholder = "Pick date & time…",
+  placeholder = tr("<trn-ui-pick-date-time>", "Pick date & time…"),
   formatDateTime = defaultFormat,
   minuteStep = 5,
   captionLayout = "label",
@@ -129,7 +130,7 @@ export function DateTimePicker({
             step={minuteStep * 60}
             value={timeValue}
             onChange={handleTimeChange}
-            aria-label="Time"
+            aria-label={tr("<trn-time>", "Time")}
             className={cn(
               "h-9 w-full rounded-md border border-input bg-field px-3 text-sm shadow-xs transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-field-ring focus-visible:ring-offset-1 focus-visible:ring-offset-field-ring-offset focus-visible:border-input-focus focus-visible:bg-field-focus"

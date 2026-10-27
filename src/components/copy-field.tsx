@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Input } from "./ui/input";
 import { Button, type ButtonSize } from "./ui/button";
 
@@ -32,8 +33,8 @@ export function CopyField({
   value,
   mono = true,
   size = "sm",
-  copyLabel = "Copy",
-  copiedLabel = "Copied",
+  copyLabel = tr("<trn-copy>", "Copy"),
+  copiedLabel = tr("<trn-copied>", "Copied"),
   onCopy,
   onCopyError,
   className,

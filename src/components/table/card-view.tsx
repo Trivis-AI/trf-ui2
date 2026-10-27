@@ -1,6 +1,7 @@
 import * as React from "react";
 import { flexRender, type Cell, type Row } from "@tanstack/react-table";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 import { Checkbox } from "../ui/checkbox";
 import { Skeleton } from "../ui/skeleton";
 
@@ -141,7 +142,7 @@ function RowCard<TData>({
             disabled={!row.getCanSelect()}
             onClick={(e) => e.stopPropagation()}
             onCheckedChange={(v) => row.toggleSelected(!!v)}
-            aria-label="Select card"
+            aria-label={tr("<trn-ui-select-card>", "Select card")}
           />
         </div>
       )}
@@ -253,7 +254,7 @@ export function CardView<TData>({
   if (rows.length === 0) {
     return (
       <div className={cn("p-8 text-center text-sm text-muted-foreground", className)}>
-        {emptyMessage ?? "No results."}
+        {emptyMessage ?? tr("<trn-no-results>", "No results.")}
       </div>
     );
   }

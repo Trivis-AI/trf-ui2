@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 import type { TableDefaultView } from "./use-table-query";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -54,7 +55,7 @@ export interface TableSearchProps {
 export function TableSearch({
   value,
   onChange,
-  placeholder = "Search...",
+  placeholder = tr("<trn-search>", "Search…"),
   debounceMs,
   className,
 }: TableSearchProps) {
@@ -153,7 +154,7 @@ function SortableColumnRow({
         <span
           {...attributes}
           {...listeners}
-          aria-label={`Drag to reorder ${option.label}`}
+          aria-label={tr("<trn-ui-drag-to-reorder-name>", "Drag to reorder {name}").replace("{name}", option.label)}
           className="cursor-grab touch-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing [&_svg]:size-4"
         >
           <GripVertical />
@@ -189,7 +190,7 @@ export function TableColumnOptions({
   enableReorder = true,
   iconOnly = false,
   viewOptions,
-  viewOptionsLabel = "View",
+  viewOptionsLabel = tr("<trn-ui-view-options>", "View"),
   className,
 }: TableColumnOptionsProps) {
   const sensors = useSensors(
@@ -225,12 +226,12 @@ export function TableColumnOptions({
         <Button
           variant="secondary"
           size={iconOnly ? "icon" : "sm"}
-          aria-label="Columns"
-          title="Columns"
+          aria-label={tr("<trn-columns>", "Columns")}
+          title={tr("<trn-columns>", "Columns")}
           className={className}
         >
           <SlidersHorizontal />
-          {!iconOnly && "Columns"}
+          {!iconOnly && tr("<trn-columns>", "Columns")}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-60 p-2">
@@ -243,7 +244,7 @@ export function TableColumnOptions({
             <Separator className="mb-2" />
           </>
         )}
-        <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">Columns</p>
+        <p className="px-1.5 py-1 text-xs font-medium text-muted-foreground">{tr("<trn-columns>", "Columns")}</p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={orderedIds} strategy={verticalListSortingStrategy}>
             <div className="flex flex-col">
@@ -294,11 +295,13 @@ export function TablePagination({
       )}
     >
       <span>
-        Page {pageIndex + 1} of {totalPages}
+        {tr("<trn-ui-page-of-total>", "Page {page} of {total}")
+          .replace("{page}", String(pageIndex + 1))
+          .replace("{total}", String(totalPages))}
         {rowCount != null && (
           <>
             {" · "}
-            {rowCount} total
+            {tr("<trn-ui-n-total>", "{n} total").replace("{n}", String(rowCount))}
           </>
         )}
       </span>
@@ -310,7 +313,7 @@ export function TablePagination({
           disabled={!canPrev}
         >
           <ChevronLeft />
-          Previous
+          {tr("<trn-previous>", "Previous")}
         </Button>
         <Button
           variant="secondary"
@@ -318,7 +321,7 @@ export function TablePagination({
           onClick={() => onPageChange(pageIndex + 1)}
           disabled={!canNext}
         >
-          Next
+          {tr("<trn-next>", "Next")}
           <ChevronRight />
         </Button>
       </div>
@@ -371,20 +374,20 @@ export function TableFilterBar({
           onClick={() => (isDefault ? defaultView!.clear() : defaultView!.save())}
           title={
             isDefault
-              ? "This list opens with these filters. Click to stop."
-              : "Open this list with these filters from now on"
+              ? tr("<trn-ui-default-view-on-hint>", "This list opens with these filters. Click to stop.")
+              : tr("<trn-ui-default-view-off-hint>", "Open this list with these filters from now on")
           }
           className={cn(isDefault && "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15")}
         >
           <Star className={cn(isDefault && "fill-current")} />
-          {isDefault ? "Default view" : "Make default"}
+          {isDefault ? tr("<trn-ui-default-view>", "Default view") : tr("<trn-ui-make-default>", "Make default")}
         </Button>
       )}
       {active && onClear && (
         // md matches the h-9 filter controls, so the items-end row stays flush.
         <Button variant="primary" size="md" onClick={onClear}>
           <X />
-          Clear
+          {tr("<trn-clear>", "Clear")}
         </Button>
       )}
     </div>
@@ -421,17 +424,17 @@ export function TableFilterNotice({
   defaultView,
   matched,
   total,
-  unit = "rows",
+  unit = tr("<trn-ui-rows-unit>", "rows"),
   className,
 }: TableFilterNoticeProps) {
   if (!active) return null;
 
   const onDefault = !!defaultView?.isCurrent;
   const headline = defaultView?.restored
-    ? "Opened with your default view"
+    ? tr("<trn-ui-opened-with-default-view>", "Opened with your default view")
     : onDefault
-      ? "Saved as your default view"
-      : "Filters are on";
+      ? tr("<trn-ui-saved-as-default-view>", "Saved as your default view")
+      : tr("<trn-ui-filters-are-on>", "Filters are on");
 
   const hidden = total != null && matched != null ? total - matched : null;
 
@@ -457,18 +460,26 @@ export function TableFilterNotice({
         <span className="text-muted-foreground">
           {total != null ? (
             <>
-              · Showing {matched} of {total} {unit}
+              ·{" "}
+              {tr("<trn-ui-showing-matched-of-total>", "Showing {matched} of {total} {unit}")
+                .replace("{matched}", String(matched))
+                .replace("{total}", String(total))
+                .replace("{unit}", unit)}
             </>
           ) : (
             <>
-              · {matched} {unit} match
+              ·{" "}
+              {tr("<trn-ui-n-unit-match>", "{n} {unit} match")
+                .replace("{n}", String(matched))
+                .replace("{unit}", unit)}
             </>
           )}
         </span>
       )}
       {hidden != null && hidden > 0 && (
         <span className="font-medium tabular-nums">
-          · {hidden} hidden by filters
+          ·{" "}
+          {tr("<trn-ui-n-hidden-by-filters>", "{n} hidden by filters").replace("{n}", String(hidden))}
         </span>
       )}
     </div>

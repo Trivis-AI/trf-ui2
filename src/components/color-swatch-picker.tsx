@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import { cn } from "../lib/utils";
+import { colorName } from "../lib/color-names";
 import {
   SWATCH_COLORS,
   asSwatchColor,
@@ -17,7 +18,7 @@ export interface ColorSwatchPickerProps {
   /** Current colour; anything outside the palette reads as nothing selected. */
   value?: SwatchColorInput | null;
   onChange: (color: SwatchColor) => void;
-  /** Accessible and hover names per colour, for translation. Defaults to the English name. */
+  /** Accessible and hover names per colour. Defaults to the colour's name via tr(). */
   labels?: Partial<Record<SwatchColor, string>>;
   disabled?: boolean;
   className?: string;
@@ -29,7 +30,7 @@ export function ColorSwatchPicker({ value, onChange, labels, disabled = false, c
     <div role="radiogroup" className={cn("flex flex-wrap items-center gap-2", className)}>
       {SWATCH_COLORS.map((color) => {
         const selected = color === current;
-        const label = labels?.[color] ?? color[0].toUpperCase() + color.slice(1);
+        const label = labels?.[color] ?? colorName(color);
         return (
           <button
             key={color}

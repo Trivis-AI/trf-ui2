@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem } from "./ui/select";
 
@@ -53,7 +54,7 @@ export function QuantityInput({
   disabled,
   className,
   "aria-label": ariaLabel,
-  unitLabel = "Unit",
+  unitLabel = tr("<trn-unit>", "Unit"),
 }: QuantityInputProps) {
   const unit = units.find((u) => u.id === unitId);
   const canPickUnit = !disabled && !!onUnitChange && units.length > 0;

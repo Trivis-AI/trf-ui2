@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Check, X } from "lucide-react";
 import { dateMatchModifiers } from "react-day-picker";
 import type { DateRange, Matcher } from "react-day-picker";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { formatDate as formatDateShared, useDateTimePrefs } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar } from "./ui/calendar";
@@ -155,7 +156,7 @@ const defaultFormat = (date: Date) => formatDateShared(date);
  */
 export function DatePicker(props: DatePickerProps) {
   const {
-    placeholder = "Pick a date…",
+    placeholder = tr("<trn-pick-a-date>", "Pick a date…"),
     formatDate = defaultFormat,
     captionLayout = "dropdown",
     startMonth,
@@ -264,7 +265,7 @@ export function DatePicker(props: DatePickerProps) {
         {showClear ? (
           <button
             type="button"
-            aria-label="Clear date"
+            aria-label={tr("<trn-ui-clear-date>", "Clear date")}
             onClick={(e) => {
               e.stopPropagation();
               clear();

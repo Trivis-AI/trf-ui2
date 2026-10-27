@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 
 const SIZE = {
   sm: "size-4",
@@ -18,7 +19,7 @@ export function Spinner({ size = "md", className, ...props }: SpinnerProps) {
   return (
     <span
       role="status"
-      aria-label="Loading"
+      aria-label={tr("<trn-ui-loading>", "Loading")}
       className={cn("inline-flex text-muted-foreground", className)}
       {...props}
     >

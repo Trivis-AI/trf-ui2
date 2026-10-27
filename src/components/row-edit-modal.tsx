@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { tr } from "../lib/i18n";
 import { Field } from "./ui/field";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -119,8 +120,8 @@ export function RowEditModal<TValue extends object = Record<string, unknown>>({
   value,
   onSubmit,
   onCancel,
-  submitLabel = "Save",
-  cancelLabel = "Cancel",
+  submitLabel = tr("<trn-save>", "Save"),
+  cancelLabel = tr("<trn-cancel>", "Cancel"),
   error,
 }: RowEditModalProps<TValue>) {
   const [form, setForm] = React.useState<Record<string, unknown>>({});
@@ -155,7 +156,7 @@ export function RowEditModal<TValue extends object = Record<string, unknown>>({
     for (const field of fields) {
       const v = form[field.key];
       if (field.required && field.type !== "switch" && isEmpty(v)) {
-        next[field.key] = "Required";
+        next[field.key] = tr("<trn-ui-required>", "Required");
         continue;
       }
       const msg = field.validate?.(v, form);

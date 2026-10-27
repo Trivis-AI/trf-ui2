@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 
@@ -80,16 +81,16 @@ export function EntityCombobox({
   debounceMs = 300,
   items,
   onPick,
-  pickLabel = "Select",
+  pickLabel = tr("<trn-ui-pick-select>", "Select"),
   fallbackItems = [],
   fallbackLabel,
   fallbackLoading = false,
-  fallbackLoadingText = "Searching…",
+  fallbackLoadingText = tr("<trn-searching>", "Searching…"),
   onFallbackPick,
-  fallbackPickLabel = "Import",
+  fallbackPickLabel = tr("<trn-import>", "Import"),
   fallbackBusy = false,
   id,
-  placeholder = "Search by name…",
+  placeholder = tr("<trn-search-by-name>", "Search by name…"),
   disabled,
   required,
   className,

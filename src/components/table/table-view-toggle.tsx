@@ -1,5 +1,6 @@
 import { LayoutGrid, List } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import type { TableViewMode } from "./card-view";
@@ -24,8 +25,8 @@ export interface TableViewToggleProps {
 export function TableViewToggle({
   value,
   onChange,
-  listLabel = "List view",
-  cardsLabel = "Gallery view",
+  listLabel = tr("<trn-ui-list-view>", "List view"),
+  cardsLabel = tr("<trn-ui-gallery-view>", "Gallery view"),
   className,
 }: TableViewToggleProps) {
   const options: { mode: TableViewMode; label: string; Icon: typeof List }[] = [

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChevronRight, PanelLeftClose, PanelLeftOpen, Menu } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { useScrollbarActivity } from "../hooks/useScrollbarActivity";
 import { readPrefCookie, writePrefCookie } from "../lib/prefCookie";
 
@@ -256,7 +257,7 @@ export function SidebarMobileTrigger({ className, ...props }: React.ButtonHTMLAt
   return (
     <button
       type="button"
-      aria-label="Open menu"
+      aria-label={tr("<trn-ui-open-menu>", "Open menu")}
       onClick={() => setMobileOpen(true)}
       className={cn(
         "flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&_svg]:size-5",
@@ -548,7 +549,7 @@ function SidebarResizeHandle() {
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize sidebar"
+      aria-label={tr("<trn-ui-resize-sidebar>", "Resize sidebar")}
       aria-valuemin={SIDEBAR_MIN_WIDTH}
       aria-valuemax={SIDEBAR_MAX_WIDTH}
       aria-valuenow={collapsed ? SIDEBAR_ICON_WIDTH : width}
@@ -572,7 +573,7 @@ export function SidebarTrigger({ className, ...props }: React.ButtonHTMLAttribut
   return (
     <button
       type="button"
-      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      title={collapsed ? tr("<trn-ui-expand-sidebar>", "Expand sidebar") : tr("<trn-ui-collapse-sidebar>", "Collapse sidebar")}
       onClick={toggleCollapsed}
       className={cn(
         "flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground [&_svg]:size-4",

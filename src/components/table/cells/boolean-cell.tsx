@@ -1,5 +1,6 @@
 import { Check, X } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import { tr } from "../../../lib/i18n";
 import { Badge } from "../../ui/badge";
 
 // Empty placeholder glyph for table cells. The long dash is the agreed data
@@ -28,8 +29,8 @@ export interface BooleanCellProps {
 export function BooleanCell({
   value,
   variant = "badge",
-  trueLabel = "Yes",
-  falseLabel = "No",
+  trueLabel = tr("<trn-yes>", "Yes"),
+  falseLabel = tr("<trn-no>", "No"),
   className,
 }: BooleanCellProps) {
   if (value == null) {

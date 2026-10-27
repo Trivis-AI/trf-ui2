@@ -3,6 +3,7 @@ import { KeyRound, X } from "lucide-react";
 import { Alert, AlertTitle } from "./ui/alert";
 import { Button } from "./ui/button";
 import { CopyField } from "./copy-field";
+import { tr } from "../lib/i18n";
 
 export interface SecretRevealProps {
   /** The secret to reveal and copy (API/MCP key, token, one-time invite link…). */
@@ -48,7 +49,7 @@ export function SecretReveal({
         />
       </div>
       {onDismiss && (
-        <Button type="button" variant="ghost" size="icon" aria-label="Dismiss" onClick={onDismiss}>
+        <Button type="button" variant="ghost" size="icon" aria-label={tr("<trn-dismiss>", "Dismiss")} onClick={onDismiss}>
           <X />
         </Button>
       )}

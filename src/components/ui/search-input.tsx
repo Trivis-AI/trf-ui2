@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 import { Input, type InputProps } from "./input";
 
 export interface SearchInputProps extends InputProps {
@@ -39,7 +40,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           <button
             type="button"
             onClick={onClear}
-            aria-label="Clear search"
+            aria-label={tr("<trn-ui-clear-search>", "Clear search")}
             className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-4" />
