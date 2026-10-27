@@ -20,6 +20,7 @@ import { Button } from "./ui/button";
 import { EmptyState } from "./empty-state";
 import { LoadingState } from "./loading-state";
 import { Text } from "./typography";
+import { tr } from "../lib/i18n";
 
 /** Which figure on the source row was clicked — it decides which lines make it up. */
 export type AccountDetailColumn = "opening" | "turnover" | "closing";
@@ -212,27 +213,30 @@ export function AccountDetailPanel({
   pageSize = 100,
   labels,
 }: AccountDetailPanelProps) {
+  // upToAndIncluding and lines have no default here: unless the app passes those
+  // pieces, the header uses whole translated phrases with the value in place.
   const L = {
-    opening: "Opening balance",
-    turnover: "Turnover",
-    closing: "Closing balance",
-    upToAndIncluding: "up to and including",
-    lines: "lines",
-    matches: "Matches the report figure",
-    doesNotMatch: "Does NOT match the report figure",
-    report: "report",
-    date: "Date",
-    entry: "Entry",
-    description: "Description",
-    document: "Doc",
-    debit: "Debit",
-    credit: "Credit",
-    balance: "Balance",
-    totalAllPages: "Total (all pages)",
-    noLines: "No journal lines in this period.",
-    prev: "Previous",
-    next: "Next",
-    page: (p: number, t: number) => `Page ${p} / ${t}`,
+    opening: tr("<trn-opening-balance>", "Opening balance"),
+    turnover: tr("<trn-turnover>", "Turnover"),
+    closing: tr("<trn-closing-balance>", "Closing balance"),
+    matches: tr("<trn-reconciles-with-report>", "Matches the report figure"),
+    doesNotMatch: tr("<trn-does-not-reconcile>", "Does NOT match the report figure"),
+    report: tr("<trn-report>", "report"),
+    date: tr("<trn-date>", "Date"),
+    entry: tr("<trn-entry>", "Entry"),
+    description: tr("<trn-description>", "Description"),
+    document: tr("<trn-ui-doc-short>", "Doc"),
+    debit: tr("<trn-debit>", "Debit"),
+    credit: tr("<trn-credit>", "Credit"),
+    balance: tr("<trn-balance>", "Balance"),
+    totalAllPages: tr("<trn-total-all-pages>", "Total (all pages)"),
+    noLines: tr("<trn-no-lines-in-period>", "No journal lines in this period."),
+    prev: tr("<trn-previous>", "Previous"),
+    next: tr("<trn-next>", "Next"),
+    page: (p: number, t: number) =>
+      tr("<trn-ui-page-slash-total>", "Page {page} / {total}")
+        .replace("{page}", String(p))
+        .replace("{total}", String(t)),
     ...labels,
   };
 
@@ -348,8 +352,16 @@ export function AccountDetailPanel({
               ? `${range.from} – ${range.to}`
               // "Everything up to X" is the honest description of an accumulated
               // balance; printing 1900 as a start date just looks like a bug.
-              : `${L.upToAndIncluding} ${range.to}`}
-            {summary ? ` · ${summary.total_rows} ${L.lines}` : ""}
+              : L.upToAndIncluding != null
+                ? `${L.upToAndIncluding} ${range.to}`
+                : tr("<trn-ui-up-to-and-including-date>", "up to and including {date}").replace("{date}", range.to)}
+            {summary
+              ? ` · ${
+                  L.lines != null
+                    ? `${summary.total_rows} ${L.lines}`
+                    : tr("<trn-ui-n-lines>", "{n} lines").replace("{n}", String(summary.total_rows))
+                }`
+              : ""}
           </Text>
         </FloatingWindowHeader>
 
@@ -366,7 +378,12 @@ export function AccountDetailPanel({
               >
                 {reconciliation.ok
                   ? L.matches
-                  : `${L.doesNotMatch} — ${L.report} ${reconciliation.text}`}
+                  : labels?.doesNotMatch != null || labels?.report != null
+                    ? `${L.doesNotMatch} — ${L.report} ${reconciliation.text}`
+                    : tr(
+                        "<trn-ui-does-not-match-report-figure-amount>",
+                        "Does NOT match the report figure (report: {amount})",
+                      ).replace("{amount}", reconciliation.text)}
               </Badge>
             )}
 

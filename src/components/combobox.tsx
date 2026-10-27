@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ActionPill } from "./ui/action-pill";
 import {
@@ -65,9 +66,9 @@ export function Combobox<T = unknown>({
   options,
   value,
   onChange,
-  placeholder = "Select…",
-  searchPlaceholder = "Search…",
-  emptyText = "No results.",
+  placeholder = tr("<trn-select>", "Select…"),
+  searchPlaceholder = tr("<trn-search>", "Search…"),
+  emptyText = tr("<trn-no-results>", "No results."),
   id,
   disabled,
   className,

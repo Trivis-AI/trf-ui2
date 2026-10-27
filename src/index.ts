@@ -4,6 +4,9 @@
 
 // Utils
 export { cn } from "./lib/utils";
+// UI text: the app plugs its translations in once (setTranslate); components call tr().
+export { setTranslate, tr } from "./lib/i18n";
+export type { Translate } from "./lib/i18n";
 export {
   setDateTimeLocale,
   getDateTimeLocale,

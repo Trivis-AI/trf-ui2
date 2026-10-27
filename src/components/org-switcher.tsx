@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ExternalLink } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
   Command,
@@ -83,11 +84,11 @@ export function OrgSwitcher({
   onOpen,
   loading = false,
   searchThreshold = 8,
-  searchPlaceholder = "Search organisations…",
-  emptyText = "No organisation found.",
-  loadingText = "Loading…",
+  searchPlaceholder = tr("<trn-ui-search-organisations>", "Search organisations…"),
+  emptyText = tr("<trn-ui-no-organisation-found>", "No organisation found."),
+  loadingText = tr("<trn-loading>", "Loading…"),
   orgHref,
-  openLabel = "Open in a new tab",
+  openLabel = tr("<trn-ui-open-in-new-tab>", "Open in a new tab"),
   align = "start",
   side = "bottom",
   sideOffset,

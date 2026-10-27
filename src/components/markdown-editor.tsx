@@ -10,6 +10,7 @@ import {
   SquareCode,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import {
@@ -79,20 +80,22 @@ function fence(value: string, start: number, end: number): Edit {
 
 interface Action {
   key: string;
-  label: string;
+  /** A function, so the label is translated while rendering, not when this module loads. */
+  label: () => string;
   icon: React.ReactNode;
   run: (value: string, start: number, end: number) => Edit;
 }
 
+// Labels and the sample text a button inserts are translated when used, never here at load.
 const ACTIONS: Action[] = [
-  { key: "bold", label: "Bold", icon: <Bold />, run: (v, s, e) => surround(v, s, e, "**", "**", "bold text") },
-  { key: "italic", label: "Italic", icon: <Italic />, run: (v, s, e) => surround(v, s, e, "*", "*", "italic text") },
-  { key: "code", label: "Inline code", icon: <Code />, run: (v, s, e) => surround(v, s, e, "`", "`", "code") },
-  { key: "fence", label: "Code block", icon: <SquareCode />, run: fence },
-  { key: "link", label: "Link", icon: <Link2 />, run: (v, s, e) => surround(v, s, e, "[", "](url)", "text") },
-  { key: "ul", label: "Bulleted list", icon: <List />, run: (v, s, e) => prefixLines(v, s, e, "- ") },
-  { key: "ol", label: "Numbered list", icon: <ListOrdered />, run: (v, s, e) => prefixLines(v, s, e, "1. ") },
-  { key: "quote", label: "Quote", icon: <Quote />, run: (v, s, e) => prefixLines(v, s, e, "> ") },
+  { key: "bold", label: () => tr("<trn-ui-md-bold>", "Bold"), icon: <Bold />, run: (v, s, e) => surround(v, s, e, "**", "**", tr("<trn-ui-md-bold-text>", "bold text")) },
+  { key: "italic", label: () => tr("<trn-ui-md-italic>", "Italic"), icon: <Italic />, run: (v, s, e) => surround(v, s, e, "*", "*", tr("<trn-ui-md-italic-text>", "italic text")) },
+  { key: "code", label: () => tr("<trn-ui-md-inline-code>", "Inline code"), icon: <Code />, run: (v, s, e) => surround(v, s, e, "`", "`", tr("<trn-ui-md-code-text>", "code")) },
+  { key: "fence", label: () => tr("<trn-ui-md-code-block>", "Code block"), icon: <SquareCode />, run: fence },
+  { key: "link", label: () => tr("<trn-ui-md-link>", "Link"), icon: <Link2 />, run: (v, s, e) => surround(v, s, e, "[", "](url)", tr("<trn-ui-md-link-text>", "text")) },
+  { key: "ul", label: () => tr("<trn-ui-md-bulleted-list>", "Bulleted list"), icon: <List />, run: (v, s, e) => prefixLines(v, s, e, "- ") },
+  { key: "ol", label: () => tr("<trn-ui-md-numbered-list>", "Numbered list"), icon: <ListOrdered />, run: (v, s, e) => prefixLines(v, s, e, "1. ") },
+  { key: "quote", label: () => tr("<trn-ui-md-quote>", "Quote"), icon: <Quote />, run: (v, s, e) => prefixLines(v, s, e, "> ") },
 ];
 
 export interface MarkdownEditorProps
@@ -147,7 +150,7 @@ export function MarkdownEditor({
                   variant="ghost"
                   size="icon-xs"
                   disabled={disabled}
-                  aria-label={action.label}
+                  aria-label={action.label()}
                   // Keep the textarea's selection: focusing a button would drop it.
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => apply(action)}
@@ -155,7 +158,7 @@ export function MarkdownEditor({
                   {action.icon}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{action.label}</TooltipContent>
+              <TooltipContent>{action.label()}</TooltipContent>
             </Tooltip>
           ))}
         </div>

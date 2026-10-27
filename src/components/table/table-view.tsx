@@ -25,6 +25,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronsUpDown, ChevronUp, Filter, GripVertical } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { tr } from "../../lib/i18n";
 import { CardView, type CardSlot, type TableViewMode } from "./card-view";
 import { useLiveGlow, type LiveChange } from "./live-change";
 import { Checkbox } from "../ui/checkbox";
@@ -359,7 +360,7 @@ function DraggableHeader<TData>({
           {...attributes}
           {...listeners}
           className="cursor-grab touch-none select-none text-muted-foreground/50 hover:text-muted-foreground active:cursor-grabbing [&_svg]:size-3.5"
-          aria-label="Drag to reorder column"
+          aria-label={tr("<trn-ui-drag-to-reorder-column>", "Drag to reorder column")}
         >
           <GripVertical />
         </span>
@@ -381,7 +382,7 @@ export function TableView<TData>({
   stickyHeader = true,
   activeFilters,
   virtualize: _virtualize = false,
-  emptyMessage = "No results.",
+  emptyMessage = tr("<trn-no-results>", "No results."),
   skeletonRows = 8,
   renderSubRow,
   enableRowSelection = false,
@@ -508,7 +509,7 @@ export function TableView<TData>({
           className="align-middle"
           onClick={(e) => e.stopPropagation()}
           onCheckedChange={(v) => table.toggleAllRowsSelected(!!v)}
-          aria-label="Select all rows"
+          aria-label={tr("<trn-ui-select-all-rows>", "Select all rows")}
         />
       ) : null}
     </TableHead>
@@ -612,7 +613,7 @@ export function TableView<TData>({
                         className="align-middle"
                         onClick={(e) => e.stopPropagation()}
                         onCheckedChange={(v) => row.toggleSelected(!!v)}
-                        aria-label="Select row"
+                        aria-label={tr("<trn-ui-select-row>", "Select row")}
                       />
                     </TableCell>
                   )}

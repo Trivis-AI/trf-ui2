@@ -45,6 +45,24 @@ from a consuming app. Keep it simple, fast, and on-system (KISS).
 - Every visual element must work in light **and** dark. Prefer token-driven colors that adapt;
   reach for `dark:` only when a token can't express it.
 
+### UI text
+- **Every user-facing string in a component goes through `tr()`** from `src/lib/i18n.ts`:
+  visible text, placeholders, tooltips, aria-labels, empty states, status labels.
+  `tr("<trn-ui-clear-search>", "Clear search")` takes a `<trn-ui-...>` kebab-case key and the
+  English fallback. Reuse an existing key from `services/translations.json` when both its
+  English and its meaning match. Brand names, code identifiers and data values stay as they are.
+- **Call it while rendering, never at module scope.** A module constant is evaluated before the
+  app plugs its translations in, so turn label constants into functions or getters.
+- **Explicit props win.** Translate the default, not the prop: `placeholder = tr(...)` in the
+  destructuring, `{ ...defaults, ...labels }` for a label object.
+- **Values go in through placeholders:** `tr("<trn-ui-n-total>", "{n} total").replace("{n}", String(n))`.
+  One key per whole sentence; never glue a sentence together from pieces.
+- A new key also needs its translations in `services/translations.json` (see
+  `documentation/I18N.md`).
+- **Apps call `setTranslate` once in `main.tsx`**, before the first render:
+  `setTranslate((key, fallback) => t.translate(key, fallback))`. Without it the components show
+  their English fallbacks.
+
 ## Forbidden
 
 - Inventing new colors, shadows, or type styles outside the tokens.

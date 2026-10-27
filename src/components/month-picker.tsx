@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { formatMonth, useDateTimeLocale } from "../lib/datetime";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
@@ -33,7 +34,7 @@ const defaultFormatMonth = (date: Date) => formatMonth(date);
 export function MonthPicker({
   value,
   onChange,
-  placeholder = "Pick a month…",
+  placeholder = tr("<trn-ui-pick-a-month>", "Pick a month…"),
   formatMonth = defaultFormatMonth,
   minYear,
   maxYear,
@@ -86,7 +87,7 @@ export function MonthPicker({
             variant="ghost"
             size="icon"
             className="size-9 text-muted-foreground hover:text-foreground"
-            aria-label="Previous year"
+            aria-label={tr("<trn-ui-previous-year>", "Previous year")}
             disabled={!canPrev}
             onClick={() => setViewYear((y) => y - 1)}
           >
@@ -97,7 +98,7 @@ export function MonthPicker({
             variant="ghost"
             size="icon"
             className="size-9 text-muted-foreground hover:text-foreground"
-            aria-label="Next year"
+            aria-label={tr("<trn-ui-next-year>", "Next year")}
             disabled={!canNext}
             onClick={() => setViewYear((y) => y + 1)}
           >

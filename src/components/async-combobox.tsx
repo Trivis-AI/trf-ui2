@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import {
   Command,
@@ -81,10 +82,10 @@ export function AsyncCombobox<T>({
   selectedLabel,
   loading,
   minChars = 0,
-  placeholder = "Select…",
-  searchPlaceholder = "Search…",
-  emptyText = "No results.",
-  loadingText = "Searching…",
+  placeholder = tr("<trn-select>", "Select…"),
+  searchPlaceholder = tr("<trn-search>", "Search…"),
+  emptyText = tr("<trn-no-results>", "No results."),
+  loadingText = tr("<trn-searching>", "Searching…"),
   minCharsText,
   id,
   disabled,
@@ -120,7 +121,11 @@ export function AsyncCombobox<T>({
   const triggerLabel = selectedItem ? getLabel(selectedItem) : selectedLabel;
   const belowMin = input.trim().length < minChars;
   const resolvedMinCharsText =
-    minCharsText ?? `Type at least ${minChars} character${minChars === 1 ? "" : "s"}…`;
+    minCharsText ??
+    (minChars === 1
+      ? tr("<trn-ui-type-at-least-one-character>", "Type at least {n} character…")
+      : tr("<trn-ui-type-at-least-n-characters>", "Type at least {n} characters…")
+    ).replace("{n}", String(minChars));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

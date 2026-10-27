@@ -1,6 +1,7 @@
 import * as React from "react";
 import { FilePlus, FileText, Upload, X } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { useFileDrop } from "../hooks/useFileDrop";
 import {
   Attachment,
@@ -47,7 +48,7 @@ function formatSize(bytes: number): string {
 }
 
 function fileKind(file: File): string {
-  return file.name.split(".").pop()?.toUpperCase() ?? (file.type || "File");
+  return file.name.split(".").pop()?.toUpperCase() ?? (file.type || tr("<trn-file>", "File"));
 }
 
 function ImagePreview({ file }: { file: File }) {
@@ -75,8 +76,8 @@ export function AttachmentDropzone({
   accept,
   multiple = true,
   disabled = false,
-  placeholder = "Drag files here, paste, or click to browse",
-  browseLabel = "Select files...",
+  placeholder = tr("<trn-ui-dropzone-placeholder>", "Drag files here, paste, or click to browse"),
+  browseLabel = tr("<trn-ui-select-files>", "Select files…"),
   className,
 }: AttachmentDropzoneProps) {
   const { isDragging, dropzoneProps, inputProps, open } = useFileDrop({
@@ -153,7 +154,7 @@ export function AttachmentDropzone({
                     </AttachmentDescription>
                   </AttachmentContent>
                   <AttachmentActions>
-                    <AttachmentAction aria-label={`Remove ${file.name}`} onClick={() => onRemove(id)}>
+                    <AttachmentAction aria-label={tr("<trn-ui-remove-file-name>", "Remove {name}").replace("{name}", file.name)} onClick={() => onRemove(id)}>
                       <X />
                     </AttachmentAction>
                   </AttachmentActions>
@@ -173,7 +174,7 @@ export function AttachmentDropzone({
                 </AttachmentDescription>
               </AttachmentContent>
               <AttachmentActions>
-                <AttachmentAction aria-label={`Remove ${file.name}`} onClick={() => onRemove(id)}>
+                <AttachmentAction aria-label={tr("<trn-ui-remove-file-name>", "Remove {name}").replace("{name}", file.name)} onClick={() => onRemove(id)}>
                   <X />
                 </AttachmentAction>
               </AttachmentActions>

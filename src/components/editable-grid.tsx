@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Check, ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -117,14 +118,17 @@ export function EditableGrid({
   className,
 }: EditableGridProps) {
   const L = {
-    addRow: "Add row",
-    addingRow: "Adding…",
-    addColumn: "Column",
-    columnName: "Column name",
-    add: "Add",
-    prev: "Prev",
-    next: "Next",
-    page: (p: number, t: number) => `Page ${p} / ${t}`,
+    addRow: tr("<trn-add-row>", "Add row"),
+    addingRow: tr("<trn-adding>", "Adding…"),
+    addColumn: tr("<trn-ui-column>", "Column"),
+    columnName: tr("<trn-column-name>", "Column name"),
+    add: tr("<trn-add>", "Add"),
+    prev: tr("<trn-ui-prev>", "Prev"),
+    next: tr("<trn-next>", "Next"),
+    page: (p: number, t: number) =>
+      tr("<trn-ui-page-slash-total>", "Page {page} / {total}")
+        .replace("{page}", String(p))
+        .replace("{total}", String(t)),
     ...labels,
   };
 
@@ -223,7 +227,7 @@ export function EditableGrid({
                         type="button"
                         variant="ghost"
                         size="icon-xs"
-                        aria-label={`Remove column ${col.name}`}
+                        aria-label={tr("<trn-ui-remove-column-name>", "Remove column {name}").replace("{name}", col.name)}
                         className="text-muted-foreground hover:text-destructive [&_svg]:size-3"
                         onClick={() => onColumnDelete(col)}
                       >
@@ -270,7 +274,7 @@ export function EditableGrid({
                         type="button"
                         variant="ghost"
                         size="icon"
-                        aria-label="Cancel adding column"
+                        aria-label={tr("<trn-ui-cancel-adding-column>", "Cancel adding column")}
                         className="size-8"
                         onClick={() => setAddingCol(false)}
                       >
@@ -339,7 +343,7 @@ export function EditableGrid({
                         type="button"
                         variant="ghost"
                         size="icon-xs"
-                        aria-label="Delete row"
+                        aria-label={tr("<trn-ui-delete-row>", "Delete row")}
                         className="text-muted-foreground hover:text-destructive"
                         onClick={() => onRowDelete(row.id)}
                       >

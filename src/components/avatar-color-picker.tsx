@@ -1,5 +1,7 @@
 import { Shuffle } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
+import { colorName } from "../lib/color-names";
 import { Avatar, AVATAR_COLORS, asAvatarColor, type AvatarColor, type AvatarColorInput } from "./avatar";
 
 /*
@@ -30,7 +32,7 @@ export function AvatarColorPicker({
   name,
   colorKey,
   size = 28,
-  autoLabel = "Automatic",
+  autoLabel = tr("<trn-colour-automatic>", "Automatic"),
   disabled = false,
   className,
 }: AvatarColorPickerProps) {
@@ -71,7 +73,7 @@ export function AvatarColorPicker({
     <div role="radiogroup" className={cn("flex flex-wrap items-center gap-2", className)}>
       {swatch("auto", autoLabel, null, !current)}
       <span className="mx-1 h-6 w-px shrink-0 bg-border" aria-hidden />
-      {AVATAR_COLORS.map((c) => swatch(c, c, c, current === c))}
+      {AVATAR_COLORS.map((c) => swatch(c, colorName(c), c, current === c))}
     </div>
   );
 }

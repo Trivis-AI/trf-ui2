@@ -1,6 +1,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 import { Button } from "./ui/button";
 import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -46,7 +47,7 @@ function escapeIsForSomethingElse(e: KeyboardEvent): boolean {
 }
 
 export function SelectionBar({
-  open, count, countLabel, info, onClear, clearLabel = "Clear selection", children, className,
+  open, count, countLabel, info, onClear, clearLabel = tr("<trn-clear-selection>", "Clear selection"), children, className,
 }: SelectionBarProps) {
   const [mounted, setMounted] = React.useState(open);
   const [shown, setShown] = React.useState(false);
@@ -83,14 +84,15 @@ export function SelectionBar({
   }, [open]);
 
   if (!mounted) return null;
-  const countText = view.countLabel ?? `${view.count} selected`;
+  const defaultCount = tr("<trn-n-selected>", "{n} selected").replace("{n}", String(view.count));
+  const countText = view.countLabel ?? defaultCount;
   const clearButton = <SelectionBarAction label={clearLabel} icon={<X />} iconOnly variant="secondary" onClick={onClear} />;
 
   return (
     <TooltipProvider delayDuration={300}>
       <div
         role="toolbar"
-        aria-label={typeof view.countLabel === "string" ? view.countLabel : `${view.count} selected`}
+        aria-label={typeof view.countLabel === "string" ? view.countLabel : defaultCount}
         className={cn(
           // The table header's band (--table-head over an opaque background), so the
           // bar reads as part of the table and stays solid over the rows beneath it.

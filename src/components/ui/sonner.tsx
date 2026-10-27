@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Toaster as SonnerToaster, toast, type ToasterProps } from "sonner";
 import { CircleCheck, CircleX, Info, Loader2, TriangleAlert } from "lucide-react";
+import { tr } from "../../lib/i18n";
 
 /*
  * Toaster — sonner, bridged onto the token contract.
@@ -58,7 +59,13 @@ export function Toaster(props: ToasterProps) {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
+      // Translated in place of sonner's built-in English (region and close button); app props still win.
+      containerAriaLabel={tr("<trn-ui-notifications>", "Notifications")}
       {...props}
+      toastOptions={{
+        closeButtonAriaLabel: tr("<trn-ui-close-toast>", "Close toast"),
+        ...props.toastOptions,
+      }}
     />
   );
 }

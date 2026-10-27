@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./dialog";
+import { tr } from "../../lib/i18n";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
 import { Alert, AlertDescription } from "./alert";
@@ -43,10 +44,10 @@ export function ConfirmDialog({
   open,
   onConfirm,
   onCancel,
-  title = "Please confirm",
+  title = tr("<trn-please-confirm>", "Please confirm"),
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = tr("<trn-confirm>", "Confirm"),
+  cancelLabel = tr("<trn-cancel>", "Cancel"),
   variant = "default",
   busy: busyProp,
   warning,

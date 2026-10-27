@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
 
 export interface TypingIndicatorProps
   extends React.HTMLAttributes<HTMLSpanElement> {
@@ -21,7 +22,7 @@ export function TypingIndicator({
   return (
     <span
       role="status"
-      aria-label={typeof label === "string" ? label : "Loading"}
+      aria-label={typeof label === "string" ? label : tr("<trn-ui-loading>", "Loading")}
       className={cn(
         "inline-flex items-center gap-2 text-muted-foreground",
         className

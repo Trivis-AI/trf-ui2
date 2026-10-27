@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePerms } from '../context/PermsContext';
 import type { ServiceKey } from '../lib/permissions';
+import { tr } from '../lib/i18n';
 
 type Props = {
   service: ServiceKey;
@@ -32,8 +33,8 @@ function AccessDenied({ service }: { service: ServiceKey }) {
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
-      <p className="text-lg font-medium">No access to {label}</p>
-      <p className="text-sm max-w-[280px]">Ask your organization admin to grant you access to this module.</p>
+      <p className="text-lg font-medium">{tr('<trn-ui-no-access-to-module>', 'No access to {module}').replace('{module}', label)}</p>
+      <p className="text-sm max-w-[280px]">{tr('<trn-ui-ask-admin-for-access>', 'Ask your organization admin to grant you access to this module.')}</p>
     </div>
   );
 }
