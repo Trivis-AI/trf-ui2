@@ -295,8 +295,13 @@ export function EntityCombobox({
           // Portalled to the body and fixed-positioned: inside editable tables the
           // scrollport and sticky cells would otherwise clip or cover the list.
           // Width grows with the longest option, floored at the input's width.
+          // pointer-events-auto: an open modal Dialog sets pointer-events: none on
+          // the body, and the list would inherit it, so every click fell through
+          // to the dialog (a contact could not be picked or imported in one).
+          // Radix still counts these clicks as inside the dialog: the list stays
+          // in its React tree, so the dialog does not close.
           style={{ top: anchor.top, left: anchor.left, minWidth: anchor.width }}
-          className="fixed z-50 max-h-64 w-max max-w-[28rem] list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
+          className="pointer-events-auto fixed z-50 max-h-64 w-max max-w-[28rem] list-none overflow-y-auto rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-md"
         >
           {items.map((item, i) => (
             <li
