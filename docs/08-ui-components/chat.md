@@ -5,14 +5,14 @@
 Primitives for AI / agent conversation UIs (used by `trffrontai`). They are presentational —
 the app owns the session state, streaming, dictation, and file handling.
 
-## ChatMessage — a conversation bubble
+## ChatMessage — a message in a conversation
 
 ```tsx
 import { ChatMessage, Stack } from "@trf/ui2";
 
 <Stack gap={4}>
   <ChatMessage role="user">How do I file a VAT return?</ChatMessage>
-  <ChatMessage role="assistant">Here are the steps…</ChatMessage>
+  <ChatMessage role="assistant" plain>Here are the steps…</ChatMessage>
 </Stack>
 ```
 
@@ -22,6 +22,12 @@ Default `assistant`. Bubbles self-align, so render them inside a vertical flex c
 `fill`: the bubble stretches across its column instead of stopping at 80% of it. For narrow
 columns, such as the AI side panel (320 to 560 px), where the cap only wastes space; the big
 chat keeps the cap. Pass it on assistant bubbles; a user bubble stays its own width.
+`plain`: no bubble at all. The message is text on the page, across its column, in the page's
+own text colour. Use it for what the assistant answers (prose, a `TypingIndicator`, an error
+line), so that the only bubbles in a conversation are the person's own messages. Leave it off
+for what asks the person to act, a question with a reply input or an approval with its buttons:
+that is a card, and it keeps the frame. `plain` already spans the column, so `fill` adds nothing
+to it.
 Compose richer content (a `TypingIndicator`, an `Alert`, reply inputs, approve/reject `Button`s)
 as children.
 
@@ -34,7 +40,7 @@ import { TypingIndicator } from "@trf/ui2";
 ```
 
 Three bouncing dots that inherit the surrounding text color (`bg-current`). `label` is optional.
-Use inside an assistant `ChatMessage` while a response streams.
+Use inside a plain assistant `ChatMessage` while a response streams.
 
 ## ChatComposer — the message input shell
 

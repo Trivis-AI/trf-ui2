@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import {
-  ActionPill, Alert, AlertDescription, AlertTitle, Avatar, AvatarColorPicker, type AvatarColor, OrgTag,
+  ActionPill, Alert, AlertDescription, AlertTitle, ChatMessage, TypingIndicator, Avatar, AvatarColorPicker, type AvatarColor, OrgTag,
   Attachment, AttachmentAction, AttachmentActions, AttachmentContent,
   AttachmentDescription, AttachmentGroup, AttachmentMedia, AttachmentTitle, AttachmentTrigger,
   AttachmentDropzone, type AttachmentDropzoneFile,
@@ -3330,6 +3330,27 @@ const GROUPS: GroupDef[] = [
               <InfoField label="Payable"><Text mono>€1,240.00</Text></InfoField>
             </InfoGrid>
           </div>
+        ),
+      },
+      {
+        id: "chat", label: "Chat messages", render: () => (
+          <Stack gap={4} className="w-full max-w-2xl">
+            <ChatMessage role="user">How do I file a VAT return?</ChatMessage>
+            <ChatMessage role="assistant" plain>
+              <Markdown>{"The return is due on the **20th** of the following month.\n\n1. Close the period.\n2. Check the report.\n3. File it."}</Markdown>
+            </ChatMessage>
+            <ChatMessage role="assistant" plain>
+              <TypingIndicator label="Thinking…" />
+            </ChatMessage>
+            <ChatMessage role="assistant" className="flex flex-col gap-2">
+              <Text weight="semibold">Approval required</Text>
+              <Text size="xs" tone="muted">A card that asks the person to act keeps its frame.</Text>
+              <div className="flex gap-2">
+                <Button size="sm">Approve</Button>
+                <Button size="sm" variant="secondary">Reject</Button>
+              </div>
+            </ChatMessage>
+          </Stack>
         ),
       },
       { id: "markdown", label: "Markdown", render: () => <MarkdownDemo /> },
