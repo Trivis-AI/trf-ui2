@@ -24,6 +24,10 @@ const SERVICE_SLOTS = {
   DOCRENDER: 12,
   FILES:     13,
   HR:        14,
+  // Split from PRODUCTS (backitems /v1/stock/*) and CRM (deals) in trflib
+  // v1.144.0. Every role holds the same state on them as on the parent slot.
+  STOCK:     15,
+  CRM_SALES: 16,
 } as const;
 
 export type ServiceKey = keyof typeof SERVICE_SLOTS;
