@@ -129,19 +129,19 @@ function RefusalBody({ shown, onClose }: { shown: Shown; onClose: () => void }) 
       );
     }
     const title = refusal.kind === "locked"
-      ? tr("<trn-ui-locked-title>", "The company is read only until tokens are topped up")
-      : tr("<trn-ui-tokens-title>", "Not enough tokens for this");
+      ? tr("<trn-ui-locked-title>", "The company is read only until its resources are topped up")
+      : tr("<trn-ui-tokens-title>", "Not enough resources for this");
     return (
       <Body
         title={title}
         text={admin
-          ? tr("<trn-ui-tokens-admin>", "Buy more tokens, or move to a package with more of them each month.")
-          : tr("<trn-ui-tokens-member>", "Ask {admin} to top up the company's tokens.").replace("{admin}", ask)}
+          ? tr("<trn-ui-tokens-admin>", "Top up, or move to a package with more resources each month.")
+          : tr("<trn-ui-tokens-member>", "Ask {admin} to top up the company's resources.").replace("{admin}", ask)}
         onClose={onClose}
         actions={admin
           ? [
               { label: tr("<trn-ui-change-plan>", "Change plan"), onClick: () => go("/overview?plan=1#credits"), secondary: true },
-              { label: tr("<trn-ui-buy-tokens>", "Buy tokens"), onClick: () => go("/overview#credits") },
+              { label: tr("<trn-ui-buy-tokens>", "Top up"), onClick: () => go("/overview#credits") },
             ]
           : []}
       />
@@ -234,7 +234,7 @@ function Body({ title, text, onClose, actions = [], closeLabel, busy }: {
 }
 
 /**
- * The shell's quiet notes for owners and admins (decision 51, decision 23): the balance below
+ * The shell's quiet notes for owners and admins (decision 51, decision 23): resources below
  * `low_balance_warning` (for a büroo, with how many companies share it, and when it is empty),
  * and each billed module at 90 % of its price range. Links only; no dialog until something is
  * actually refused.
@@ -248,9 +248,11 @@ export function LowBalanceNote({ slug, className }: { slug?: string | null; clas
   const low = info.low_balance_warning > 0 && info.balance < info.low_balance_warning;
   if (low) {
     const shared = info.group_members ?? 0;
-    let text = info.balance <= 0 && shared > 0 ? tr("<trn-ui-balance-empty>", "Balance empty") : tr("<trn-ui-low-balance>", "Low balance");
-    if (shared > 0) text += ` · ${tr("<trn-ui-shared-with>", "shared with {n} companies").replace("{n}", String(shared))}`;
-    lines.push({ key: "balance", href: loginPortalUrl(s, "/overview#credits"), text: `${text} · ${tr("<trn-ui-buy-tokens>", "Buy tokens")}` });
+    // Users see resources, never tokens: no amounts here (the token is an internal unit).
+    let text = info.balance <= 0 ? tr("<trn-ui-balance-empty>", "Resources used up") : tr("<trn-ui-low-balance>", "Resources running low");
+    if (shared === 1) text += ` · ${tr("<trn-ui-shared-with-one>", "shared with 1 company")}`;
+    else if (shared > 1) text += ` · ${tr("<trn-ui-shared-with>", "shared with {n} companies").replace("{n}", String(shared))}`;
+    lines.push({ key: "balance", href: loginPortalUrl(s, "/overview#credits"), text: `${text} · ${tr("<trn-ui-buy-tokens>", "Top up")}` });
   }
   for (const n of info.range_notes ?? []) {
     lines.push({
