@@ -21,6 +21,7 @@
 // dependency — the app passes in its own axios instance.
 
 import { getOrgToken, mintOrgToken } from './renewToken';
+import { noticeRefusal } from './refusals';
 
 /** Minimal structural view of the bits of an axios request config we touch. */
 interface RequestConfig {
@@ -31,7 +32,7 @@ interface RequestConfig {
 }
 interface AxiosLikeError {
   config?: RequestConfig;
-  response?: { status?: number };
+  response?: { status?: number; data?: unknown };
 }
 /**
  * Loosely-typed axios instance. `use` callbacks are `any` so we don't couple trf-ui2 to a
@@ -108,6 +109,10 @@ export function installAuthInterceptors(instance: AxiosLike, opts: AuthIntercept
       const config = error.config;
       const slug = getSlug();
 
+      // Out of tokens, a locked company, a module outside the package, the next price
+      // range: <RefusalDialogs/> explains it. Not an auth problem, so no re-mint.
+      if (noticeRefusal(status, error.response?.data)) return Promise.reject(error);
+
       if ((status === 401 || status === 403) && config && !config._trfAuthRetried && slug) {
         // Re-mint once and retry — this is the transient "raced the mint" case.
         const { token, unauthorized } = await mintOrgToken(slug, { apiBase: opts.apiBase });
@@ -153,6 +158,11 @@ export async function authFetch(
 
   const token = slug ? (await getOrgToken(slug, { apiBase: opts.apiBase })).token : null;
   const res = await send(token);
+
+  if (res.status === 402 || res.status === 403 || res.status === 423) {
+    const body = await res.clone().json().catch(() => null);
+    if (noticeRefusal(res.status, body)) return res;
+  }
 
   if ((res.status === 401 || res.status === 403) && slug) {
     const { token: minted, unauthorized } = await mintOrgToken(slug, { apiBase: opts.apiBase });

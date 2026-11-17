@@ -46,14 +46,29 @@ export const PERMS = Object.fromEntries(
 };
 
 export function parsePerms(token: string): bigint {
+  return parsePermsClaim(token, 'p') ?? 0n;
+}
+
+/**
+ * A permission-mask claim of the token: `p` (what the person may do), or `pr` (what their
+ * role or access would allow before the company's package capped it; only present when the
+ * package removed something, BUROO-AND-ACCESS.md phase 3). null when absent.
+ */
+export function parsePermsClaim(token: string, claim: 'p' | 'pr'): bigint | null {
   try {
     const [, encoded] = token.split('.');
     const payload = JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')));
-    // p is safe as a JSON number for up to 26 services (52 bits < Number.MAX_SAFE_INTEGER).
-    return payload.p ? BigInt(Math.trunc(payload.p)) : 0n;
+    // Safe as a JSON number for up to 26 services (52 bits < Number.MAX_SAFE_INTEGER).
+    const v = payload[claim];
+    return typeof v === 'number' ? BigInt(Math.trunc(v)) : null;
   } catch {
-    return 0n;
+    return null;
   }
+}
+
+/** The slot index of a service, as trflib numbers it (the `service` of a refusal). */
+export function serviceSlot(service: ServiceKey): number {
+  return SERVICE_SLOTS[service];
 }
 
 function slotFor(perms: bigint, service: ServiceKey): bigint {
