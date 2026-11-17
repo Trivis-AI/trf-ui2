@@ -234,17 +234,43 @@ function Body({ title, text, onClose, actions = [], closeLabel, busy }: {
 }
 
 /**
- * The quiet low-balance line for the shell (decision 51): owners and admins only, below
- * `low_balance_warning`; no dialog until the balance is empty.
+ * The shell's quiet notes for owners and admins (decision 51, decision 23): the balance below
+ * `low_balance_warning` (for a büroo, with how many companies share it, and when it is empty),
+ * and each billed module at 90 % of its price range. Links only; no dialog until something is
+ * actually refused.
  */
 export function LowBalanceNote({ slug, className }: { slug?: string | null; className?: string }) {
   const info = useAccessInfo(slug);
-  if (!info || !info.can_buy || info.low_balance_warning <= 0 || info.balance >= info.low_balance_warning) return null;
   const s = slug ?? slugFromPath();
-  if (!s) return null;
+  if (!info || !info.can_buy || !s) return null;
+  const lines: { key: string; href: string; text: string }[] = [];
+
+  const low = info.low_balance_warning > 0 && info.balance < info.low_balance_warning;
+  if (low) {
+    const shared = info.group_members ?? 0;
+    let text = info.balance <= 0 && shared > 0 ? tr("<trn-ui-balance-empty>", "Balance empty") : tr("<trn-ui-low-balance>", "Low balance");
+    if (shared > 0) text += ` · ${tr("<trn-ui-shared-with>", "shared with {n} companies").replace("{n}", String(shared))}`;
+    lines.push({ key: "balance", href: loginPortalUrl(s, "/overview#credits"), text: `${text} · ${tr("<trn-ui-buy-tokens>", "Buy tokens")}` });
+  }
+  for (const n of info.range_notes ?? []) {
+    lines.push({
+      key: `range-${n.module}`,
+      href: loginPortalUrl(s, "/manage-organization/members#modules"),
+      text: tr("<trn-ui-range-near>", "{module} {count}/{to} · next range {price} a month")
+        .replace("{module}", moduleName({ key: n.module, name_en: n.name_en }))
+        .replace("{count}", String(n.count))
+        .replace("{to}", String(n.range_to))
+        .replace("{price}", eur(n.new_total)),
+    });
+  }
+  if (lines.length === 0) return null;
   return (
-    <a href={loginPortalUrl(s, "/overview#credits")} className={["text-xs text-muted-foreground hover:underline", className].filter(Boolean).join(" ")}>
-      {tr("<trn-ui-low-balance>", "Low balance")} · {tr("<trn-ui-buy-tokens>", "Buy tokens")}
-    </a>
+    <div className={className}>
+      {lines.map((l) => (
+        <a key={l.key} href={l.href} title={l.text} className="block truncate text-xs text-muted-foreground hover:underline">
+          {l.text}
+        </a>
+      ))}
+    </div>
   );
 }

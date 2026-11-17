@@ -464,7 +464,7 @@ export { PermsProvider, usePerms } from './context/PermsContext';
 export { RequireAccess } from './components/RequireAccess';
 export { RefusalDialogs, LowBalanceNote, useAccessInfo, adminNames, moduleName } from './components/refusal-dialogs';
 export { classifyRefusal, raiseRefusal, noticeRefusal, fetchAccessInfo, confirmRange, loginPortalUrl, REFUSAL_EVENT } from './lib/refusals';
-export type { Refusal, RangeQuote, AccessInfo, ModuleOffer } from './lib/refusals';
+export type { Refusal, RangeQuote, AccessInfo, ModuleOffer, RangeNote } from './lib/refusals';
 export {
   parsePerms, canRead, canManipulate, isLookup,
   PERMS, SLOT_NONE, SLOT_READ, SLOT_LOOKUP, SLOT_MANIPULATE,

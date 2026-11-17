@@ -84,6 +84,23 @@ export type AccessInfo = {
   low_balance_warning: number;
   locked: boolean;
   group?: { org_id: string; name: string };
+  /** This company is a büroo: how many companies draw on its balance once theirs is spent. */
+  group_members?: number;
+  /** Billed modules at 90 % of their range whose next range costs more (owners/admins only). */
+  range_notes?: RangeNote[];
+};
+
+export type RangeNote = {
+  module: string;
+  name_et: string;
+  name_en: string;
+  counts: string;
+  count: number;
+  range_to: number;
+  next_from: number;
+  next_to?: number;
+  current_total: string;
+  new_total: string;
 };
 
 function apexHost(): string {
