@@ -28,6 +28,9 @@ const SERVICE_SLOTS = {
   // v1.144.0. Every role holds the same state on them as on the parent slot.
   STOCK:     15,
   CRM_SALES: 16,
+  // Point of sale in backinvoices (trflib v1.154.0, task #397). Every role
+  // holds the same state on it as on INVOICES.
+  POS:       17,
 } as const;
 
 export type ServiceKey = keyof typeof SERVICE_SLOTS;
