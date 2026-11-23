@@ -61,8 +61,8 @@ const [period, setPeriod] = useState<DateRange>();
 | `variant?` | `"default"` \| `"cell"` | `"cell"` draws nothing of its own and fills the cell, for a date that is a cell of an editable table inside `<TableCell editable>`; the cell shows hover, focus and the open state. See [Table, editable cells](table.md#editable-cells). |
 | `id` / `disabled` / `className` | | Trigger mirrors the Combobox / Select trigger styling. |
 
-The calendar opens on the month of the current value (the range's `from` in range mode), and on
-today's month only when nothing is selected — editing a date on a document from March does not
+The calendar opens on the month of the current value (in range mode the left pane on `from` and
+the right pane on `to`), and on today's month only when nothing is selected — editing a date on a document from March does not
 start in the current month.
 
 ### Fast navigation (month + year dropdowns)
@@ -108,6 +108,20 @@ that month, so it's a single action rather than "navigate, then click the day ag
 `DateRange` is `{ from: Date | undefined; to?: Date | undefined }` (re-exported from
 `react-day-picker`).
 
+### Picking a range
+
+Two clicks, in either order: the first day starts the range, the second ends it (an earlier second
+day becomes the start). A click on a range that is already complete starts a new one, so any range
+can be replaced by any other without clearing first.
+
+- The two panes navigate separately: the left can show January 2026 while the right shows
+  February 2027, so both ends of a long range are one click each. They stay in order, so moving
+  one onto or past the other pushes the other a month along. On reopening, the left pane shows the
+  start and the right pane the end (or the month after, when both fall in one month).
+- After the first click `onChange` gets `{ from, to: undefined }`. Store it as it is: the picker is
+  controlled, so a consumer that drops incomplete ranges never lets the second click land.
+- One day is the same day clicked twice (`from` and `to` equal); a third click on it clears.
+
 ### Presets (named ranges)
 
 A list filter that offers "Current month" / "Last month" does it inside the range picker, not
@@ -151,8 +165,8 @@ const range = period
 ```
 
 - **Picking a preset** emits its dates as of today together with its id, and closes the popover.
-- **Picking a day** afterwards turns it into a plain range that starts from the preset's dates
-  (`preset` is `undefined`), so "Last month" then a click on the 20th is the 1st to the 20th.
+- **Picking a day** afterwards starts a plain range from that day (`preset` is `undefined`); the
+  next click ends it. See [Picking a range](#picking-a-range).
 - **While `preset` is set** the trigger shows the preset's label (the tooltip gives its dates), the
   list marks it, and the calendar shows its dates as of today. An id that is not in `presets` is
   ignored and `value` shows instead.
