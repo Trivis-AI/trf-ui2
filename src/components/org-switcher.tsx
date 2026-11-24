@@ -72,6 +72,11 @@ export interface OrgSwitcherProps {
    *  right. With `sideOffset` it places the panel's search field over something under the
    *  trigger, e.g. the sidebar's own search, so the two placeholders sit in the same spot. */
   alignOffset?: number;
+  /** Distance the panel keeps from the viewport's edges in px, one number or per side
+   *  (default 8). A panel that `alignOffset` places closer to an edge than this is pushed
+   *  back to it: a sidebar at the window's left edge with `alignOffset={7}` needs `left: 7`
+   *  or less here, or the panel lands at 8. */
+  collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
   /** Extra classes for the popover panel (e.g. a custom width). */
   className?: string;
   /** The trigger element (rendered as-is via `asChild`), e.g. the sidebar brand block. */
@@ -113,6 +118,7 @@ export function OrgSwitcher({
   side = "bottom",
   sideOffset,
   alignOffset,
+  collisionPadding = 8,
   className,
   children,
 }: OrgSwitcherProps) {
@@ -145,7 +151,7 @@ export function OrgSwitcher({
         side={side}
         sideOffset={sideOffset}
         alignOffset={alignOffset}
-        collisionPadding={8}
+        collisionPadding={collisionPadding}
       >
         <Command filter={substringFilter}>
           {/* pl-px: one pixel more between the magnifier and the text, the same spacing as
