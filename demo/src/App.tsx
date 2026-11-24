@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, Fragment, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Moon, Sun, Search, Save, Trash2, Info, Inbox,
   BadgeDollarSign, Receipt, ScrollText, Handshake, PieChart, Settings,
   Palette, Atom, Combine, Layers, MoreHorizontal, Copy, Pencil, ChevronRight,
   FileText, ImageIcon, X, Download, Eye, Check,
   Landmark, Banknote, CreditCard, Repeat, RefreshCw, ExternalLink, ChevronsUpDown, Package, Radio,
+  House, Bot, Warehouse, Percent, Building2, Plus, LogOut, Gauge,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -15,7 +16,7 @@ import {
   AppShell, Badge, Button, cn, type ColumnDef, DataTable, useScrollbarActivity,
   BrandMark, AppleMark, GoogleMark, BRAND_MARKS,
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu,
-  SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, useSidebar,
+  SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarProvider, SidebarTrigger, SidebarMobileTrigger, useSidebar, type SidebarColor,
   Combobox, type ComboboxPreset, AsyncCombobox, EntityCombobox, type EntityComboboxItem, OrgSwitcher, type OrgSwitcherOrg, Calendar, DatePicker, DateTimePicker, MonthPicker, type DateRange, type DateRangePreset, RadioCard, PalettePicker, PaletteSwatches, TableCard,
   StatementTable, type StatementRow,
   EditableGrid, type EditableGridColumn, type EditableGridRow,
@@ -417,6 +418,23 @@ function OrgSwitcherDemo() {
       <Field label="Few orgs" description="Below the threshold the search input is hidden.">
         <OrgSwitcher orgs={FEW_ORGS} currentSlug={fewCurrent.slug} onSelect={setFewCurrent}>
           {orgTrigger(fewCurrent)}
+        </OrgSwitcher>
+      </Field>
+      <Field
+        label="With actions"
+        description="actions adds rows under the list, below a divider: they stay put while the list scrolls and the search does not filter them. destructive draws one red."
+      >
+        <OrgSwitcher
+          orgs={MANY_ORGS}
+          currentSlug={manyCurrent.slug}
+          onSelect={setManyCurrent}
+          orgHref={(o) => `#${o.slug}`}
+          actions={[
+            { id: "add", label: "Add a new company", icon: <Plus />, onSelect: () => {} },
+            { id: "logout", label: "Log out", icon: <LogOut />, destructive: true, onSelect: () => {} },
+          ]}
+        >
+          {orgTrigger(manyCurrent)}
         </OrgSwitcher>
       </Field>
       <Field label="Lazy list" description="onOpen + loading — list fetched when the popover opens.">
@@ -3016,6 +3034,305 @@ function SidebarDemo() {
   );
 }
 
+/* ------------------------------------- section: Sidebar, grouped menu */
+
+/* The sink's light/dark state, so a demo can carry the same moon/sun button the sink's own
+   rail has. The app owns the theme; ui2 only draws the button. */
+const DemoThemeContext = createContext<{ dark: boolean; toggle: () => void }>({ dark: false, toggle: () => {} });
+
+/* The whole product in one menu, the way the app shell is meant to render it: ten coloured
+   groups, one open at a time, counts for what waits, Settings three levels deep. The tree is
+   mock data; the shell gets the real one from the discovery service. */
+type MenuNode = {
+  id: string;
+  label: string;
+  icon?: LucideIcon;
+  color?: SidebarColor;
+  count?: number;
+  destructive?: boolean;
+  items?: MenuNode[];
+};
+
+const leaves = (prefix: string, labels: string[]): MenuNode[] =>
+  labels.map((label) => ({ id: `${prefix}-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, label }));
+
+const SETTINGS_SECTIONS: [string, string[]][] = [
+  ["Organisation", ["Organisation profile", "Members", "Agents", "Employees", "Locations", "Location types", "Projects", "Project types"]],
+  ["Accounting", ["Chart of accounts", "Periods", "Currencies", "Tax rates", "Account mappings", "Dimensions", "Units", "Numbering series"]],
+  ["Banking and payments", ["Banks", "Bank types", "Payment settings", "Card payments"]],
+  ["Sales and invoicing", ["Invoice settings", "E-invoice"]],
+  ["Purchases", ["Purchase settings", "Approval flow", "Email import"]],
+  ["Products and stock", ["Product settings", "Stock settings"]],
+  ["Contracts", ["Contract settings"]],
+  ["CRM", ["Task statuses", "Task categories", "Task webhooks"]],
+  ["AI", ["AI settings"]],
+  ["Developer", ["API keys", "MCP keys", "Audit log"]],
+];
+
+const GROUPED_MENU: MenuNode[] = [
+  { id: "my-trivis", label: "My Trivis", icon: House, color: "magenta", count: 7, items: [
+    { id: "overview", label: "Overview" }, { id: "inbox", label: "Inbox", count: 7 }, { id: "tasks", label: "Tasks" },
+    ...leaves("home", ["Accountant overview", "My companies", "Billing"]) ] },
+  { id: "ai-tools", label: "AI Tools", icon: Bot, color: "cyan", items: leaves("ai", ["Chat", "History", "Approvals", "Agents"]) },
+  { id: "sales", label: "Sales", icon: BadgeDollarSign, color: "green", count: 1, items: [
+    { id: "sales-invoices", label: "Invoices", count: 1 },
+    ...leaves("sales", ["POS", "Customers", "Interactions", "Pipeline", "New businesses", "Products", "Receipts"]) ] },
+  { id: "purchase", label: "Purchase", icon: Receipt, color: "orange", count: 3, items: [
+    { id: "purchase-invoices", label: "Invoices and receipts", count: 3 },
+    ...leaves("purchase", ["Approvals", "Suppliers", "To pay", "Upload invoices"]) ] },
+  { id: "warehouse", label: "Warehouse", icon: Warehouse, color: "violet", items: leaves("warehouse", ["Stock", "Stock documents", "Reservations", "Locations"]) },
+  { id: "bank", label: "Bank", icon: Landmark, color: "blue", count: 2, items: [
+    ...leaves("bank", ["Banks and cash", "Statements"]), { id: "bank-unmatched", label: "Unmatched rows", count: 2 },
+    ...leaves("bank", ["Payments", "Pending payments"]) ] },
+  { id: "payroll", label: "Payroll", icon: Banknote, color: "purple", items: leaves("payroll", ["Employees", "Contracts", "Absences", "Calculation", "Payout"]) },
+  { id: "taxes", label: "Taxes", icon: Percent, color: "red", count: 1, items: [
+    { id: "taxes-overview", label: "Overview and deadlines", count: 1 },
+    ...leaves("taxes", ["VAT return (KMD)", "TSD", "Tax payment"]) ] },
+  { id: "company", label: "Company", icon: Building2, color: "teal", items: leaves("company", [
+    "Owners and dividends", "Loans and leasing", "Assets", "Rentals", "Reservations", "Vehicles and driving log", "Investments", "Contracts", "Tables"]) },
+  { id: "reports", label: "Reports", icon: PieChart, color: "yellow", items: leaves("reports", [
+    "Balance sheet", "Income statement", "Cash flow", "Turnover sheet", "General ledger", "Journal", "Entries", "Dimensions", "Accountable persons", "Annual report"]) },
+  { id: "settings", label: "Settings", icon: Settings, color: "gray", items: [
+    { id: "settings-user-settings", label: "User settings" },
+    ...SETTINGS_SECTIONS.map(([title, pages]): MenuNode => {
+      const id = `settings-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+      return { id: `${id}-section`, label: title, items: leaves(id, pages) };
+    }),
+    { id: "sign-out", label: "Sign out", destructive: true },
+  ] },
+];
+
+/** The rows from the top of the menu down to `id`, the page itself last. */
+function menuTrail(nodes: MenuNode[], id: string, above: MenuNode[] = []): MenuNode[] | null {
+  for (const n of nodes) {
+    if (n.id === id) return [...above, n];
+    const found = n.items && menuTrail(n.items, id, [...above, n]);
+    if (found) return found;
+  }
+  return null;
+}
+
+const MENU_PAGES: { node: MenuNode; trail: string[] }[] = (function flat(nodes: MenuNode[], trail: string[]): { node: MenuNode; trail: string[] }[] {
+  return nodes.flatMap((n) => (n.items ? flat(n.items, [...trail, n.label]) : [{ node: n, trail }]));
+})(GROUPED_MENU, []);
+
+/* The org block of the rail, as the app shell draws it: the whole block is the switcher's
+   trigger, with the plan and this month's use of it under the name ("Standard  Usage 58%").
+   Mock figures; the shell reads them from billing. */
+const DEMO_PLANS = ["Standard", "Free", "Premium"];
+const demoPlan = (org: OrgSwitcherOrg) => {
+  const i = Number(org.id) - 1;
+  return { plan: DEMO_PLANS[i % DEMO_PLANS.length], usedPct: (i * 37 + 58) % 100 };
+};
+
+function GroupedMenuBrand({ onAction }: { onAction: (what: string) => void }) {
+  const { collapsed } = useSidebar();
+  const [org, setOrg] = useState(MANY_ORGS[0]);
+  const { plan, usedPct } = demoPlan(org);
+  return (
+    <OrgSwitcher
+      orgs={MANY_ORGS}
+      currentSlug={org.slug}
+      onSelect={setOrg}
+      orgHref={(o) => `#${o.slug}`}
+      // 3px up into the header and 7px right: the panel's magnifier and search text then sit
+      // exactly on the rail's own (icon at 20px and text at 45px from the rail's edge, field
+      // centre 74px from its top), so opening the switcher reads as the same field changing
+      // its question.
+      sideOffset={-3}
+      alignOffset={7}
+      actions={[
+        { id: "add", label: "Add a new company", icon: <Plus />, onSelect: () => onAction("Add a new company") },
+        { id: "logout", label: "Log out", icon: <LogOut />, destructive: true, onSelect: () => onAction("Log out") },
+      ]}
+    >
+      {/* The hover is a rounded block inset 8px from the button's edges; the button itself
+          keeps the header's full size (h-14, the height of the page's top bar). */}
+      <button
+        type="button"
+        className="relative isolate w-full before:absolute before:inset-2 before:-z-10 before:rounded-md before:transition-colors hover:before:bg-muted"
+      >
+        <div className="flex h-14 w-full items-center gap-2 overflow-hidden px-4">
+          <Avatar name={org.name} colorKey={org.slug} size={28} className="shrink-0" />
+          <div
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-1 overflow-hidden transition-[max-width,opacity] duration-200",
+              collapsed ? "max-w-0 opacity-0" : "max-w-[30rem] opacity-100"
+            )}
+          >
+            <div className="min-w-0 flex-1 text-left">
+              <Text as="span" size="sm" weight="semibold" className="block min-w-0 truncate leading-tight">{org.name}</Text>
+              <Text as="span" size="xs" tone="muted" className="block truncate">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="min-w-0 truncate">{plan}</span>
+                  <Gauge className="size-3.5 shrink-0" aria-hidden />
+                  <span className="shrink-0 tabular-nums">Usage {usedPct}%</span>
+                </span>
+              </Text>
+            </div>
+            <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+      </button>
+    </OrgSwitcher>
+  );
+}
+
+/* Phone only: the ✕ that closes the full-screen menu. The shell has it in its mobile bar. */
+function GroupedMenuClose() {
+  const { setMobileOpen } = useSidebar();
+  return (
+    <Button variant="ghost" size="icon" className="shrink-0 md:hidden" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+      <X />
+    </Button>
+  );
+}
+
+function GroupedMenuSearch({ query, setQuery }: { query: string; setQuery: (v: string) => void }) {
+  const { collapsed } = useSidebar();
+  if (collapsed) return null;
+  return (
+    <div className="px-2 pb-1">
+      <SearchInput
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onClear={() => setQuery("")}
+        placeholder="Search…"
+        aria-label="Search menu"
+        className="h-9 bg-sidebar-field focus-visible:bg-sidebar-field-focus"
+      />
+    </div>
+  );
+}
+
+function GroupedSidebarDemo() {
+  const [active, setActive] = useState("overview");
+  const [open, setOpen] = useState<string[]>(["my-trivis"]);
+  const [query, setQuery] = useState("");
+  const [said, setSaid] = useState<string | null>(null);
+  const theme = useContext(DemoThemeContext);
+
+  const trail = useMemo(() => menuTrail(GROUPED_MENU, active) ?? [], [active]);
+  // The groups the current page sits inside: the ones that fill while they are closed.
+  const around = useMemo(() => new Set(trail.slice(0, -1).map((n) => n.id)), [trail]);
+  const q = query.trim().toLowerCase();
+  const results = q ? MENU_PAGES.filter((p) => `${p.node.label} ${p.trail.join(" ")}`.toLowerCase().includes(q)) : [];
+
+  const go = (id: string) => { setActive(id); setSaid(null); };
+  // From the search: open the page's groups too, as the shell does for the current route.
+  const pick = (id: string) => {
+    setOpen((menuTrail(GROUPED_MENU, id) ?? []).slice(0, -1).map((n) => n.id));
+    setQuery("");
+    go(id);
+  };
+
+  const row = (n: MenuNode, top: boolean): React.ReactNode => {
+    const Icon = n.icon;
+    if (n.items) {
+      return (
+        <SidebarMenuItem key={n.id} color={top ? n.color : undefined}>
+          <SidebarMenuButton
+            groupId={n.id}
+            icon={Icon ? <Icon /> : undefined}
+            tooltip={n.label}
+            count={n.count}
+            hasActive={around.has(n.id)}
+          >
+            {n.label}
+          </SidebarMenuButton>
+          <SidebarMenuSub groupId={n.id}>{n.items.map((c) => row(c, false))}</SidebarMenuSub>
+        </SidebarMenuItem>
+      );
+    }
+    return (
+      <SidebarMenuItem key={n.id}>
+        <SidebarMenuButton
+          isActive={active === n.id}
+          count={n.count}
+          variant={n.destructive ? "destructive" : "default"}
+          onClick={() => go(n.id)}
+        >
+          {n.label}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
+
+  return (
+    <div className="h-[760px] w-full overflow-hidden rounded-lg border border-border">
+      <SidebarProvider accordion openGroups={open} onOpenGroupsChange={setOpen}>
+        <div className="flex h-full w-full">
+          <Sidebar>
+            <SidebarHeader className="border-b-0 max-md:pr-2">
+              <div className="min-w-0 flex-1"><GroupedMenuBrand onAction={setSaid} /></div>
+              <GroupedMenuClose />
+            </SidebarHeader>
+            {/* flex column + mt-auto on the last row: see the comment there. */}
+            <SidebarContent className="flex flex-col pt-0">
+              <GroupedMenuSearch query={query} setQuery={setQuery} />
+              {q ? (
+                <SidebarMenu>
+                  {results.length === 0 ? (
+                    <Text className="px-3 py-2 text-sm text-muted-foreground">No matches</Text>
+                  ) : results.map(({ node, trail: t }) => (
+                    <SidebarMenuItem key={node.id}>
+                      <SidebarMenuButton isActive={active === node.id} onClick={() => pick(node.id)}>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="truncate">{node.label}</span>
+                          <span className="truncate text-xs text-muted-foreground">{t.join(" › ")}</span>
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              ) : (
+                <SidebarMenu>{GROUPED_MENU.map((n) => row(n, true))}</SidebarMenu>
+              )}
+              {/* The last row of the scrolling column, not a fixed footer: light/dark on the left,
+                  collapse on the right. mt-auto rests it on the bottom of the rail while the menu
+                  is shorter than the rail; a taller menu pushes it down and it scrolls away with
+                  the rest. On the rail the theme button folds away, as in the sink. */}
+              <div className="mt-auto flex shrink-0 items-center px-2 pt-2">
+                <ThemeToggle dark={theme.dark} onToggle={theme.toggle} />
+                <SidebarTrigger />
+              </div>
+            </SidebarContent>
+          </Sidebar>
+          <main className="min-w-0 flex-1 overflow-y-auto p-6">
+            {/* Below md the rail is gone and the menu is a full-screen panel behind this button. */}
+            <div className="mb-3 flex items-center gap-2 md:hidden">
+              <SidebarMobileTrigger />
+              <Text tone="muted" className="text-sm">Open the menu</Text>
+            </div>
+            <Text tone="muted" className="text-sm">{trail.map((n) => n.label).join(" / ")}</Text>
+            <H1 className="mt-1">{trail[trail.length - 1]?.label}</H1>
+            {said && <Text className="mt-3">Organisation switcher: {said}.</Text>}
+            <Text tone="muted" className="mt-3">
+              <code>color</code> on a top-level item gives the group a colour from the menu palette:
+              the icon carries it all the time, the tree line takes a trace of it and the current page
+              is filled with it. The open group's own row stays unmarked. Rows inside inherit it.
+            </Text>
+            <Text tone="muted" className="mt-3">
+              <code>accordion</code> on the provider keeps one group open per level. Open Sales while
+              you are on Overview: My Trivis closes and its row fills, because its page is now out of
+              sight (<code>hasActive</code>). Settings is three levels deep; its sections take turns
+              without closing Settings.
+            </Text>
+            <Text tone="muted" className="mt-3">
+              <code>count</code> draws the red number for what waits. <code>variant="destructive"</code> is
+              the Sign out row at the end of Settings. The light/dark and collapse controls are one row:
+              it rests on the bottom of the rail while the menu is short and scrolls away with a long one;
+              on the rail the group holding the current page stays filled. The organisation block shows
+              the plan and this month's use of it under the name, as in the app shell, and its switcher
+              has two rows of its own under the list (<code>actions</code>).
+            </Text>
+          </main>
+        </div>
+      </SidebarProvider>
+    </div>
+  );
+}
+
 /* ------------------------------------------------- atomic-design registry */
 
 type SectionDef = { id: string; label: string; render: () => React.ReactNode };
@@ -3497,6 +3814,7 @@ const GROUPS: GroupDef[] = [
       { id: "record-payment-dialog", label: "Record payment dialog", render: () => <RecordPaymentDialogDemo /> },
       { id: "chart", label: "Chart", render: () => <ChartDemo /> },
       { id: "sidebar", label: "App shell / Sidebar", render: () => <SidebarDemo /> },
+      { id: "sidebar-grouped", label: "App shell / Grouped menu", render: () => <GroupedSidebarDemo /> },
     ],
   },
 ];
@@ -3603,6 +3921,7 @@ function SidebarSearchBox({ query, setQuery, onPick }: {
 
 export function App() {
   const [dark, setDark] = useState(false);
+  const demoTheme = useMemo(() => ({ dark, toggle: () => setDark((d) => !d) }), [dark]);
   // "trivis" = the default brand theme (base :root/.dark, no class). Other values add a theme-* class.
   // Default is the localhost theme (as in app-shell); deployed demos open on Trivis.
   const [theme, setTheme] = useState(() => (window.location.hostname === "localhost" ? "default" : "trivis"));
@@ -3645,6 +3964,7 @@ export function App() {
   }, []);
 
   return (
+    <DemoThemeContext.Provider value={demoTheme}>
     <TooltipProvider delayDuration={200}>
       <AppShell
         defaultOpenGroups={GROUPS.map((g) => g.id)}
@@ -3747,5 +4067,6 @@ export function App() {
       </AppShell>
       <Toaster />
     </TooltipProvider>
+    </DemoThemeContext.Provider>
   );
 }

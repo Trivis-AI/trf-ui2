@@ -82,6 +82,14 @@ active: `card`, or 50% black on it in dark Default. A field embedded transparent
 surface (the markdown editor's textarea, the chat composer's) sets
 `focus-visible:bg-transparent` so it stays see-through when focused.
 
+`menu-*` are the group colours of the grouped sidebar (`SidebarMenuItem color`): `menu-gray`,
+`menu-red`, `menu-orange`, `menu-yellow`, `menu-green`, `menu-teal`, `menu-cyan`, `menu-blue`,
+`menu-violet`, `menu-purple`, `menu-magenta`. All share one lightness and one chroma
+(`--menu-tone-l` 0.55 / `--menu-tone-c` 0.14, lifted to 0.78 / 0.12 in dark), so only the hue
+differs and no group is louder than another; gray has no chroma. They are not Tailwind
+utilities: the sidebar reads them through `color`. For a colour a user picks, use the swatch
+palette (`ColorBadge`) instead.
+
 ### Themes and the Default theme
 
 Themes are classes on `<html>` (`theme-amber`, ...), composed with `.dark`; no class is

@@ -160,6 +160,25 @@
   --swatch-blue: oklch(0.52 0.16 255);
   --swatch-purple: oklch(0.52 0.18 300);
   --swatch-pink: oklch(0.56 0.19 350);
+
+  /* Menu group colours (the grouped sidebar: SidebarMenuItem `color`). One lightness and
+   * one chroma for every group, so no area of the product shouts louder than another and
+   * only the hue tells them apart. Used as icon ink and, mixed down, as the fill of the
+   * current page (14%), of a closed group that holds it (12%) and as the tree line (22%).
+   * Gray has no chroma: it is for Settings. .dark lifts the pair; the hues stay. */
+  --menu-tone-l: 0.55;
+  --menu-tone-c: 0.14;
+  --menu-gray: oklch(var(--menu-tone-l) 0 0);
+  --menu-red: oklch(var(--menu-tone-l) var(--menu-tone-c) 20);
+  --menu-orange: oklch(var(--menu-tone-l) var(--menu-tone-c) 55);
+  --menu-yellow: oklch(var(--menu-tone-l) var(--menu-tone-c) 85);
+  --menu-green: oklch(var(--menu-tone-l) var(--menu-tone-c) 150);
+  --menu-teal: oklch(var(--menu-tone-l) var(--menu-tone-c) 190);
+  --menu-cyan: oklch(var(--menu-tone-l) var(--menu-tone-c) 215);
+  --menu-blue: oklch(var(--menu-tone-l) var(--menu-tone-c) 240);
+  --menu-violet: oklch(var(--menu-tone-l) var(--menu-tone-c) 270);
+  --menu-purple: oklch(var(--menu-tone-l) var(--menu-tone-c) 300);
+  --menu-magenta: oklch(var(--menu-tone-l) var(--menu-tone-c) 330);
 }
 
 .dark {
@@ -238,6 +257,10 @@
   --swatch-blue: oklch(0.74 0.13 255);
   --swatch-purple: oklch(0.74 0.15 300);
   --swatch-pink: oklch(0.76 0.16 350);
+
+  /* Menu group colours, lifted for the dark rail. The --menu-* colours follow by themselves. */
+  --menu-tone-l: 0.78;
+  --menu-tone-c: 0.12;
 }
 
 /* ============================================================================

@@ -25,6 +25,18 @@ export interface OrgSwitcherOrg {
   tag?: string | null;
 }
 
+/** A row under the organisation list: something to do, not somewhere to switch to. */
+export interface OrgSwitcherAction {
+  id: string;
+  label: string;
+  /** Lucide icon, drawn in the avatar's column so the labels line up with the names. */
+  icon?: React.ReactNode;
+  /** Red, for leaving (log out). */
+  destructive?: boolean;
+  /** Fires on click. The popover closes itself first. */
+  onSelect: () => void;
+}
+
 export interface OrgSwitcherProps {
   /** Organisations the user can switch to (include the current one). */
   orgs: OrgSwitcherOrg[];
@@ -47,12 +59,19 @@ export interface OrgSwitcherProps {
   orgHref?: (org: OrgSwitcherOrg) => string;
   /** Accessible label for that link. */
   openLabel?: string;
+  /** Rows under the list, below a divider: "Add a new company", "Log out". They stay put while
+   *  the list scrolls and the search does not filter them. Omit for the plain list. */
+  actions?: OrgSwitcherAction[];
   /** Popover alignment relative to the trigger. */
   align?: "start" | "center" | "end";
   side?: "top" | "right" | "bottom" | "left";
   /** Gap between trigger and panel in px (default 4). Negative overlaps the trigger, for
    *  a trigger with empty space at its edge (the sidebar brand's inset hover block). */
   sideOffset?: number;
+  /** Shift along the trigger's edge in px (default 0): positive moves a start-aligned panel
+   *  right. With `sideOffset` it places the panel's search field over something under the
+   *  trigger, e.g. the sidebar's own search, so the two placeholders sit in the same spot. */
+  alignOffset?: number;
   /** Extra classes for the popover panel (e.g. a custom width). */
   className?: string;
   /** The trigger element (rendered as-is via `asChild`), e.g. the sidebar brand block. */
@@ -89,9 +108,11 @@ export function OrgSwitcher({
   loadingText = tr("<trn-loading>", "Loading…"),
   orgHref,
   openLabel = tr("<trn-ui-open-in-new-tab>", "Open in a new tab"),
+  actions,
   align = "start",
   side = "bottom",
   sideOffset,
+  alignOffset,
   className,
   children,
 }: OrgSwitcherProps) {
@@ -123,10 +144,13 @@ export function OrgSwitcher({
         align={align}
         side={side}
         sideOffset={sideOffset}
+        alignOffset={alignOffset}
         collisionPadding={8}
       >
         <Command filter={substringFilter}>
-          {showSearch && <CommandInput placeholder={searchPlaceholder} />}
+          {/* pl-px: one pixel more between the magnifier and the text, the same spacing as
+              SearchInput, so the field can sit exactly over a sidebar search (see alignOffset). */}
+          {showSearch && <CommandInput placeholder={searchPlaceholder} className="pl-px" />}
           <CommandList className="max-h-none min-h-0">
             {loading ? (
               <div className="py-6 text-center text-sm text-muted-foreground">{loadingText}</div>
@@ -190,6 +214,34 @@ export function OrgSwitcher({
             </CommandGroup>
           </CommandList>
         </Command>
+        {actions && actions.length > 0 && (
+          /* Outside the Command on purpose: cmdk would filter these by the search text and
+             walk them with the arrow keys as if they were organisations. Tab reaches them.
+             p-2 is the list's own inset (CommandList p-1 + CommandGroup p-1), so the rows line up. */
+          <div className="flex shrink-0 flex-col border-t border-border p-2">
+            {actions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  action.onSelect();
+                }}
+                className={cn(
+                  "flex w-full select-none items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none transition-colors",
+                  "[&_svg]:size-4 [&_svg]:shrink-0",
+                  action.destructive
+                    ? "text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10"
+                    : "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground"
+                )}
+              >
+                {/* The avatar's 20px column, so the label starts where the names do. */}
+                <span className="flex size-5 shrink-0 items-center justify-center">{action.icon}</span>
+                <span className="min-w-0 flex-1 truncate">{action.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

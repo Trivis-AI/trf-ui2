@@ -13,6 +13,10 @@ import { readPrefCookie, writePrefCookie } from "../lib/prefCookie";
  *  - collapsing is STAGED: accordions close first, then the rail narrows (and reverse on expand).
  *  - sub-menus animate with the grid-template-rows 0fr->1fr trick (no JS height measuring).
  *  - header + footer are flex-fixed; only the middle scrolls.
+ *
+ * The grouped menu (opt-in, nothing changes without it): a `color` on a top-level
+ * SidebarMenuItem gives the group a colour from the menu palette, and `accordion` on the
+ * provider keeps one group open per level. See "Group colour" and "Accordion" below.
  */
 
 /*
@@ -75,12 +79,63 @@ type SidebarContextValue = {
   resizing: boolean;
   setResizing: (v: boolean) => void;
   openGroups: Set<string>;
-  toggleGroup: (id: string, forceOpen?: boolean) => void;
+  /** `siblings` are the group ids on the same level; in accordion mode they close when `id` opens. */
+  toggleGroup: (id: string, forceOpen?: boolean, siblings?: Iterable<string>) => void;
+  /** One open group per level. */
+  accordion: boolean;
   mobileOpen: boolean;
   setMobileOpen: (v: boolean) => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextValue | null>(null);
+
+/*
+ * Accordion. A level is one list of rows: a SidebarMenu, or a SidebarMenuSub. Each keeps the ids
+ * of the groups rendered directly in it, so that opening one can close its siblings and leave
+ * the levels above and below alone (Settings stays open while its sections take turns).
+ */
+const SidebarLevelContext = React.createContext<Set<string> | null>(null);
+function useNewLevel() {
+  return React.useState(() => new Set<string>())[0];
+}
+
+/*
+ * Group colour. `color` on a SidebarMenuItem sets --sidebar-tone for the row and everything
+ * under it, so a group's pages inherit its colour. The names are the menu palette's
+ * (tokens.css, --menu-*): one lightness and chroma for all of them, a hue each, lifted in dark.
+ * Not the swatch palette: that one is tuned as text on its own tint and varies in weight.
+ * Class strings are spelled out in full so Tailwind can see them.
+ */
+export const SIDEBAR_COLORS = [
+  "gray", "red", "orange", "yellow", "green", "teal", "cyan", "blue", "violet", "purple", "magenta",
+] as const;
+
+export type SidebarColor = (typeof SIDEBAR_COLORS)[number];
+
+/** Menu palette colour, but any string is accepted so a menu payload field can be passed
+ *  straight through; an unknown or empty one leaves the item uncoloured. */
+export type SidebarColorInput = SidebarColor | (string & {});
+
+/** Narrow an untrusted value (a menu payload field) to a menu colour, or `undefined`. */
+export function asSidebarColor(value?: SidebarColorInput | null): SidebarColor | undefined {
+  return value && (SIDEBAR_COLORS as readonly string[]).includes(value) ? (value as SidebarColor) : undefined;
+}
+
+const TONE: Record<SidebarColor, string> = {
+  gray: "[--sidebar-tone:var(--menu-gray)]",
+  red: "[--sidebar-tone:var(--menu-red)]",
+  orange: "[--sidebar-tone:var(--menu-orange)]",
+  yellow: "[--sidebar-tone:var(--menu-yellow)]",
+  green: "[--sidebar-tone:var(--menu-green)]",
+  teal: "[--sidebar-tone:var(--menu-teal)]",
+  cyan: "[--sidebar-tone:var(--menu-cyan)]",
+  blue: "[--sidebar-tone:var(--menu-blue)]",
+  violet: "[--sidebar-tone:var(--menu-violet)]",
+  purple: "[--sidebar-tone:var(--menu-purple)]",
+  magenta: "[--sidebar-tone:var(--menu-magenta)]",
+};
+/** True under a SidebarMenuItem that carries a colour. */
+const SidebarToneContext = React.createContext(false);
 
 export function useSidebar() {
   const ctx = React.useContext(SidebarContext);
@@ -96,6 +151,9 @@ export interface SidebarProviderProps {
    *  (e.g. auto-open the active route's group once an async menu has loaded). */
   openGroups?: string[];
   onOpenGroupsChange?: (ids: string[]) => void;
+  /** One open group per level: opening a group closes the others beside it. A group inside
+   *  another (a third level) takes turns with its own siblings only. Default false. */
+  accordion?: boolean;
   children: React.ReactNode;
 }
 
@@ -104,6 +162,7 @@ export function SidebarProvider({
   defaultOpenGroups = [],
   openGroups: openGroupsProp,
   onOpenGroupsChange,
+  accordion = false,
   children,
 }: SidebarProviderProps) {
   // Read once, synchronously, so the first paint already has the stored width and state.
@@ -127,14 +186,17 @@ export function SidebarProvider({
     });
   }, [openGroupsProp]);
 
-  // Update internal state AND notify the parent (so controlled usage stays in sync).
+  // Update internal state AND notify the parent (so controlled usage stays in sync). The next
+  // set is worked out here, from a ref, not inside a state updater: React runs updaters while
+  // rendering, and telling the parent from there is a setState on another component mid-render.
+  const openGroupsRef = React.useRef(openGroups);
+  openGroupsRef.current = openGroups;
   const setOpenGroups = React.useCallback(
     (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-      setOpenGroupsState((prev) => {
-        const next = typeof updater === "function" ? updater(prev) : updater;
-        onOpenGroupsChange?.([...next]);
-        return next;
-      });
+      const next = typeof updater === "function" ? updater(openGroupsRef.current) : updater;
+      openGroupsRef.current = next;
+      setOpenGroupsState(next);
+      onOpenGroupsChange?.([...next]);
     },
     [onOpenGroupsChange]
   );
@@ -153,16 +215,17 @@ export function SidebarProvider({
   }, [collapsed, width, resizing]);
 
   const toggleGroup = React.useCallback(
-    (id: string, forceOpen?: boolean) => {
+    (id: string, forceOpen?: boolean, siblings?: Iterable<string>) => {
       setOpenGroups((prev) => {
         const next = new Set(prev);
-        if (forceOpen) next.add(id);
-        else if (next.has(id)) next.delete(id);
-        else next.add(id);
+        if (forceOpen || !next.has(id)) {
+          if (accordion && siblings) for (const s of siblings) if (s !== id) next.delete(s);
+          next.add(id);
+        } else next.delete(id);
         return next;
       });
     },
-    [setOpenGroups]
+    [setOpenGroups, accordion]
   );
 
   // Staged collapse: close accordions first, then narrow (and reverse on expand).
@@ -190,10 +253,11 @@ export function SidebarProvider({
       setResizing,
       openGroups,
       toggleGroup,
+      accordion,
       mobileOpen,
       setMobileOpen,
     }),
-    [collapsed, setCollapsed, toggleCollapsed, width, setWidth, resetWidth, resizing, openGroups, toggleGroup, mobileOpen]
+    [collapsed, setCollapsed, toggleCollapsed, width, setWidth, resetWidth, resizing, openGroups, toggleGroup, accordion, mobileOpen]
   );
 
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
@@ -318,11 +382,26 @@ export function SidebarFooter({
 }
 
 export function SidebarMenu({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
-  return <ul className={cn("flex flex-col gap-0.5 px-2", className)} {...props} />;
+  const level = useNewLevel();
+  return (
+    <SidebarLevelContext.Provider value={level}>
+      <ul className={cn("flex flex-col gap-0.5 px-2", className)} {...props} />
+    </SidebarLevelContext.Provider>
+  );
 }
 
-export function SidebarMenuItem({ className, ...props }: React.LiHTMLAttributes<HTMLLIElement>) {
-  return <li className={cn("list-none", className)} {...props} />;
+export interface SidebarMenuItemProps extends Omit<React.LiHTMLAttributes<HTMLLIElement>, "color"> {
+  /** Group colour, a menu palette name (SIDEBAR_COLORS). Set it on a top-level item: the row's
+   *  icon, the tree line and the current page's fill all take it, and the rows nested under the
+   *  item inherit it. The open group's own row is left unmarked: only the current page is filled.
+   *  Unknown or empty leaves the item as it was. */
+  color?: SidebarColorInput | null;
+}
+
+export function SidebarMenuItem({ className, color, ...props }: SidebarMenuItemProps) {
+  const tone = asSidebarColor(color);
+  const li = <li className={cn("list-none", tone && TONE[tone], className)} {...props} />;
+  return tone ? <SidebarToneContext.Provider value={true}>{li}</SidebarToneContext.Provider> : li;
 }
 
 /** Label that fades to zero width when collapsed (so the icon never shifts). */
@@ -353,6 +432,13 @@ export interface SidebarMenuButtonProps
   href?: string;
   /** Shown as a native tooltip when collapsed (icon-only). */
   tooltip?: string;
+  /** A group row whose current page is somewhere inside it. While the group is closed (another
+   *  one is open, or the rail is collapsed) the row is filled, since its page is out of sight. */
+  hasActive?: boolean;
+  /** How many things wait here. Drawn as a small red count after the label; nothing at 0. */
+  count?: number | null;
+  /** `destructive`: a row that leaves or removes (sign out). */
+  variant?: "default" | "destructive";
 }
 
 export function SidebarMenuButton({
@@ -361,21 +447,38 @@ export function SidebarMenuButton({
   groupId,
   href,
   tooltip,
+  hasActive,
+  count,
+  variant = "default",
   className,
   children,
   onClick,
   ...props
 }: SidebarMenuButtonProps) {
   const { collapsed, setCollapsed, openGroups, toggleGroup, setMobileOpen } = useSidebar();
-  const isOpen = groupId ? openGroups.has(groupId) : false;
+  const toned = React.useContext(SidebarToneContext);
+  const level = React.useContext(SidebarLevelContext);
+  // Nothing is open on the icon rail, whatever the set says (a drag-collapse leaves it filled).
+  const isOpen = groupId ? !collapsed && openGroups.has(groupId) : false;
+  // The current page sits inside this group and cannot be seen: the group row stands in for it.
+  const standsIn = !!groupId && !!hasActive && !isOpen;
+
+  // Tell the level this group lives on, so accordion mode knows its siblings.
+  React.useEffect(() => {
+    if (!groupId || !level) return;
+    level.add(groupId);
+    return () => {
+      level.delete(groupId);
+    };
+  }, [groupId, level]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement & HTMLAnchorElement>) => {
     if (collapsed) {
       // Clicking a collapsed rail expands it first (then opens the group, if any).
       setCollapsed(false);
-      if (groupId) toggleGroup(groupId, true);
+      if (groupId) toggleGroup(groupId, true, level ?? undefined);
     } else if (groupId) {
-      toggleGroup(groupId);
+      toggleGroup(groupId, undefined, level ?? undefined);
     }
     // A leaf row navigates — close the mobile drawer (no-op on desktop).
     if (!groupId) setMobileOpen(false);
@@ -386,15 +489,26 @@ export function SidebarMenuButton({
   // (56/2), the same vertical line as the header logo. Padding is identical expanded/collapsed,
   // so the icon never moves. Keep these in sync if SidebarMenu's px-* changes.
   const classes = cn(
-    "flex w-full items-center rounded-md py-1.5 pl-3 pr-3 text-left text-sm transition-colors",
+    "group/sidebar-row flex w-full items-center rounded-md py-1.5 pl-3 pr-3 text-left text-sm transition-colors",
     // Mobile-first: larger rows + font for touch (the rail is hidden below md, so
     // these only affect the full-screen mobile menu).
     "max-md:gap-1 max-md:py-3 max-md:text-base",
-    isActive
-      // Light: purple ink reads fine on the tinted bg. Dark: the magenta primary is too
-      // dark on the tint, so the active label goes near-white (foreground) for contrast.
-      ? "bg-primary/10 font-medium text-primary dark:text-foreground"
-      : "text-foreground hover:bg-accent hover:text-accent-foreground",
+    variant === "destructive"
+      ? cn("text-destructive hover:bg-destructive/10", isActive && "bg-destructive/10 font-medium")
+      : isActive
+        ? toned
+          // A group colour is a tint, not an ink: the label keeps the text colour in both themes.
+          ? "bg-(--sidebar-tone)/14 font-medium text-foreground hover:bg-(--sidebar-tone)/20"
+          // Light: purple ink reads fine on the tinted bg. Dark: the magenta primary is too
+          // dark on the tint, so the active label goes near-white (foreground) for contrast.
+          : "bg-primary/10 font-medium text-primary dark:text-foreground"
+        : standsIn
+          ? toned
+            ? "bg-(--sidebar-tone)/12 text-foreground hover:bg-(--sidebar-tone)/18"
+            : "bg-primary/10 text-foreground hover:bg-primary/15"
+          : "text-foreground hover:bg-accent hover:text-accent-foreground",
+    // The row's own icon carries the group colour all the time; the chevron does not.
+    toned && variant !== "destructive" && "[&>svg]:text-(--sidebar-tone)",
     "[&_svg]:size-4 [&_svg]:shrink-0 max-md:[&_svg]:size-5",
     className
   );
@@ -403,11 +517,31 @@ export function SidebarMenuButton({
     <>
       {icon}
       <FadeLabel className={icon ? "ml-2" : undefined}>{children}</FadeLabel>
+      {count != null && count > 0 && (
+        // The margins sit inside the clipped box, so the rail's icon geometry is untouched.
+        <span
+          className={cn(
+            "flex shrink-0 overflow-hidden transition-[max-width,opacity] duration-200",
+            collapsed ? "max-w-0 opacity-0" : "max-w-12 opacity-100"
+          )}
+        >
+          <span
+            className={cn(
+              "ml-2 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-destructive/12 px-1.5 text-xs font-semibold leading-none text-destructive dark:bg-destructive/16",
+              groupId && "mr-2"
+            )}
+          >
+            {count > 99 ? "99+" : count}
+          </span>
+        </span>
+      )}
       {groupId && (
         <span
           className={cn(
             "ml-auto flex shrink-0 overflow-hidden transition-[max-width,opacity] duration-200",
-            collapsed ? "max-w-0 opacity-0" : "max-w-4 opacity-100"
+            collapsed ? "max-w-0 opacity-0" : "max-w-4 opacity-100",
+            // Quieter than the label in the grouped menu, full strength under the pointer.
+            toned && "text-muted-foreground transition-[max-width,opacity,color] group-hover/sidebar-row:text-foreground"
           )}
         >
           <ChevronRight
@@ -458,6 +592,8 @@ export function SidebarMenuSub({
   children: React.ReactNode;
 }) {
   const { collapsed, openGroups } = useSidebar();
+  const toned = React.useContext(SidebarToneContext);
+  const level = useNewLevel();
   const open = !collapsed && openGroups.has(groupId);
   const ref = React.useRef<HTMLDivElement>(null);
   const prevOpen = React.useRef(open);
@@ -483,9 +619,18 @@ export function SidebarMenuSub({
       <div className="overflow-hidden">
         {/* ml-5 (20px) + the SidebarMenu's px-2 (8px) ⇒ the left border sits at 28px,
             centered under the parent row's icon. */}
-        <ul className={cn("ml-5 mt-0.5 flex flex-col gap-0.5 border-l border-border pl-2.5", className)}>
-          {children}
-        </ul>
+        {/* In a coloured group the line takes a trace of the colour, at about the border token's weight. */}
+        <SidebarLevelContext.Provider value={level}>
+          <ul
+            className={cn(
+              "ml-5 mt-0.5 flex flex-col gap-0.5 border-l pl-2.5",
+              toned ? "border-(--sidebar-tone)/22" : "border-border",
+              className
+            )}
+          >
+            {children}
+          </ul>
+        </SidebarLevelContext.Provider>
       </div>
     </div>
   );
@@ -608,6 +753,8 @@ export interface AppShellProps {
   /** Controlled open groups (with onOpenGroupsChange) — e.g. to auto-open the active route. */
   openGroups?: string[];
   onOpenGroupsChange?: (ids: string[]) => void;
+  /** One open group per level (see SidebarProvider). */
+  accordion?: boolean;
   className?: string;
 }
 
@@ -618,6 +765,7 @@ export function AppShell({
   defaultOpenGroups,
   openGroups,
   onOpenGroupsChange,
+  accordion,
   className,
 }: AppShellProps) {
   // Thin scrollbars show their thumb while a box scrolls (tokens.css, "Scrollbars").
@@ -628,6 +776,7 @@ export function AppShell({
       defaultOpenGroups={defaultOpenGroups}
       openGroups={openGroups}
       onOpenGroupsChange={onOpenGroupsChange}
+      accordion={accordion}
     >
       <div className={cn("flex h-dvh w-full overflow-hidden", className)}>
         {sidebar}
