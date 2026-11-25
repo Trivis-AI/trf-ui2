@@ -37,13 +37,40 @@ import { OrgSwitcher } from "@trf/ui2";
 | `searchThreshold` | `number` | Show the search input only at or above this many orgs. Default `8`. |
 | `orgHref` | `(org) => string` | Supply it and every row gets a trailing open-in-a-new-tab link. Omit it and no link is rendered. |
 | `openLabel` | `string` | Accessible label for that link. Default `"Open in a new tab"`. |
+| `actions` | `OrgSwitcherAction[]` | Rows under the list, below a divider: `{ id, label, icon?, destructive?, onSelect }`. See [Actions](#actions). |
 | `searchPlaceholder` / `emptyText` / `loadingText` | `string` | Copy overrides. |
 | `align` / `side` | | Popover placement relative to the trigger. Default `"start"` / `"bottom"`. |
 | `sideOffset` | `number` | Gap between trigger and panel in px (default 4). Negative overlaps the trigger, e.g. when its visible block is inset from its edge. |
+| `alignOffset` | `number` | Shift along the trigger's edge in px (default 0); positive moves a start-aligned panel right. In the sidebar, `sideOffset={-3}` with `alignOffset={7}` lands the panel's search icon and text exactly on the rail's own search icon and text (56px header, `px-2` search, `h-9` field). |
+| `collisionPadding` | `number \| { top?, right?, bottom?, left? }` | Distance the panel keeps from the viewport's edges in px (default 8). It wins over `alignOffset`: a sidebar at the window's left edge needs `collisionPadding={{ top: 8, right: 8, bottom: 8, left: 7 }}` for `alignOffset={7}` to hold, otherwise the panel is pushed to 8 and its search sits 1px right of the rail's. |
 | `className` | `string` | Extra classes for the popover panel, e.g. a custom width. |
 | `children` | `ReactNode` | The trigger, rendered as-is via `asChild`. |
 
 Each row renders an [`Avatar`](avatar.md) keyed on the org slug, so the colour survives renames.
+
+## Actions
+
+Things to do from the switcher that are not organisations: add a company, log out.
+
+```tsx
+<OrgSwitcher
+  orgs={orgs}
+  currentSlug={slug}
+  onSelect={switchTo}
+  actions={[
+    { id: "add", label: "Add a new company", icon: <Plus />, onSelect: openNewCompany },
+    { id: "logout", label: "Log out", icon: <LogOut />, destructive: true, onSelect: logout },
+  ]}
+>
+  {trigger}
+</OrgSwitcher>
+```
+
+They sit under the list behind a divider, stay put while the list scrolls, and the search does not
+filter them (an empty result still leaves them there). The popover closes before `onSelect` runs.
+`destructive` draws the row red. The icon is drawn in the avatar's 20px column, so labels line up
+with the organisation names. They are plain buttons outside the cmdk list: Tab reaches them, the
+arrow keys stay with the organisations. Labels are the consumer's, so translate them there.
 
 ## Telling two organisations with the same name apart
 

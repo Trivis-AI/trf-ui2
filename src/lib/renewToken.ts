@@ -72,12 +72,22 @@ function cacheKey(slug: string): string {
   return CACHE_PREFIX + slug;
 }
 
+/** Tells the page an org token is in hand, as a `trf:org-token` event ({ slug, token }).
+ *  @trf/ui's TranslationClient listens for it: a user who never picked a language gets the
+ *  organisation's, by its country (o.c). The token reaches no app code before this, so the
+ *  client has no other way to see the country. */
+function announce(slug: string, token: string): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('trf:org-token', { detail: { slug, token } }));
+}
+
 function writeCache(slug: string, token: string): void {
   mem.set(slug, token);
   // Every org token funnels through here (mint, reload, legacy migration), so this is the
   // one spot that keeps the suite date/time prefs (locale + format overrides) in sync with
   // the account claims — zero per-app wiring. No-op when nothing changed.
   setDateTimePrefs(dateTimePrefsFromToken(token));
+  announce(slug, token);
   try {
     sessionStorage.setItem(cacheKey(slug), token);
   } catch {
@@ -93,6 +103,7 @@ function readCache(slug: string): string | null {
     if (s) {
       mem.set(slug, s);
       setDateTimePrefs(dateTimePrefsFromToken(s));
+      announce(slug, s);
       return s;
     }
   } catch {

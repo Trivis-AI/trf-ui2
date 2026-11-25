@@ -56,10 +56,16 @@ export {
   SIDEBAR_ICON_WIDTH,
   SIDEBAR_SNAP_WIDTH,
   clampSidebarWidth,
+  // The grouped menu's colours (tokens.css, --menu-*).
+  SIDEBAR_COLORS,
+  asSidebarColor,
 } from "./components/sidebar";
 export type {
   AppShellProps,
   SidebarProviderProps,
+  SidebarMenuItemProps,
+  SidebarColor,
+  SidebarColorInput,
   SidebarMenuButtonProps,
 } from "./components/sidebar";
 
@@ -237,7 +243,7 @@ export { EntityCombobox } from "./components/entity-combobox";
 export type { EntityComboboxProps, EntityComboboxItem } from "./components/entity-combobox";
 
 export { OrgSwitcher } from "./components/org-switcher";
-export type { OrgSwitcherProps, OrgSwitcherOrg } from "./components/org-switcher";
+export type { OrgSwitcherProps, OrgSwitcherOrg, OrgSwitcherAction } from "./components/org-switcher";
 export { PalettePicker, PaletteSwatches } from "./components/palette-picker";
 export type { PalettePickerProps, PaletteSwatchesProps, PaletteOption } from "./components/palette-picker";
 
@@ -462,6 +468,9 @@ export type {
 // --- Permissions ---
 export { PermsProvider, usePerms } from './context/PermsContext';
 export { RequireAccess } from './components/RequireAccess';
+export { RefusalDialogs, LowBalanceNote, useAccessInfo, adminNames, moduleName } from './components/refusal-dialogs';
+export { classifyRefusal, raiseRefusal, noticeRefusal, fetchAccessInfo, confirmRange, loginPortalUrl, REFUSAL_EVENT } from './lib/refusals';
+export type { Refusal, RangeQuote, AccessInfo, ModuleOffer, RangeNote } from './lib/refusals';
 export {
   parsePerms, canRead, canManipulate, isLookup,
   PERMS, SLOT_NONE, SLOT_READ, SLOT_LOOKUP, SLOT_MANIPULATE,

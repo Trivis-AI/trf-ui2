@@ -24,6 +24,13 @@ const SERVICE_SLOTS = {
   DOCRENDER: 12,
   FILES:     13,
   HR:        14,
+  // Split from PRODUCTS (backitems /v1/stock/*) and CRM (deals) in trflib
+  // v1.144.0. Every role holds the same state on them as on the parent slot.
+  STOCK:     15,
+  CRM_SALES: 16,
+  // Point of sale in backinvoices (trflib v1.154.0, task #397). Every role
+  // holds the same state on it as on INVOICES.
+  POS:       17,
 } as const;
 
 export type ServiceKey = keyof typeof SERVICE_SLOTS;
@@ -42,14 +49,29 @@ export const PERMS = Object.fromEntries(
 };
 
 export function parsePerms(token: string): bigint {
+  return parsePermsClaim(token, 'p') ?? 0n;
+}
+
+/**
+ * A permission-mask claim of the token: `p` (what the person may do), or `pr` (what their
+ * role or access would allow before the company's package capped it; only present when the
+ * package removed something, BUROO-AND-ACCESS.md phase 3). null when absent.
+ */
+export function parsePermsClaim(token: string, claim: 'p' | 'pr'): bigint | null {
   try {
     const [, encoded] = token.split('.');
     const payload = JSON.parse(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')));
-    // p is safe as a JSON number for up to 26 services (52 bits < Number.MAX_SAFE_INTEGER).
-    return payload.p ? BigInt(Math.trunc(payload.p)) : 0n;
+    // Safe as a JSON number for up to 26 services (52 bits < Number.MAX_SAFE_INTEGER).
+    const v = payload[claim];
+    return typeof v === 'number' ? BigInt(Math.trunc(v)) : null;
   } catch {
-    return 0n;
+    return null;
   }
+}
+
+/** The slot index of a service, as trflib numbers it (the `service` of a refusal). */
+export function serviceSlot(service: ServiceKey): number {
+  return SERVICE_SLOTS[service];
 }
 
 function slotFor(perms: bigint, service: ServiceKey): bigint {

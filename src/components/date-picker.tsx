@@ -127,13 +127,15 @@ export interface RangeDatePickerProps extends DatePickerBaseProps {
   value?: DateRange;
   /**
    * `preset` is the picked preset's id, and `undefined` when days were picked by hand or the field
-   * was cleared, so a filter can store the preset itself instead of its dates.
+   * was cleared, so a filter can store the preset itself instead of its dates. The first click of
+   * a range emits `{ from, to: undefined }` and the second completes it; store the half-picked
+   * range too, or the second click has no start to build on.
    */
   onChange?: (range: DateRange | undefined, preset?: string) => void;
   /**
    * Named ranges listed beside the calendar ("Current month", "Last month"). Picking one emits its
-   * dates with its id and closes the popover; picking a day afterwards turns it into a plain range
-   * that starts from the preset's dates. Opt-in.
+   * dates with its id and closes the popover; picking a day afterwards starts a plain range from
+   * that day. Opt-in.
    */
   presets?: DateRangePreset[];
   /**
@@ -148,6 +150,67 @@ export type DatePickerProps = SingleDatePickerProps | RangeDatePickerProps;
 
 // Shared locale-aware format (lib/datetime.ts) so triggers match DateCell everywhere.
 const defaultFormat = (date: Date) => formatDateShared(date);
+
+const monthOf = (date: Date, offset = 0) => new Date(date.getFullYear(), date.getMonth() + offset, 1);
+
+interface RangeCalendarsProps {
+  range: DateRange | undefined;
+  onSelect: (range: DateRange | undefined) => void;
+  disabledDates?: Matcher | Matcher[];
+  captionLayout: NonNullable<DatePickerBaseProps["captionLayout"]>;
+  startMonth?: Date;
+  endMonth?: Date;
+}
+
+/**
+ * The two month panes of the range picker. Each pane has a month of its own, so the left can sit
+ * on January 2026 while the right is on February 2027 and both ends of a long range are one click
+ * each. One calendar showing two months cannot do that: its months are always consecutive, so a
+ * year picked in the right pane dragged the left pane along with it.
+ *
+ * Mounted with the popover, so the panes start from the current range on every open.
+ */
+function RangeCalendars({ range, onSelect, disabledDates, captionLayout, startMonth, endMonth }: RangeCalendarsProps) {
+  const clamp = (month: Date) => {
+    if (startMonth && month < monthOf(startMonth)) return monthOf(startMonth);
+    if (endMonth && month > monthOf(endMonth)) return monthOf(endMonth);
+    return month;
+  };
+  // Left opens on the start, right on the end, or on the month after when they share a month.
+  const [months, setMonths] = React.useState(() => {
+    const left = clamp(monthOf(range?.from ?? new Date()));
+    const end = range?.to ? clamp(monthOf(range.to)) : undefined;
+    return { left, right: end && end > left ? end : clamp(monthOf(left, 1)) };
+  });
+  // The panes stay in order: moving one onto or past the other pushes the other a month along.
+  const setLeft = (month: Date) =>
+    setMonths(({ right }) => ({ left: month, right: month >= right ? clamp(monthOf(month, 1)) : right }));
+  const setRight = (month: Date) =>
+    setMonths(({ left }) => ({ left: month <= left ? clamp(monthOf(month, -1)) : left, right: month }));
+
+  const shared = {
+    mode: "range",
+    // A neighbouring month's days would repeat in the other pane, and show as selected there.
+    showOutsideDays: false,
+    // A click on a finished range starts a new one: first click the start, second the end.
+    // Without this the calendar only ever stretches the range it has, so a start could not be
+    // moved later (Jan 2025 - Dec 2025 could not become Jan 2026 - Feb 2027).
+    resetOnSelect: true,
+    selected: range,
+    onSelect,
+    disabled: disabledDates,
+    captionLayout,
+    startMonth,
+    endMonth,
+  } as const;
+
+  return (
+    <div className="flex flex-col sm:flex-row">
+      <Calendar {...shared} autoFocus month={months.left} onMonthChange={setLeft} className="max-sm:pb-2 sm:pr-2" />
+      <Calendar {...shared} month={months.right} onMonthChange={setRight} className="max-sm:pt-2 sm:pl-2" />
+    </div>
+  );
+}
 
 /**
  * Token-styled date picker — a `Button`-like trigger that opens a `Popover` with a `Calendar`.
@@ -309,18 +372,11 @@ export function DatePicker(props: DatePickerProps) {
                 })}
               </div>
             ) : null}
-            <Calendar
-              mode="range"
-              numberOfMonths={2}
-              // Side by side, the first month's trailing days would repeat (and show as selected)
-              // in the second month's grid; a month-long range made that the usual case.
-              showOutsideDays={false}
-              autoFocus
-              selected={range}
-              defaultMonth={selectedMonth}
-              // Days picked by hand are a plain range, even when they started from a preset.
+            <RangeCalendars
+              range={range}
+              // Days picked by hand are a plain range, even when a preset was showing.
               onSelect={(next) => props.onChange?.(next, undefined)}
-              disabled={disabledDates}
+              disabledDates={disabledDates}
               {...navProps}
             />
           </div>
