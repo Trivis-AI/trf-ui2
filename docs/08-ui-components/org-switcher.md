@@ -43,6 +43,7 @@ import { OrgSwitcher } from "@trf/ui2";
 | `sideOffset` | `number` | Gap between trigger and panel in px (default 4). Negative overlaps the trigger, e.g. when its visible block is inset from its edge. |
 | `alignOffset` | `number` | Shift along the trigger's edge in px (default 0); positive moves a start-aligned panel right. In the sidebar, `sideOffset={-3}` with `alignOffset={7}` lands the panel's search icon and text exactly on the rail's own search icon and text (56px header, `px-2` search, `h-9` field). |
 | `collisionPadding` | `number \| { top?, right?, bottom?, left? }` | Distance the panel keeps from the viewport's edges in px (default 8). It wins over `alignOffset`: a sidebar at the window's left edge needs `collisionPadding={{ top: 8, right: 8, bottom: 8, left: 7 }}` for `alignOffset={7}` to hold, otherwise the panel is pushed to 8 and its search sits 1px right of the rail's. |
+| `onCloseAutoFocus` | `(event: Event) => void` | Fires when the panel has closed and focus is about to return to the trigger, on every close. `event.preventDefault()` keeps focus off the trigger; or let it land and move it afterwards. The app shell uses it to put the cursor in the menu search once an organisation was picked. |
 | `className` | `string` | Extra classes for the popover panel, e.g. a custom width. |
 | `children` | `ReactNode` | The trigger, rendered as-is via `asChild`. |
 
