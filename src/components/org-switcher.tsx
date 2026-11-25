@@ -77,6 +77,11 @@ export interface OrgSwitcherProps {
    *  back to it: a sidebar at the window's left edge with `alignOffset={7}` needs `left: 7`
    *  or less here, or the panel lands at 8. */
   collisionPadding?: number | Partial<Record<"top" | "right" | "bottom" | "left", number>>;
+  /** Fires when the panel has closed and focus is about to return to the trigger (Radix's
+   *  `onCloseAutoFocus`). Call `event.preventDefault()` to keep focus off the trigger, or let
+   *  it land there and move it afterwards, e.g. to a search field once an organisation was
+   *  picked. Fires on every close, not only after a pick. */
+  onCloseAutoFocus?: (event: Event) => void;
   /** Extra classes for the popover panel (e.g. a custom width). */
   className?: string;
   /** The trigger element (rendered as-is via `asChild`), e.g. the sidebar brand block. */
@@ -119,6 +124,7 @@ export function OrgSwitcher({
   sideOffset,
   alignOffset,
   collisionPadding = 8,
+  onCloseAutoFocus,
   className,
   children,
 }: OrgSwitcherProps) {
@@ -152,6 +158,7 @@ export function OrgSwitcher({
         sideOffset={sideOffset}
         alignOffset={alignOffset}
         collisionPadding={collisionPadding}
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <Command filter={substringFilter}>
           {/* pl-px: one pixel more between the magnifier and the text, the same spacing as
