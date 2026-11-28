@@ -7,6 +7,7 @@ export { cn } from "./lib/utils";
 // UI text: the app plugs its translations in once (setTranslate); components call tr().
 export { setTranslate, tr } from "./lib/i18n";
 export type { Translate } from "./lib/i18n";
+export { isAllowedImageSrc, imageHost } from "./lib/image-src";
 export {
   setDateTimeLocale,
   getDateTimeLocale,
