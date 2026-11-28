@@ -1643,6 +1643,12 @@ const total = invoices.reduce((sum, i) => sum + i.payable, 0);
 
 ## Image
 
+Same-origin, relative, blob: and data:image/ images load:
+
+![Dot](data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='40'><rect width='160' height='40' rx='6' fill='orange'/></svg>)
+
+Any other host is shown as a note and never requested (the \`imageHosts\` prop adds hosts):
+
 ![Cashflow trend for Q3](https://placehold.co/640x160/orange/white?text=Cashflow+Q3)
 
 

@@ -13,6 +13,8 @@ import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
 import yaml from "highlight.js/lib/languages/yaml";
 import { cn } from "../lib/utils";
+import { tr } from "../lib/i18n";
+import { imageHost, isAllowedImageSrc } from "../lib/image-src";
 
 /**
  * Only the languages this product is written in, registered explicitly.
@@ -89,6 +91,29 @@ export interface MarkdownProps {
    * defaults, so you can replace just `a` or `code` without losing the rest.
    */
   components?: Components;
+  /**
+   * Extra hosts images may load from (exact host, e.g. "files.trf.is"). By
+   * default an image loads only from this page's origin, a relative path, blob:
+   * or data:image/. Any other image is shown as a note naming its host and is
+   * never fetched, so text a third party wrote (an AI reply steered by an
+   * uploaded document, a task note) cannot make the browser send data out.
+   */
+  imageHosts?: readonly string[];
+}
+
+/** An image whose address is not allowed: a visible note, never a request. */
+function BlockedImage({ src, alt }: { src: string; alt?: string }) {
+  const host = imageHost(src) || src.slice(0, 60);
+  return (
+    <span
+      className="my-1 inline-block rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground"
+      title={src}
+      data-blocked-image=""
+    >
+      {tr("<trn-ui-markdown-image-blocked>", "External image not loaded, for your safety: {host}").replace("{host}", host)}
+      {alt ? ` (${alt})` : ""}
+    </span>
+  );
 }
 
 /*
@@ -234,14 +259,23 @@ const baseComponents = {
   table: Renderer<"table">; th: Renderer<"th">; td: Renderer<"td">;
 };
 
-export function Markdown({ children, className, components }: MarkdownProps) {
-  const merged = React.useMemo(
-    () =>
-      (components
-        ? { ...(baseComponents as Components), ...components }
-        : (baseComponents as Components)),
-    [components]
-  );
+export function Markdown({ children, className, components, imageHosts }: MarkdownProps) {
+  const hostsKey = (imageHosts ?? []).join(",");
+  const merged = React.useMemo(() => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const hosts = hostsKey ? hostsKey.split(",") : [];
+    const BaseImg = baseComponents.img;
+    const img: Renderer<"img"> = (props) => {
+      const src = typeof props.src === "string" ? props.src : "";
+      return isAllowedImageSrc(src, origin, hosts) ? (
+        <BaseImg {...props} />
+      ) : (
+        <BlockedImage src={src} alt={props.alt} />
+      );
+    };
+    const base = { ...(baseComponents as Components), img } as Components;
+    return components ? { ...base, ...components } : base;
+  }, [components, hostsKey]);
   return (
     // `whitespace-normal` guards against a `white-space: pre-wrap` ancestor (e.g.
     // a chat bubble): react-markdown leaves newline text nodes between blocks,
